@@ -33,10 +33,15 @@ jobs:
       - name: Install package
         run: pip install -e .[dev]
       - name: Run test
-        run: pytest -n 8
+        run: pytest -n 8 --junitxml=junit.xml
       - name: Upload Codecov Results
         if: success()
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: lcov.info
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
