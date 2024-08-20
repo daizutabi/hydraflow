@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hydraflow"
+version = "0.1.0"
+description = "Hydra with MLflow"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "daizutabi", email = "daizutabi@gmail.com" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Documentation",
+  "Topic :: Software Development :: Documentation",
+]
+requires-python = ">=3.10"
+dependencies = ["hydra-core", "mlflow", "watchdog"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest-clarity",
+  "pytest-cov",
+  "pytest-randomly",
+  "pytest-xdist",
+  "setuptools",
+]
+
+[project.urls]
+Documentation = "https://daizutabi.github.io/hydraflow/"
+Source = "https://github.com/daizutabi/hydraflow"
+Issues = "https://github.com/daizutabi/hydraflow/issues"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github", "/docs"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hydraflow"]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--doctest-modules",
+  "--cov=hydraflow",
+  "--cov-report=lcov:lcov.info",
+]
+
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL"]
+filterwarnings = ['ignore:pkg_resources is deprecated:DeprecationWarning']
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "raise NotImplementedError", "if TYPE_CHECKING:"]
+
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build --clean --strict {args}"
+serve = "mkdocs serve --dev-addr localhost:8000 {args}"
+deploy = "mkdocs gh-deploy --force"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+unfixable = ["F401", "RUF100"]
