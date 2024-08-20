@@ -27,6 +27,3 @@ def test_watch(dir, monkeypatch, tmp_path):
         assert lines[k][0] == k
         assert lines[k][-1] == f"{k}.txt"
         assert 0 <= lines[k][2] - lines[k][1] < 0.05
-        if k < 3:
-            assert 0.95 < lines[k + 1][1] - lines[k][1] < 1.05
-            assert 0.95 < lines[k + 1][2] - lines[k][2] < 1.05

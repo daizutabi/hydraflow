@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
-from urllib.parse import urlparse
 
 import mlflow
 from hydra.core.hydra_config import HydraConfig
@@ -15,6 +14,7 @@ from watchdog.observers import Observer
 
 from hydraflow.mlflow import log_params
 from hydraflow.run import get_artifact_path
+from hydraflow.util import uri_to_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -40,8 +40,7 @@ def log_run(
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
     uri = mlflow.get_artifact_uri()
-    artifact_dir = Path(urlparse(uri).path)
-    location = Info(output_dir, artifact_dir)
+    location = Info(output_dir, uri_to_path(uri))
 
     # Save '.hydra' config directory first.
     output_subdir = output_dir / (hc.output_subdir or "")
@@ -63,7 +62,7 @@ def watch(
 ) -> Iterator[None]:
     if not dir:
         uri = mlflow.get_artifact_uri()
-        dir = Path(urlparse(uri).path)
+        dir = uri_to_path(uri)
 
     handler = Handler(func)
     observer = Observer()

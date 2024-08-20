@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
 import subprocess
+import sys
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import mlflow
 import pytest
@@ -11,23 +10,20 @@ from mlflow.artifacts import download_artifacts
 from mlflow.entities.run import Run
 
 
-@pytest.fixture(scope="module")
-def runs():
+@pytest.fixture
+def runs(monkeypatch, tmp_path):
     file = Path("tests/log_run.py").absolute()
-    curdir = Path.cwd()
+    monkeypatch.chdir(tmp_path)
 
-    with TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    subprocess.check_call(
+        [sys.executable, file.as_posix(), "-m", "host=x,y", "port=1,2"]
+    )
 
-        subprocess.check_call(["python", file, "-m", "host=x,y", "port=1,2"])
-
-        mlflow.set_experiment("log_run")
-        runs = mlflow.search_runs(output_format="list")
-        assert len(runs) == 4
-        assert isinstance(runs, list)
-        yield runs
-
-    os.chdir(curdir)
+    mlflow.set_experiment("log_run")
+    runs = mlflow.search_runs(output_format="list")
+    assert len(runs) == 4
+    assert isinstance(runs, list)
+    yield runs
 
 
 @pytest.fixture(params=range(4))

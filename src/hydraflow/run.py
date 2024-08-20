@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload
-from urllib.parse import urlparse
 
 import mlflow
 import numpy as np
@@ -11,6 +10,7 @@ from mlflow.tracking import artifact_utils
 from omegaconf import DictConfig, OmegaConf
 
 from hydraflow.config import iter_params
+from hydraflow.util import uri_to_path
 
 if TYPE_CHECKING:
     from typing import Any
@@ -131,7 +131,7 @@ def get_artifact_uri(run: Run | Series | str, artifact_path: str | None = None) 
 
 def get_artifact_dir(run: Run | Series | str) -> Path:
     uri = get_artifact_uri(run)
-    return Path(urlparse(uri).path)
+    return uri_to_path(uri)
 
 
 def get_artifact_path(
