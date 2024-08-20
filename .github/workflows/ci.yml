@@ -32,7 +32,7 @@ jobs:
       - name: Install package
         run: pip install -e .[dev]
       - name: Run test
-        run: pytest
+        run: pytest -n 8
       - name: Upload Codecov Results
         if: success()
         uses: codecov/codecov-action@v4
