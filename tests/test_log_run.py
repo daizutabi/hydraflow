@@ -12,7 +12,7 @@ from mlflow.entities.run import Run
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    file = Path("tests/log_run.py").absolute()
+    file = Path("tests/scripts/log_run.py").absolute()
     monkeypatch.chdir(tmp_path)
 
     subprocess.check_call(

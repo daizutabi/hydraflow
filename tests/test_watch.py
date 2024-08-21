@@ -11,7 +11,7 @@ import pytest
 def test_watch(dir, monkeypatch, tmp_path):
     from hydraflow.context import watch
 
-    file = Path("tests/watch.py").absolute()
+    file = Path("tests/scripts/watch.py").absolute()
     monkeypatch.chdir(tmp_path)
 
     lines = []
