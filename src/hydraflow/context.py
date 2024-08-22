@@ -13,7 +13,7 @@ from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from hydraflow.mlflow import log_params
-from hydraflow.run import get_artifact_path
+from hydraflow.runs import get_artifact_path
 from hydraflow.util import uri_to_path
 
 if TYPE_CHECKING:
@@ -40,14 +40,19 @@ def log_run(
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
     uri = mlflow.get_artifact_uri()
-    location = Info(output_dir, uri_to_path(uri))
+    info = Info(output_dir, uri_to_path(uri))
 
     # Save '.hydra' config directory first.
     output_subdir = output_dir / (hc.output_subdir or "")
     mlflow.log_artifacts(output_subdir.as_posix(), hc.output_subdir)
 
+    def log_artifact(path: Path) -> None:
+        local_path = (output_dir / path).as_posix()
+        mlflow.log_artifact(local_path)
+
     try:
-        yield location
+        with watch(log_artifact, output_dir):
+            yield info
 
     finally:
         # Save output_dir including '.hydra' config directory.
@@ -55,11 +60,7 @@ def log_run(
 
 
 @contextmanager
-def watch(
-    func: Callable[[Path], None],
-    dir: Path | str = "",
-    timeout: int = 600,
-) -> Iterator[None]:
+def watch(func: Callable[[Path], None], dir: Path | str = "", timeout: int = 60) -> Iterator[None]:
     if not dir:
         uri = mlflow.get_artifact_uri()
         dir = uri_to_path(uri)

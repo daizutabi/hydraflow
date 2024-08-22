@@ -18,7 +18,7 @@ def test_watch(dir, monkeypatch, tmp_path):
 
     def func(path: Path) -> None:
         k, t = path.read_text().split(" ")
-        lines.append([int(k), float(t), time.time(), path.name])
+        lines.append([int(k), float(t), time.time(), path.as_posix()])
 
     with watch(func, dir if isinstance(dir, str) else dir()):
         subprocess.check_call(["python", file])
@@ -27,3 +27,5 @@ def test_watch(dir, monkeypatch, tmp_path):
         assert lines[k][0] == k
         assert lines[k][-1] == f"{k}.txt"
         assert 0 <= lines[k][2] - lines[k][1] < 0.05
+
+    assert lines[-1][-1] == "a/b/c.txt"

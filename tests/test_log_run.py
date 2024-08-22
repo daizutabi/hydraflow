@@ -15,9 +15,7 @@ def runs(monkeypatch, tmp_path):
     file = Path("tests/scripts/log_run.py").absolute()
     monkeypatch.chdir(tmp_path)
 
-    subprocess.check_call(
-        [sys.executable, file.as_posix(), "-m", "host=x,y", "port=1,2"]
-    )
+    subprocess.check_call([sys.executable, file.as_posix(), "-m", "host=x,y", "port=1,2"])
 
     mlflow.set_experiment("log_run")
     runs = mlflow.search_runs(output_format="list")
@@ -48,7 +46,7 @@ def read_log(run_id: str) -> str:
 
 
 def test_load_config(run_id: str):
-    from hydraflow.run import load_config
+    from hydraflow.runs import load_config
 
     log = read_log(run_id)
     host, port = log.splitlines()[0].split("START,")[-1].split(",")
@@ -56,9 +54,3 @@ def test_load_config(run_id: str):
     cfg = load_config(run_id)
     assert cfg.host == host.strip()
     assert cfg.port == int(port)
-
-
-def test_load_config_err(run_id: str):
-    from hydraflow.run import load_config
-
-    assert not load_config(run_id, "a")

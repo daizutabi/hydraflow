@@ -6,10 +6,13 @@ from hydra.core.hydra_config import HydraConfig
 from hydraflow.config import iter_params
 
 
-def set_experiment() -> None:
+def set_experiment(prefix: str = "", suffix: str = "", uri: str | None = None) -> None:
+    if uri:
+        mlflow.set_tracking_uri(uri)
+
     hc = HydraConfig.get()
-    mlflow.set_tracking_uri("")
-    mlflow.set_experiment(hc.job.name)
+    name = f"{prefix}{hc.job.name}{suffix}"
+    mlflow.set_experiment(name)
 
 
 def log_params(config: object, *, synchronous: bool | None = None) -> None:

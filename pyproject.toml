@@ -54,7 +54,7 @@ serve = "mkdocs serve --dev-addr localhost:8000 {args}"
 deploy = "mkdocs gh-deploy --force"
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
