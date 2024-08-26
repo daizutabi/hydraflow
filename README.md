@@ -63,18 +63,13 @@ def my_app(cfg: MySQLConfig) -> None:
         # Your app code below.
 
         # `info.output_dir` is the Hydra output directory.
-        # `info.artifact_dir` is the MLflow run directory.
+        # `info.artifact_dir` is the MLflow artifact directory.
 
-        with hydraflow.chdir_artifact():
-            # Current working directory is the MLflow artifact directory.
-            # You can use the directory to save your model or
-            # other artifacts.
-            pass
-
-        with hydraflow.watch():
+        with hydraflow.watch(callback):
             # Watch files in the MLflow artifact directory.
             # You can update metrics or log other artifacts
-            # according to the watched files.
+            # according to the watched files in your callback
+            # function.
             pass
 
 
