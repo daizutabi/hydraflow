@@ -14,6 +14,7 @@
 [GHAction-link]: https://github.com/daizutabi/hydraflow/actions?query=event%3Apush+branch%3Amain
 [codecov-image]: https://codecov.io/github/daizutabi/hydraflow/coverage.svg?branch=main
 [codecov-link]: https://codecov.io/github/daizutabi/hydraflow?branch=main
+
 ## Overview
 
 Hydraflow is a powerful library designed to seamlessly integrate [Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/), making it easier to manage and track machine learning experiments. By combining the flexibility of Hydra's configuration management with the robust experiment tracking capabilities of MLflow, Hydraflow provides a comprehensive solution for managing complex machine learning workflows.
@@ -38,6 +39,7 @@ pip install hydraflow
 Here is a simple example to get you started with Hydraflow:
 
 1. **Create a Hydra configuration file**:
+
     ```yaml
     experiment:
       name: my_experiment
@@ -47,22 +49,55 @@ Here is a simple example to get you started with Hydraflow:
     ```
 
 2. **Create a Python script to run your experiment**:
+
     ```python
     import hydra
+    import hydraflow
     import mlflow
+    from dataclasses import dataclass
+    from hydra.core.config_store import ConfigStore
     from omegaconf import DictConfig
 
-    @hydra.main(config_name="config")
-    def my_app(cfg: DictConfig) -> None:
-        with mlflow.start_run(), hydraflow.log_run(cfg):
-            # Your training code here
-            pass
+    @dataclass
+    class MySQLConfig:
+        host: str = "localhost"
+        port: int = 3306
+
+    cs = ConfigStore.instance()
+    cs.store(name="config", node=MySQLConfig)
+
+    @hydra.main(version_base=None, config_name="config")
+    def my_app(cfg: MySQLConfig) -> None:
+        # Set experiment by Hydra job name.
+        hydraflow.set_experiment()
+
+        # Automatically log Hydra config in the MLflow run directory.
+        with mlflow.start_run(), hydraflow.log_run(cfg) as info:
+            # Your app code below.
+
+            # `info.output_dir` is the Hydra output directory.
+            # `info.artifact_dir` is the MLflow run directory.
+
+            with hydraflow.chdir_artifact():
+                # Current working directory is the MLflow artifact directory.
+                # You can use the directory to save your model or
+                # other artifacts.
+                pass
+
+            with hydraflow.watch():
+                # Watch files in the MLflow artifact directory.
+                # You can update metrics or log other artifacts
+                # according to the watched files.
+                pass
+
+
 
     if __name__ == "__main__":
         my_app()
     ```
 
 3. **Run your experiment**:
+
     ```bash
     python my_script.py
     ```
