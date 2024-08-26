@@ -44,6 +44,7 @@ import hydraflow
 import mlflow
 from dataclasses import dataclass
 from hydra.core.config_store import ConfigStore
+from pathlib import Path
 
 @dataclass
 class MySQLConfig:
@@ -72,7 +73,9 @@ def my_app(cfg: MySQLConfig) -> None:
             # function.
             pass
 
-
+# Your callback function here.
+def callback(file: Path) -> None:
+    pass
 
 if __name__ == "__main__":
     my_app()
