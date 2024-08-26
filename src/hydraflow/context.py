@@ -1,3 +1,8 @@
+"""
+This module provides context managers to log parameters and manage the MLflow
+run context.
+"""
+
 from __future__ import annotations
 
 import os
@@ -35,6 +40,28 @@ def log_run(
     *,
     synchronous: bool | None = None,
 ) -> Iterator[Info]:
+    """
+    Log the parameters from the given configuration object and manage the MLflow
+    run context.
+
+    This context manager logs the parameters from the provided configuration object
+    using MLflow. It also manages the MLflow run context, ensuring that artifacts
+    are logged and the run is properly closed.
+
+    Args:
+        config: The configuration object to log the parameters from.
+        synchronous: Whether to log the parameters synchronously.
+            Defaults to None.
+
+    Yields:
+        Info: An `Info` object containing the output directory and artifact directory
+        paths.
+
+    Example:
+        with log_run(config) as info:
+            # Perform operations within the MLflow run context
+            pass
+    """
     log_params(config, synchronous=synchronous)
 
     hc = HydraConfig.get()
@@ -61,6 +88,32 @@ def log_run(
 
 @contextmanager
 def watch(func: Callable[[Path], None], dir: Path | str = "", timeout: int = 60) -> Iterator[None]:
+    """
+    Watch the given directory for changes and call the provided function
+    when a change is detected.
+
+    This context manager sets up a file system watcher on the specified directory.
+    When a file modification is detected, the provided function is called with
+    the path of the modified file. The watcher runs for the specified timeout
+    period or until the context is exited.
+
+    Args:
+        func (Callable[[Path], None]): The function to call when a change is
+            detected. It should accept a single argument of type `Path`,
+            which is the path of the modified file.
+        dir (Path | str, optional): The directory to watch. If not specified,
+            the current MLflow artifact URI is used. Defaults to "".
+        timeout (int, optional): The timeout period in seconds for the watcher
+            to run after the context is exited. Defaults to 60.
+
+    Yields:
+        None: This context manager does not return any value.
+
+    Example:
+        with watch(log_artifact, "/path/to/dir"):
+            # Perform operations while watching the directory for changes
+            pass
+    """
     if not dir:
         uri = mlflow.get_artifact_uri()
         dir = uri_to_path(uri)
@@ -100,6 +153,18 @@ def chdir_artifact(
     run: Run | Series | str,
     artifact_path: str | None = None,
 ) -> Iterator[Path]:
+    """
+    Change the current working directory to the artifact directory of the
+    given run.
+
+    This context manager changes the current working directory to the artifact
+    directory of the given run. It ensures that the directory is changed back
+    to the original directory after the context is exited.
+
+    Args:
+        run: The run to get the artifact directory from.
+        artifact_path: The artifact path.
+    """
     curdir = Path.cwd()
 
     artifact_dir = get_artifact_path(run, artifact_path)

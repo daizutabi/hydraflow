@@ -59,5 +59,4 @@ def test_iter_params_from_config(cfg):
     assert next(it) == ("size.y", 2)
     assert next(it) == ("db.name", "name")
     assert next(it) == ("db.port", 100)
-    assert next(it) == ("store.items.0", "a")
-    assert next(it) == ("store.items.1", "b")
+    assert next(it) == ("store.items", ["a", "b"])
