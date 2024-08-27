@@ -27,8 +27,8 @@ def app(cfg: MySQLConfig):
     mlflow.set_experiment("log_run")
     with mlflow.start_run(), log_run(cfg) as info:
         log.info(f"START, {cfg.host}, {cfg.port} ")
-        mlflow.log_text(info.artifact_dir.as_posix(), "artifact_dir.txt")
-        mlflow.log_text(info.output_dir.as_posix(), "output_dir.txt")
+        mlflow.log_text("A " + info.artifact_dir.as_posix(), "artifact_dir.txt")
+        mlflow.log_text("B " + info.output_dir.as_posix(), "output_dir.txt")
         (info.artifact_dir / "a.txt").write_text("abc")
         log.info("END")
 

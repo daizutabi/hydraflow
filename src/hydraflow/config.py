@@ -16,18 +16,19 @@ if TYPE_CHECKING:
 
 def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     """
-    Iterate over the parameters in the given configuration object.
+    Recursively iterate over the parameters in the given configuration object.
 
-    This function recursively traverses the configuration object and yields
-    key-value pairs representing the parameters.
+    This function traverses the configuration object and yields key-value pairs
+    representing the parameters. The keys are prefixed with the provided prefix.
 
     Args:
-        config (object): The configuration object to iterate over.
-        prefix (str, optional): The prefix to prepend to the parameter keys.
-            Defaults to "".
+        config: The configuration object to iterate over. This can be a dictionary,
+            list, DictConfig, or ListConfig.
+        prefix: The prefix to prepend to the parameter keys.
+            Defaults to an empty string.
 
     Yields:
-        Key-value pairs representing the parameters.
+        Key-value pairs representing the parameters in the configuration object.
     """
     if not isinstance(config, (DictConfig, ListConfig)):
         config = OmegaConf.create(config)  # type: ignore

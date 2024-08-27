@@ -5,6 +5,7 @@ run context.
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from contextlib import contextmanager
@@ -17,15 +18,14 @@ from hydra.core.hydra_config import HydraConfig
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from hydraflow.mlflow import log_params
-from hydraflow.runs import get_artifact_path
-from hydraflow.util import uri_to_path
+from hydraflow.mlflow import get_artifact_dir, log_params
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from mlflow.entities.run import Run
-    from pandas import Series
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -66,8 +66,7 @@ def log_run(
 
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
-    uri = mlflow.get_artifact_uri()
-    info = Info(output_dir, uri_to_path(uri))
+    info = Info(output_dir, get_artifact_dir())
 
     # Save '.hydra' config directory first.
     output_subdir = output_dir / (hc.output_subdir or "")
@@ -81,13 +80,21 @@ def log_run(
         with watch(log_artifact, output_dir):
             yield info
 
+    except Exception as e:
+        log.error(f"Error during log_run: {e}")
+        raise
+
     finally:
         # Save output_dir including '.hydra' config directory.
         mlflow.log_artifacts(output_dir.as_posix())
 
 
 @contextmanager
-def watch(func: Callable[[Path], None], dir: Path | str = "", timeout: int = 60) -> Iterator[None]:
+def watch(
+    func: Callable[[Path], None],
+    dir: Path | str = "",
+    timeout: int = 60,
+) -> Iterator[None]:
     """
     Watch the given directory for changes and call the provided function
     when a change is detected.
@@ -98,25 +105,23 @@ def watch(func: Callable[[Path], None], dir: Path | str = "", timeout: int = 60)
     period or until the context is exited.
 
     Args:
-        func (Callable[[Path], None]): The function to call when a change is
+        func: The function to call when a change is
             detected. It should accept a single argument of type `Path`,
             which is the path of the modified file.
-        dir (Path | str, optional): The directory to watch. If not specified,
+        dir: The directory to watch. If not specified,
             the current MLflow artifact URI is used. Defaults to "".
-        timeout (int, optional): The timeout period in seconds for the watcher
+        timeout: The timeout period in seconds for the watcher
             to run after the context is exited. Defaults to 60.
 
     Yields:
-        None: This context manager does not return any value.
+        None
 
     Example:
         with watch(log_artifact, "/path/to/dir"):
             # Perform operations while watching the directory for changes
             pass
     """
-    if not dir:
-        uri = mlflow.get_artifact_uri()
-        dir = uri_to_path(uri)
+    dir = dir or get_artifact_dir()
 
     handler = Handler(func)
     observer = Observer()
@@ -125,6 +130,10 @@ def watch(func: Callable[[Path], None], dir: Path | str = "", timeout: int = 60)
 
     try:
         yield
+
+    except Exception as e:
+        log.error(f"Error during watch: {e}")
+        raise
 
     finally:
         elapsed = 0
@@ -150,7 +159,7 @@ class Handler(FileSystemEventHandler):
 
 @contextmanager
 def chdir_artifact(
-    run: Run | Series | str,
+    run: Run,
     artifact_path: str | None = None,
 ) -> Iterator[Path]:
     """
@@ -166,11 +175,14 @@ def chdir_artifact(
         artifact_path: The artifact path.
     """
     curdir = Path.cwd()
+    path = mlflow.artifacts.download_artifacts(
+        run_id=run.info.run_id,
+        artifact_path=artifact_path,
+    )
 
-    artifact_dir = get_artifact_path(run, artifact_path)
-
-    os.chdir(artifact_dir)
+    os.chdir(path)
     try:
-        yield artifact_dir
+        yield Path(path)
+
     finally:
         os.chdir(curdir)
