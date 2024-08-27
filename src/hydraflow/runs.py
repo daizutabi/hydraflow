@@ -1,28 +1,83 @@
 """
 This module provides functionality for managing and interacting with MLflow runs.
-It includes classes and functions to filter runs, retrieve run information, and
-log artifacts and configurations.
+It includes the `Runs` class and various methods to filter runs, retrieve run information,
+log artifacts, and load configurations.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import cache
-from pathlib import Path
+from itertools import chain
 from typing import TYPE_CHECKING, Any
 
 import mlflow
-import numpy as np
-from mlflow.entities.run import Run as Run_
-from mlflow.tracking import artifact_utils
+from mlflow.entities import ViewType
+from mlflow.entities.run import Run
+from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
 from omegaconf import DictConfig, OmegaConf
-from pandas import DataFrame, Series
 
 from hydraflow.config import iter_params
-from hydraflow.util import uri_to_path
 
 if TYPE_CHECKING:
     from typing import Any
+
+
+def search_runs(
+    experiment_ids: list[str] | None = None,
+    filter_string: str = "",
+    run_view_type: int = ViewType.ACTIVE_ONLY,
+    max_results: int = SEARCH_MAX_RESULTS_PANDAS,
+    order_by: list[str] | None = None,
+    search_all_experiments: bool = False,
+    experiment_names: list[str] | None = None,
+) -> Runs:
+    """
+    Search for Runs that fit the specified criteria.
+
+    This function wraps the `mlflow.search_runs` function and returns the results
+    as a `Runs` object. It allows for flexible searching of MLflow runs based on
+    various criteria.
+
+    Args:
+        experiment_ids: List of experiment IDs. Search can work with experiment IDs or
+            experiment names, but not both in the same call. Values other than
+            ``None`` or ``[]`` will result in error if ``experiment_names`` is
+            also not ``None`` or ``[]``. ``None`` will default to the active
+            experiment if ``experiment_names`` is ``None`` or ``[]``.
+        filter_string: Filter query string, defaults to searching all runs.
+        run_view_type: one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``, or ``ALL`` runs
+            defined in :py:class:`mlflow.entities.ViewType`.
+        max_results: The maximum number of runs to put in the dataframe. Default is 100,000
+            to avoid causing out-of-memory issues on the user's machine.
+        order_by: List of columns to order by (e.g., "metrics.rmse"). The ``order_by`` column
+            can contain an optional ``DESC`` or ``ASC`` value. The default is ``ASC``.
+            The default ordering is to sort by ``start_time DESC``, then ``run_id``.
+        output_format: The output format to be returned. If ``pandas``, a ``pandas.DataFrame``
+            is returned and, if ``list``, a list of :py:class:`mlflow.entities.Run`
+            is returned.
+        search_all_experiments: Boolean specifying whether all experiments should be searched.
+            Only honored if ``experiment_ids`` is ``[]`` or ``None``.
+        experiment_names: List of experiment names. Search can work with experiment IDs or
+            experiment names, but not both in the same call. Values other
+            than ``None`` or ``[]`` will result in error if ``experiment_ids``
+            is also not ``None`` or ``[]``. ``None`` will default to the active
+            experiment if ``experiment_ids`` is ``None`` or ``[]``.
+
+    Returns:
+        A `Runs` object containing the search results.
+    """
+    runs = mlflow.search_runs(
+        experiment_ids=experiment_ids,
+        filter_string=filter_string,
+        run_view_type=run_view_type,
+        max_results=max_results,
+        order_by=order_by,
+        output_format="list",
+        search_all_experiments=search_all_experiments,
+        experiment_names=experiment_names,
+    )
+    return Runs(runs)  # type: ignore
 
 
 @dataclass
@@ -34,7 +89,7 @@ class Runs:
     retrieving specific runs, and accessing run information.
     """
 
-    runs: list[Run_] | DataFrame
+    runs: list[Run]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({len(self)})"
@@ -53,115 +108,95 @@ class Runs:
         be included in the returned `Runs` object.
 
         Args:
-            config (object): The configuration object to filter the runs.
-                This object should contain key-value pairs representing
-                the parameters to filter by.
+            config: The configuration object to filter the runs.
 
         Returns:
-            Runs: A new `Runs` object containing the filtered runs.
+            A new `Runs` object containing the filtered runs.
         """
         return Runs(filter_runs(self.runs, config))
 
-    def get(self, config: object) -> Run:
+    def get(self, config: object) -> Run | None:
         """
         Retrieve a specific run based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the run that matches
         the provided parameters. If more than one run matches the criteria,
-        an error is raised.
+        a `ValueError` is raised.
 
         Args:
-            config (object): The configuration object to identify the run.
+            config: The configuration object to identify the run.
 
         Returns:
             Run: The run object that matches the provided configuration.
+            None, if the runs are not in a DataFrame format.
 
         Raises:
             ValueError: If the number of filtered runs is not exactly one.
         """
-        return Run(get_run(self.runs, config))
+        return get_run(self.runs, config)
 
-    def drop_unique_params(self) -> Runs:
+    def get_earliest_run(self, config: object | None = None, **kwargs) -> Run | None:
         """
-        Drop unique parameters from the runs and return a new Runs object.
+        Get the earliest run from the list of runs based on the start time.
 
-        This method removes parameters that have unique values across all runs
-        in the collection. This is useful for identifying common parameters
-        that are shared among multiple runs.
+        This method filters the runs based on the configuration if provided
+        and returns the run with the earliest start time.
+
+        Args:
+            config: The configuration object to filter the runs.
+                If None, no filtering is applied.
+            **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
-            Runs: A new `Runs` object with unique parameters dropped.
-
-        Raises:
-            NotImplementedError: If the runs are not in a DataFrame format.
+            The run with the earliest start time, or None if no runs match the criteria.
         """
-        if isinstance(self.runs, DataFrame):
-            return Runs(drop_unique_params(self.runs))
+        return get_earliest_run(self.runs, config, **kwargs)
 
-        raise NotImplementedError
+    def get_latest_run(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Get the latest run from the list of runs based on the start time.
+
+        Args:
+            config: The configuration object to filter the runs.
+                If None, no filtering is applied.
+            **kwargs: Additional key-value pairs to filter the runs.
+
+        Returns:
+            The run with the latest start time, or None if no runs match the criteria.
+        """
+        return get_latest_run(self.runs, config, **kwargs)
 
     def get_param_names(self) -> list[str]:
         """
         Get the parameter names from the runs.
 
-        This method extracts the parameter names from the runs in the collection.
-        If the runs are stored in a DataFrame, it retrieves the column names
-        that correspond to the parameters.
+        This method extracts the unique parameter names from the provided list of runs.
+        It iterates through each run and collects the parameter names into a set to
+        ensure uniqueness.
 
         Returns:
-            list[str]: A list of parameter names.
-
-        Raises:
-            NotImplementedError: If the runs are not in a DataFrame format.
+            A list of unique parameter names.
         """
-        if isinstance(self.runs, DataFrame):
-            return get_param_names(self.runs)
-
-        raise NotImplementedError
+        return get_param_names(self.runs)
 
     def get_param_dict(self) -> dict[str, list[str]]:
         """
-        Get the parameter dictionary from the runs.
+        Get the parameter dictionary from the list of runs.
 
         This method extracts the parameter names and their corresponding values
-        from the runs in the collection. If the runs are stored in a DataFrame,
-        it retrieves the unique values for each parameter.
-
+        from the provided list of runs. It iterates through each run and collects
+        the parameter values into a dictionary where the keys are parameter names
+        and the values are lists of parameter values.
 
         Returns:
-            dict[str, list[str]]: A dictionary of parameter names and their
-            corresponding values.
-
-        Raises:
-            NotImplementedError: If the runs are not in a DataFrame format.
+            A dictionary where the keys are parameter names and the values are lists
+            of parameter values.
         """
-        if isinstance(self.runs, DataFrame):
-            return get_param_dict(self.runs)
-
-        raise NotImplementedError
+        return get_param_dict(self.runs)
 
 
-def search_runs(*args, **kwargs) -> Runs:
-    """
-    Search for runs that match the specified criteria.
-
-    This function wraps the `mlflow.search_runs` function and returns the results
-    as a `Runs` object.  It allows for flexible searching of MLflow runs based on
-    various criteria.
-
-    Args:
-        *args: Positional arguments to pass to `mlflow.search_runs`.
-        **kwargs: Keyword arguments to pass to `mlflow.search_runs`.
-
-    Returns:
-        Runs: A `Runs` object containing the search results.
-    """
-    runs = mlflow.search_runs(*args, **kwargs)
-    return Runs(runs)
-
-
-def filter_runs(runs: list[Run_] | DataFrame, config: object) -> list[Run_] | DataFrame:
+def filter_runs(runs: list[Run], config: object, **kwargs) -> list[Run]:
     """
     Filter the runs based on the provided configuration.
 
@@ -169,22 +204,26 @@ def filter_runs(runs: list[Run_] | DataFrame, config: object) -> list[Run_] | Da
     specified configuration object. The configuration object should
     contain key-value pairs that correspond to the parameters of the
     runs. Only the runs that match all the specified parameters will
-    be included in the returned `Runs` object.
+    be included in the returned list of runs.
 
     Args:
         runs: The runs to filter.
         config: The configuration object to filter the runs.
+        **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
-        Runs: A filtered list of runs or a DataFrame.
+        A filtered list of runs.
     """
-    if isinstance(runs, list):
-        return _filter_runs_list(runs, config)
+    for key, value in chain(iter_params(config), kwargs.items()):
+        runs = [run for run in runs if _is_equal(run, key, value)]
 
-    return _filter_runs_dataframe(runs, config)
+        if len(runs) == 0:
+            return []
+
+    return runs
 
 
-def _is_equal(run: Run_, key: str, value: Any) -> bool:
+def _is_equal(run: Run, key: str, value: Any) -> bool:
     param = run.data.params.get(key, value)
 
     if param is None:
@@ -193,275 +232,146 @@ def _is_equal(run: Run_, key: str, value: Any) -> bool:
     return type(value)(param) == value
 
 
-def _filter_runs_list(runs: list[Run_], config: object) -> list[Run_]:
-    for key, value in iter_params(config):
-        runs = [run for run in runs if _is_equal(run, key, value)]
-
-    return runs
-
-
-def _filter_runs_dataframe(runs: DataFrame, config: object) -> DataFrame:
-    index = np.ones(len(runs), dtype=bool)
-
-    for key, value in iter_params(config):
-        name = f"params.{key}"
-
-        if name in runs:
-            series = runs[name]
-            is_value = -series.isna()
-            param = series.fillna(value).astype(type(value))
-            index &= is_value & (param == value)
-
-    return runs[index]
-
-
-def get_run(runs: list[Run_] | DataFrame, config: object) -> Run_ | Series:
+def get_run(runs: list[Run], config: object, **kwargs) -> Run | None:
     """
     Retrieve a specific run based on the provided configuration.
 
     This method filters the runs in the collection according to the
     specified configuration object and returns the run that matches
     the provided parameters. If more than one run matches the criteria,
-    an error is raised.
+    a `ValueError` is raised.
 
     Args:
         runs: The runs to filter.
         config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
-        Run: The run object that matches the provided configuration.
+        The run object that matches the provided configuration, or None
+        if no runs match the criteria.
+
+    Raises:
+        ValueError: If more than one run matches the criteria.
     """
-    runs = filter_runs(runs, config)
+    runs = filter_runs(runs, config, **kwargs)
+
+    if len(runs) == 0:
+        return None
 
     if len(runs) == 1:
-        return runs[0] if isinstance(runs, list) else runs.iloc[0]
+        return runs[0]
 
-    msg = f"number of filtered runs is not 1: got {len(runs)}"
+    msg = f"Multiple runs were filtered. Expected number of runs is 1, but found {len(runs)} runs."
     raise ValueError(msg)
 
 
-def drop_unique_params(runs: DataFrame) -> DataFrame:
+def get_earliest_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
     """
-    Drop unique parameters from the runs and return a new DataFrame.
+    Get the earliest run from the list of runs based on the start time.
 
-    This method removes parameters that have unique values across all runs
-    in the collection. This is useful for identifying common parameters
-    that are shared among multiple runs.
+    This method filters the runs based on the configuration if provided
+    and returns the run with the earliest start time.
 
     Args:
-        runs: The DataFrame containing the runs.
+        runs: The list of runs.
+        config: The configuration object to filter the runs.
+            If None, no filtering is applied.
+        **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
-        DataFrame: A new DataFrame with unique parameters dropped.
+        The run with the earliest start time, or None if no runs match the criteria.
     """
+    if config is not None or kwargs:
+        runs = filter_runs(runs, config or {}, **kwargs)
 
-    def select(column: str) -> bool:
-        return not column.startswith("params.") or len(runs[column].unique()) > 1
-
-    columns = [select(column) for column in runs.columns]
-    return runs.iloc[:, columns]
+    return min(runs, key=lambda run: run.info.start_time, default=None)
 
 
-def get_param_names(runs: DataFrame) -> list[str]:
+def get_latest_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+    """
+    Get the latest run from the list of runs based on the start time.
+
+    This method filters the runs based on the configuration if provided
+    and returns the run with the latest start time.
+
+    Args:
+        runs: The list of runs.
+        config: The configuration object to filter the runs.
+            If None, no filtering is applied.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The run with the latest start time, or None if no runs match the criteria.
+    """
+    if config is not None or kwargs:
+        runs = filter_runs(runs, config or {}, **kwargs)
+
+    return max(runs, key=lambda run: run.info.start_time, default=None)
+
+
+def get_param_names(runs: list[Run]) -> list[str]:
     """
     Get the parameter names from the runs.
 
-    This method extracts the parameter names from the runs in the collection.
-    If the runs are stored in a DataFrame, it retrieves the column names
-    that correspond to the parameters.
+    This method extracts the unique parameter names from the provided list of runs.
+    It iterates through each run and collects the parameter names into a set to
+    ensure uniqueness.
 
     Args:
-        runs: The DataFrame containing the runs.
+        runs: The list of runs from which to extract parameter names.
 
     Returns:
-        list[str]: A list of parameter names.
+        A list of unique parameter names.
     """
+    param_names = set()
 
-    def get_name(column: str) -> str:
-        if column.startswith("params."):
-            return column.split(".", maxsplit=1)[-1]
+    for run in runs:
+        for param in run.data.params.keys():
+            param_names.add(param)
 
-        return ""
-
-    columns = [get_name(column) for column in runs.columns]
-    return [column for column in columns if column]
+    return list(param_names)
 
 
-def get_param_dict(runs: DataFrame) -> dict[str, list[str]]:
+def get_param_dict(runs: list[Run]) -> dict[str, list[str]]:
     """
-    Get the parameter dictionary from the runs.
+    Get the parameter dictionary from the list of runs.
 
     This method extracts the parameter names and their corresponding values
-    from the runs in the collection. If the runs are stored in a DataFrame,
-    it retrieves the unique values for each parameter.
+    from the provided list of runs. It iterates through each run and collects
+    the parameter values into a dictionary where the keys are parameter names
+    and the values are lists of parameter values.
 
     Args:
-        runs: The DataFrame containing the runs.
+        runs: The list of runs from which to extract parameter names and values.
 
     Returns:
-        dict[str, list[str]]: A dictionary of parameter names and
-        their corresponding values.
+        A dictionary where the keys are parameter names and the values are lists
+        of parameter values.
     """
     params = {}
+
     for name in get_param_names(runs):
-        params[name] = list(runs[f"params.{name}"].unique())
+        it = (run.data.params[name] for run in runs if name in run.data.params)
+        params[name] = sorted(set(it))
 
     return params
 
 
-@dataclass
-class Run:
+def load_config(run: Run) -> DictConfig:
     """
-    A class to represent a specific MLflow run.
+    Load the configuration for a given run.
 
-    This class provides methods to interact with the run, such as retrieving
-    the run ID, artifact URI, and configuration. It also includes properties
-    to access the artifact directory, artifact path, and Hydra output directory.
-    """
-
-    run: Run_ | Series | str
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.run_id!r})"
-
-    @property
-    def run_id(self) -> str:
-        """
-        Get the run ID.
-
-        Returns:
-            str: The run ID.
-        """
-        return get_run_id(self.run)
-
-    def artifact_uri(self, artifact_path: str | None = None) -> str:
-        """
-        Get the artifact URI.
-
-        Args:
-            artifact_path (str | None): The artifact path.
-
-        Returns:
-            str: The artifact URI.
-        """
-        return get_artifact_uri(self.run, artifact_path)
-
-    @property
-    def artifact_dir(self) -> Path:
-        """
-        Get the artifact directory.
-
-        Returns:
-            Path: The artifact directory.
-        """
-        return get_artifact_dir(self.run)
-
-    def artifact_path(self, artifact_path: str | None = None) -> Path:
-        """
-        Get the artifact path.
-
-        Args:
-            artifact_path: The artifact path.
-
-        Returns:
-            Path: The artifact path.
-        """
-        return get_artifact_path(self.run, artifact_path)
-
-    @property
-    def config(self) -> DictConfig:
-        """
-        Get the configuration.
-
-        Returns:
-            DictConfig: The configuration.
-        """
-        return load_config(self.run)
-
-    def log_hydra_output_dir(self) -> None:
-        """
-        Log the Hydra output directory.
-
-        Returns:
-            None
-        """
-        log_hydra_output_dir(self.run)
-
-
-def get_run_id(run: Run_ | Series | str) -> str:
-    """
-    Get the run ID.
+    This function loads the configuration for the provided Run instance
+    by downloading the configuration file from the MLflow artifacts and
+    loading it using OmegaConf.
 
     Args:
-        run: The run object.
+        run: The Run instance to load the configuration for.
 
     Returns:
-        str: The run ID.
+        The loaded configuration.
     """
-    if isinstance(run, str):
-        return run
-
-    if isinstance(run, Run_):
-        return run.info.run_id
-
-    return run.run_id
-
-
-def get_artifact_uri(run: Run_ | Series | str, artifact_path: str | None = None) -> str:
-    """
-    Get the artifact URI.
-
-    Args:
-        run: The run object.
-        artifact_path: The artifact path.
-
-    Returns:
-        str: The artifact URI.
-    """
-    run_id = get_run_id(run)
-    return artifact_utils.get_artifact_uri(run_id, artifact_path)
-
-
-def get_artifact_dir(run: Run_ | Series | str) -> Path:
-    """
-    Get the artifact directory.
-
-    Args:
-        run: The run object.
-
-    Returns:
-        Path: The artifact directory.
-    """
-    uri = get_artifact_uri(run)
-    return uri_to_path(uri)
-
-
-def get_artifact_path(run: Run_ | Series | str, artifact_path: str | None = None) -> Path:
-    """
-    Get the artifact path.
-
-    Args:
-        run: The run object.
-        artifact_path: The artifact path.
-
-    Returns:
-        Path: The artifact path.
-    """
-    artifact_dir = get_artifact_dir(run)
-    return artifact_dir / artifact_path if artifact_path else artifact_dir
-
-
-def load_config(run: Run_ | Series | str) -> DictConfig:
-    """
-    Load the configuration.
-
-    Args:
-        run: The run object.
-
-    Returns:
-        DictConfig: The configuration.
-    """
-    run_id = get_run_id(run)
+    run_id = run.info.run_id
     return _load_config(run_id)
 
 
@@ -478,35 +388,35 @@ def _load_config(run_id: str) -> DictConfig:
     return OmegaConf.load(path)  # type: ignore
 
 
-def get_hydra_output_dir(run: Run_ | Series | str) -> Path:
-    """
-    Get the Hydra output directory.
+# def get_hydra_output_dir(run: Run_ | Series | str) -> Path:
+#     """
+#     Get the Hydra output directory.
 
-    Args:
-        run: The run object.
+#     Args:
+#         run: The run object.
 
-    Returns:
-        Path: The Hydra output directory.
-    """
-    path = get_artifact_dir(run) / ".hydra/hydra.yaml"
+#     Returns:
+#         Path: The Hydra output directory.
+#     """
+#     path = get_artifact_dir(run) / ".hydra/hydra.yaml"
 
-    if path.exists():
-        hc = OmegaConf.load(path)
-        return Path(hc.hydra.runtime.output_dir)
+#     if path.exists():
+#         hc = OmegaConf.load(path)
+#         return Path(hc.hydra.runtime.output_dir)
 
-    raise FileNotFoundError
+#     raise FileNotFoundError
 
 
-def log_hydra_output_dir(run: Run_ | Series | str) -> None:
-    """
-    Log the Hydra output directory.
+# def log_hydra_output_dir(run: Run_ | Series | str) -> None:
+#     """
+#     Log the Hydra output directory.
 
-    Args:
-        run: The run object.
+#     Args:
+#         run: The run object.
 
-    Returns:
-        None
-    """
-    output_dir = get_hydra_output_dir(run)
-    run_id = run if isinstance(run, str) else run.info.run_id
-    mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)
+#     Returns:
+#         None
+#     """
+#     output_dir = get_hydra_output_dir(run)
+#     run_id = run if isinstance(run, str) else run.info.run_id
+#     mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)

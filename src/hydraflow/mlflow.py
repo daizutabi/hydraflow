@@ -5,6 +5,8 @@ configuration objects and set up experiments using MLflow.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import mlflow
 from hydra.core.hydra_config import HydraConfig
 
@@ -47,3 +49,24 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
     """
     for key, value in iter_params(config):
         mlflow.log_param(key, value, synchronous=synchronous)
+
+
+def get_artifact_dir(artifact_path: str | None = None) -> Path:
+    """
+    Get the artifact directory for the given artifact path.
+
+    This function retrieves the artifact URI for the specified artifact path
+    using MLflow, downloads the artifacts to a local directory, and returns
+    the path to that directory.
+
+    Args:
+        artifact_path: The artifact path for which to get the directory.
+            Defaults to None.
+
+    Returns:
+        The local path to the directory where the artifacts are downloaded.
+    """
+    uri = mlflow.get_artifact_uri(artifact_path)
+    dir = mlflow.artifacts.download_artifacts(artifact_uri=uri)
+
+    return Path(dir)
