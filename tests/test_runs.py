@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import mlflow
 import pytest
 from mlflow.entities import Run
+
+from hydraflow.runs import Runs
 
 
 @pytest.fixture
@@ -37,6 +40,13 @@ def test_filter_all(runs: list[Run]):
 
     assert len(runs) == 6
     x = filter_runs(runs, {"q": 0})
+    assert len(x) == 6
+
+
+def test_filter_invalid_param(runs: list[Run]):
+    from hydraflow.runs import filter_runs
+
+    x = filter_runs(runs, {"invalid": 0})
     assert len(x) == 6
 
 
@@ -131,3 +141,137 @@ def test_runs_get_params_dict(runs):
     params = runs.get_param_dict()
     assert params["p"] == ["0", "1", "2", "3", "4", "5"]
     assert params["q"] == ["0"]
+
+
+@pytest.fixture
+def mock_runs():
+    from hydraflow.runs import Runs
+
+    run1 = MagicMock()
+    run1.info.start_time = 1
+    run1.data.params = {"param1": "value1", "param2": "value2"}
+
+    run2 = MagicMock()
+    run2.info.start_time = 2
+    run2.data.params = {"param1": "value1", "param2": "value3"}
+
+    run3 = MagicMock()
+    run3.info.start_time = 3
+    run3.data.params = {"param1": "value4", "param2": "value2"}
+
+    return Runs([run1, run2, run3])
+
+
+def test_filter_runs(mock_runs: Runs):
+    filtered_runs = mock_runs.filter({"param1": "value1"})
+    assert len(filtered_runs) == 2
+
+
+def test_get_run_by_params(mock_runs: Runs):
+    run = mock_runs.get({"param1": "value4"})
+    assert run is not None
+    assert run.data.params["param1"] == "value4"
+
+
+def test_get_earliest_run(mock_runs: Runs):
+    earliest_run = mock_runs.get_earliest_run()
+    assert earliest_run
+    assert earliest_run.info.start_time == 1
+
+
+def test_get_latest_run(mock_runs: Runs):
+    latest_run = mock_runs.get_latest_run()
+    assert latest_run
+    assert latest_run.info.start_time == 3
+
+
+def test_get_param_names_mock(mock_runs: Runs):
+    param_names = mock_runs.get_param_names()
+    assert set(param_names) == {"param1", "param2"}
+
+
+def test_get_param_dict_mock(mock_runs: Runs):
+    param_dict = mock_runs.get_param_dict()
+    assert param_dict == {"param1": ["value1", "value4"], "param2": ["value2", "value3"]}
+
+
+def test_filter_runs_no_match(runs: list[Run]):
+    from hydraflow.runs import filter_runs
+
+    assert len(runs) == 6
+    x = filter_runs(runs, {"p": 999})
+    assert len(x) == 0
+
+
+def test_get_run_no_match(runs: list[Run]):
+    from hydraflow.runs import get_run
+
+    run = get_run(runs, {"p": 999})
+    assert run is None
+
+
+def test_get_run_multiple_matches(runs: list[Run]):
+    from hydraflow.runs import get_run
+
+    with pytest.raises(ValueError):
+        get_run(runs, {"q": 0})
+
+
+def test_get_earliest_run_no_match(runs: list[Run]):
+    from hydraflow.runs import get_earliest_run
+
+    run = get_earliest_run(runs, {"p": 999})
+    assert run is None
+
+
+def test_get_latest_run_no_match(runs: list[Run]):
+    from hydraflow.runs import get_latest_run
+
+    run = get_latest_run(runs, {"p": 999})
+    assert run is None
+
+
+@pytest.fixture
+def mock_mlflow_search_runs():
+    with patch("mlflow.search_runs") as mock_search_runs:
+        yield mock_search_runs
+
+
+def test_search_runs(mock_mlflow_search_runs):
+    from hydraflow.runs import search_runs
+
+    mock_run = MagicMock()
+    mock_mlflow_search_runs.return_value = [mock_run]
+
+    result = search_runs(
+        experiment_ids=["1"],
+        filter_string="metrics.accuracy > 0.9",
+        run_view_type=1,
+        max_results=10,
+        order_by=["metrics.accuracy DESC"],
+        search_all_experiments=False,
+        experiment_names=None,
+    )
+
+    assert isinstance(result, Runs)
+    assert len(result.runs) == 1
+    assert result.runs[0] == mock_run
+
+
+def test_search_runs_no_results(mock_mlflow_search_runs):
+    from hydraflow.runs import search_runs
+
+    mock_mlflow_search_runs.return_value = []
+
+    result = search_runs(
+        experiment_ids=["1"],
+        filter_string="metrics.accuracy > 0.9",
+        run_view_type=1,
+        max_results=10,
+        order_by=["metrics.accuracy DESC"],
+        search_all_experiments=False,
+        experiment_names=None,
+    )
+
+    assert isinstance(result, Runs)
+    assert len(result.runs) == 0
