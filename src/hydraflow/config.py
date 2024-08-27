@@ -33,23 +33,34 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if not isinstance(config, (DictConfig, ListConfig)):
         config = OmegaConf.create(config)  # type: ignore
 
+    yield from _iter_params(config, prefix)
+
+
+def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if isinstance(config, DictConfig):
         for key, value in config.items():
-            if isinstance(value, ListConfig) and not any(
-                isinstance(v, (DictConfig, ListConfig)) for v in value
-            ):
+            if _is_param(value):
                 yield f"{prefix}{key}", value
-
-            elif isinstance(value, (DictConfig, ListConfig)):
-                yield from iter_params(value, f"{prefix}{key}.")
 
             else:
-                yield f"{prefix}{key}", value
+                yield from _iter_params(value, f"{prefix}{key}.")
 
     elif isinstance(config, ListConfig):
         for index, value in enumerate(config):
-            if isinstance(value, (DictConfig, ListConfig)):
-                yield from iter_params(value, f"{prefix}{index}.")
+            if _is_param(value):
+                yield f"{prefix}{index}", value
 
             else:
-                yield f"{prefix}{index}", value
+                yield from _iter_params(value, f"{prefix}{index}.")
+
+
+def _is_param(value: object) -> bool:
+    """Check if the given value is a parameter."""
+    if isinstance(value, DictConfig):
+        return False
+
+    if isinstance(value, ListConfig):
+        if any(isinstance(v, (DictConfig, ListConfig)) for v in value):
+            return False
+
+    return True
