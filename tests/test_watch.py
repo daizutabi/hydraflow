@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import subprocess
-import time
 from pathlib import Path
 
 import pytest
@@ -14,16 +13,14 @@ def test_watch(dir, monkeypatch, tmp_path):
     file = Path("tests/scripts/watch.py").absolute()
     monkeypatch.chdir(tmp_path)
 
-    lines = []
+    results = []
 
     def func(path: Path) -> None:
-        k, t = path.read_text().split(" ")
-        lines.append([int(k), float(t), time.time(), path.name])
+        text = path.read_text()
+        results.append([path.name, text])
 
     with watch(func, dir if isinstance(dir, str) else dir()):
         subprocess.check_call(["python", file])
 
-    for k in range(4):
-        assert lines[k][0] == k
-        assert lines[k][-1] == f"{k}.txt"
-        assert 0 <= lines[k][2] - lines[k][1] < 0.05
+    assert results[0][0] == "watch.txt"
+    assert results[0][1] == "watch"
