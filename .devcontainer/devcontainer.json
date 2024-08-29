@@ -7,7 +7,12 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["charliermarsh.ruff"]
+      "extensions": [
+        "charliermarsh.ruff",
+        "henriiik.vscode-sort",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
     }
   },
   "postCreateCommand": ".devcontainer/postCreate.sh"

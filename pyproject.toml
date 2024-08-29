@@ -48,11 +48,6 @@ filterwarnings = ['ignore:pkg_resources is deprecated:DeprecationWarning']
 [tool.coverage.report]
 exclude_lines = ["no cov", "raise NotImplementedError", "if TYPE_CHECKING:"]
 
-[tool.hatch.envs.docs.scripts]
-build = "mkdocs build --clean --strict {args}"
-serve = "mkdocs serve --dev-addr localhost:8000 {args}"
-deploy = "mkdocs gh-deploy --force"
-
 [tool.ruff]
 line-length = 100
 target-version = "py312"
