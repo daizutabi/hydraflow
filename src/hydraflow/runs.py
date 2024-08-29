@@ -325,11 +325,20 @@ class RunCollection:
         return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
 
-def _is_equal(run: Run, key: str, value: Any) -> bool:
+def _contains(run: Run, key: str, value: Any) -> bool:
     param = run.data.params.get(key, value)
+
+    # FIXME: This is a workaround to handle the case where the parameter value is a list
+    #        We need to improve the logic to handle different types of values
+    #        For now, we assume that if the parameter is a list, we should check if it contains the value
+    #        This is not ideal, but it works for the case where the parameter value is a list of strings
+    #        We should improve the logic to handle different types of values in the future
 
     if param is None:
         return False
+
+    if isinstance(value, list):
+        return param in value
 
     return type(value)(param) == value
 
@@ -353,7 +362,7 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
         A filtered list of runs.
     """
     for key, value in chain(iter_params(config), kwargs.items()):
-        runs = [run for run in runs if _is_equal(run, key, value)]
+        runs = [run for run in runs if _contains(run, key, value)]
 
         if len(runs) == 0:
             return []

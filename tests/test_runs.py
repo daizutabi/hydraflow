@@ -136,13 +136,6 @@ def test_chdir_artifact_list(i: int, run_list: list[Run]):
     assert not Path("abc.txt").exists()
 
 
-# def test_hydra_output_dir_error(runs_list: list[Run]):
-#     from hydraflow.runs import get_hydra_output_dir
-
-#     with pytest.raises(FileNotFoundError):
-#         get_hydra_output_dir(runs_list[0])
-
-
 def test_runs_repr(runs: RunCollection):
     assert repr(runs) == "RunCollection(6)"
 
@@ -286,3 +279,10 @@ def test_run_collection_map_dir(runs: RunCollection):
     results = list(runs.map_dir(lambda dir_path: dir_path))
     assert len(results) == len(runs._runs)
     assert all(isinstance(dir_path, str) for dir_path in results)
+
+
+# def test_hydra_output_dir_error(runs_list: list[Run]):
+#     from hydraflow.runs import get_hydra_output_dir
+
+#     with pytest.raises(FileNotFoundError):
+#         get_hydra_output_dir(runs_list[0])
