@@ -5,6 +5,7 @@ from pathlib import Path
 import mlflow
 import pytest
 from mlflow.entities import Run
+from omegaconf import DictConfig
 
 from hydraflow.runs import RunCollection
 
@@ -255,3 +256,33 @@ def test_list_runs_none(runs, runs2):
 
     no_runs = list_runs(experiment_names=["non_existent_experiment"])
     assert len(no_runs) == 0
+
+
+def test_run_collection_map(runs: RunCollection):
+    results = list(runs.map(lambda run: run.info.run_id))
+    assert len(results) == len(runs._runs)
+    assert all(isinstance(run_id, str) for run_id in results)
+
+
+def test_run_collection_map_run_id(runs: RunCollection):
+    results = list(runs.map_run_id(lambda run_id: run_id))
+    assert len(results) == len(runs._runs)
+    assert all(isinstance(run_id, str) for run_id in results)
+
+
+def test_run_collection_map_config(runs: RunCollection):
+    results = list(runs.map_config(lambda config: config))
+    assert len(results) == len(runs._runs)
+    assert all(isinstance(config, DictConfig) for config in results)
+
+
+def test_run_collection_map_uri(runs: RunCollection):
+    results = list(runs.map_uri(lambda uri: uri))
+    assert len(results) == len(runs._runs)
+    assert all(isinstance(uri, (str, type(None))) for uri in results)
+
+
+def test_run_collection_map_dir(runs: RunCollection):
+    results = list(runs.map_dir(lambda dir_path: dir_path))
+    assert len(results) == len(runs._runs)
+    assert all(isinstance(dir_path, str) for dir_path in results)
