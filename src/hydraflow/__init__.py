@@ -8,6 +8,7 @@ from .runs import (
     get_param_names,
     get_run,
     load_config,
+    search_runs,
 )
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "get_run",
     "load_config",
     "log_run",
+    "search_runs",
     "set_experiment",
     "watch",
 ]
