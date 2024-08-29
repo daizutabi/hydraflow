@@ -213,3 +213,45 @@ def test_runs_find_last(runs: RunCollection):
 def test_runs_find_last_none(runs: RunCollection):
     run = runs.find_last({"p": 10})
     assert run is None
+
+
+@pytest.fixture
+def runs2(monkeypatch, tmp_path):
+    mlflow.set_experiment("test_run2")
+    for x in range(3):
+        with mlflow.start_run(run_name=f"{x}"):
+            mlflow.log_param("x", x)
+
+
+def test_list_runs(runs, runs2):
+    from hydraflow.runs import list_runs
+
+    mlflow.set_experiment("test_run")
+    all_runs = list_runs()
+    assert len(all_runs) == 6
+
+    mlflow.set_experiment("test_run2")
+    all_runs = list_runs()
+    assert len(all_runs) == 3
+
+
+def test_list_runs_empty_list(runs, runs2):
+    from hydraflow.runs import list_runs
+
+    all_runs = list_runs([])
+    assert len(all_runs) == 9
+
+
+@pytest.mark.parametrize(["name", "n"], [("test_run", 6), ("test_run2", 3)])
+def test_list_runs_list(runs, runs2, name, n):
+    from hydraflow.runs import list_runs
+
+    filtered_runs = list_runs(experiment_names=[name])
+    assert len(filtered_runs) == n
+
+
+def test_list_runs_none(runs, runs2):
+    from hydraflow.runs import list_runs
+
+    no_runs = list_runs(experiment_names=["non_existent_experiment"])
+    assert len(no_runs) == 0

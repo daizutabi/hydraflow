@@ -81,6 +81,35 @@ def search_runs(
     return RunCollection(runs)  # type: ignore
 
 
+def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
+    """
+    List all runs for the specified experiments.
+
+    This function retrieves all runs for the given list of experiment names.
+    If no experiment names are provided (None), it defaults to searching all runs
+    for the currently active experiment. If an empty list is provided, the function
+    will search all runs for all experiments except the "Default" experiment.
+    The function returns the results as a `RunCollection` object.
+
+    Note:
+        The returned runs are sorted by their start time in ascending order.
+
+    Args:
+        experiment_names: List of experiment names to search for runs.
+        If None or an empty list is provided, the function will search
+        the currently active experiment or all experiments except the
+        "Default" experiment.
+
+    Returns:
+        A `RunCollection` object containing the runs for the specified experiments.
+    """
+    if experiment_names == []:
+        experiments = mlflow.search_experiments()
+        experiment_names = [e.name for e in experiments if e.name != "Default"]
+
+    return search_runs(experiment_names=experiment_names)
+
+
 @dataclass
 class RunCollection:
     """
