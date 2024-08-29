@@ -30,6 +30,9 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     Yields:
         Key-value pairs representing the parameters in the configuration object.
     """
+    if config is None:
+        return
+
     if not isinstance(config, (DictConfig, ListConfig)):
         config = OmegaConf.create(config)  # type: ignore
 

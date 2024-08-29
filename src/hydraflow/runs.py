@@ -39,6 +39,9 @@ def search_runs(
     as a `Runs` object. It allows for flexible searching of MLflow runs based on
     various criteria.
 
+    Note:
+        The returned runs are sorted by their start time in ascending order.
+
     Args:
         experiment_ids: List of experiment IDs. Search can work with experiment IDs or
             experiment names, but not both in the same call. Values other than
@@ -53,9 +56,6 @@ def search_runs(
         order_by: List of columns to order by (e.g., "metrics.rmse"). The ``order_by`` column
             can contain an optional ``DESC`` or ``ASC`` value. The default is ``ASC``.
             The default ordering is to sort by ``start_time DESC``, then ``run_id``.
-        output_format: The output format to be returned. If ``pandas``, a ``pandas.DataFrame``
-            is returned and, if ``list``, a list of :py:class:`mlflow.entities.Run`
-            is returned.
         search_all_experiments: Boolean specifying whether all experiments should be searched.
             Only honored if ``experiment_ids`` is ``[]`` or ``None``.
         experiment_names: List of experiment names. Search can work with experiment IDs or
@@ -77,6 +77,7 @@ def search_runs(
         search_all_experiments=search_all_experiments,
         experiment_names=experiment_names,
     )
+    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
     return Runs(runs)  # type: ignore
 
 
@@ -89,16 +90,16 @@ class Runs:
     retrieving specific runs, and accessing run information.
     """
 
-    runs: list[Run]
+    _runs: list[Run]
     """A list of MLflow Run objects."""
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({len(self)})"
 
     def __len__(self) -> int:
-        return len(self.runs)
+        return len(self._runs)
 
-    def filter(self, config: object) -> Runs:
+    def filter(self, config: object | None = None, **kwargs) -> Runs:
         """
         Filter the runs based on the provided configuration.
 
@@ -114,9 +115,43 @@ class Runs:
         Returns:
             A new `Runs` object containing the filtered runs.
         """
-        return Runs(filter_runs(self.runs, config))
+        return Runs(filter_runs(self._runs, config, **kwargs))
 
-    def get(self, config: object) -> Run | None:
+    def find(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Find the first run based on the provided configuration.
+
+        This method filters the runs in the collection according to the
+        specified configuration object and returns the first run that matches
+        the provided parameters. If no run matches the criteria, None is returned.
+
+        Args:
+            config: The configuration object to identify the run.
+
+        Returns:
+            The first run object that matches the provided configuration, or None
+            if no runs match the criteria.
+        """
+        return find_run(self._runs, config, **kwargs)
+
+    def find_last(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Find the last run based on the provided configuration.
+
+        This method filters the runs in the collection according to the
+        specified configuration object and returns the last run that matches
+        the provided parameters. If no run matches the criteria, None is returned.
+
+        Args:
+            config: The configuration object to identify the run.
+
+        Returns:
+            The last run object that matches the provided configuration, or None
+            if no runs match the criteria.
+        """
+        return find_last_run(self._runs, config, **kwargs)
+
+    def get(self, config: object | None = None, **kwargs) -> Run | None:
         """
         Retrieve a specific run based on the provided configuration.
 
@@ -129,44 +164,13 @@ class Runs:
             config: The configuration object to identify the run.
 
         Returns:
-            Run: The run object that matches the provided configuration.
-            None, if the runs are not in a DataFrame format.
+            The run object that matches the provided configuration, or None
+            if no runs match the criteria.
 
         Raises:
             ValueError: If the number of filtered runs is not exactly one.
         """
-        return get_run(self.runs, config)
-
-    def get_earliest_run(self, config: object | None = None, **kwargs) -> Run | None:
-        """
-        Get the earliest run from the list of runs based on the start time.
-
-        This method filters the runs based on the configuration if provided
-        and returns the run with the earliest start time.
-
-        Args:
-            config: The configuration object to filter the runs.
-                If None, no filtering is applied.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The run with the earliest start time, or None if no runs match the criteria.
-        """
-        return get_earliest_run(self.runs, config, **kwargs)
-
-    def get_latest_run(self, config: object | None = None, **kwargs) -> Run | None:
-        """
-        Get the latest run from the list of runs based on the start time.
-
-        Args:
-            config: The configuration object to filter the runs.
-                If None, no filtering is applied.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The run with the latest start time, or None if no runs match the criteria.
-        """
-        return get_latest_run(self.runs, config, **kwargs)
+        return get_run(self._runs, config, **kwargs)
 
     def get_param_names(self) -> list[str]:
         """
@@ -179,7 +183,7 @@ class Runs:
         Returns:
             A list of unique parameter names.
         """
-        return get_param_names(self.runs)
+        return get_param_names(self._runs)
 
     def get_param_dict(self) -> dict[str, list[str]]:
         """
@@ -194,10 +198,19 @@ class Runs:
             A dictionary where the keys are parameter names and the values are lists
             of parameter values.
         """
-        return get_param_dict(self.runs)
+        return get_param_dict(self._runs)
 
 
-def filter_runs(runs: list[Run], config: object, **kwargs) -> list[Run]:
+def _is_equal(run: Run, key: str, value: Any) -> bool:
+    param = run.data.params.get(key, value)
+
+    if param is None:
+        return False
+
+    return type(value)(param) == value
+
+
+def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list[Run]:
     """
     Filter the runs based on the provided configuration.
 
@@ -224,16 +237,49 @@ def filter_runs(runs: list[Run], config: object, **kwargs) -> list[Run]:
     return runs
 
 
-def _is_equal(run: Run, key: str, value: Any) -> bool:
-    param = run.data.params.get(key, value)
+def find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+    """
+    Find the first run based on the provided configuration.
 
-    if param is None:
-        return False
+    This method filters the runs in the collection according to the
+    specified configuration object and returns the first run that matches
+    the provided parameters. If no run matches the criteria, None is returned.
 
-    return type(value)(param) == value
+    Args:
+        runs: The runs to filter.
+        config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The first run object that matches the provided configuration, or None
+        if no runs match the criteria.
+    """
+    runs = filter_runs(runs, config, **kwargs)
+    return runs[0] if runs else None
 
 
-def get_run(runs: list[Run], config: object, **kwargs) -> Run | None:
+def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+    """
+    Find the last run based on the provided configuration.
+
+    This method filters the runs in the collection according to the
+    specified configuration object and returns the last run that matches
+    the provided parameters. If no run matches the criteria, None is returned.
+
+    Args:
+        runs: The runs to filter.
+        config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The last run object that matches the provided configuration, or None
+        if no runs match the criteria.
+    """
+    runs = filter_runs(runs, config, **kwargs)
+    return runs[-1] if runs else None
+
+
+def get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
     """
     Retrieve a specific run based on the provided configuration.
 
@@ -264,50 +310,6 @@ def get_run(runs: list[Run], config: object, **kwargs) -> Run | None:
 
     msg = f"Multiple runs were filtered. Expected number of runs is 1, but found {len(runs)} runs."
     raise ValueError(msg)
-
-
-def get_earliest_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
-    """
-    Get the earliest run from the list of runs based on the start time.
-
-    This method filters the runs based on the configuration if provided
-    and returns the run with the earliest start time.
-
-    Args:
-        runs: The list of runs.
-        config: The configuration object to filter the runs.
-            If None, no filtering is applied.
-        **kwargs: Additional key-value pairs to filter the runs.
-
-    Returns:
-        The run with the earliest start time, or None if no runs match the criteria.
-    """
-    if config is not None or kwargs:
-        runs = filter_runs(runs, config or {}, **kwargs)
-
-    return min(runs, key=lambda run: run.info.start_time, default=None)
-
-
-def get_latest_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
-    """
-    Get the latest run from the list of runs based on the start time.
-
-    This method filters the runs based on the configuration if provided
-    and returns the run with the latest start time.
-
-    Args:
-        runs: The list of runs.
-        config: The configuration object to filter the runs.
-            If None, no filtering is applied.
-        **kwargs: Additional key-value pairs to filter the runs.
-
-    Returns:
-        The run with the latest start time, or None if no runs match the criteria.
-    """
-    if config is not None or kwargs:
-        runs = filter_runs(runs, config or {}, **kwargs)
-
-    return max(runs, key=lambda run: run.info.start_time, default=None)
 
 
 def get_param_names(runs: list[Run]) -> list[str]:

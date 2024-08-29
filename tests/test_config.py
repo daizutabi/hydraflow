@@ -68,6 +68,12 @@ def test_is_param_with_complex_nested_structure():
     assert _is_param(complex_conf) is False
 
 
+def test_iter_params_with_none():
+    from hydraflow.config import iter_params
+
+    assert not list(iter_params(None))
+
+
 def test_iter_params():
     from hydraflow.config import iter_params
 
