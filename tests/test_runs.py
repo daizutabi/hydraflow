@@ -6,7 +6,7 @@ import mlflow
 import pytest
 from mlflow.entities import Run
 
-from hydraflow.runs import Runs
+from hydraflow.runs import RunCollection
 
 
 @pytest.fixture
@@ -24,12 +24,12 @@ def runs(monkeypatch, tmp_path):
             mlflow.log_text(f"{x}", "abc.txt")
 
     x = search_runs()
-    assert isinstance(x, Runs)
+    assert isinstance(x, RunCollection)
     return x
 
 
 @pytest.fixture
-def run_list(runs: Runs):
+def run_list(runs: RunCollection):
     return runs._runs
 
 
@@ -142,11 +142,11 @@ def test_chdir_artifact_list(i: int, run_list: list[Run]):
 #         get_hydra_output_dir(runs_list[0])
 
 
-def test_runs_repr(runs: Runs):
-    assert repr(runs) == "Runs(6)"
+def test_runs_repr(runs: RunCollection):
+    assert repr(runs) == "RunCollection(6)"
 
 
-def test_runs_filter(runs: Runs):
+def test_runs_filter(runs: RunCollection):
     assert len(runs.filter()) == 6
     assert len(runs.filter({})) == 6
     assert len(runs.filter({"p": 1})) == 1
@@ -159,7 +159,7 @@ def test_runs_filter(runs: Runs):
     assert len(runs.filter(r=0)) == 2
 
 
-def test_runs_get(runs: Runs):
+def test_runs_get(runs: RunCollection):
     from hydraflow.runs import Run
 
     run = runs.get({"p": 4})
@@ -168,7 +168,7 @@ def test_runs_get(runs: Runs):
     assert isinstance(run, Run)
 
 
-def test_runs_get_params_names(runs: Runs):
+def test_runs_get_params_names(runs: RunCollection):
     names = runs.get_param_names()
     assert len(names) == 3
     assert "p" in names
@@ -176,14 +176,14 @@ def test_runs_get_params_names(runs: Runs):
     assert "r" in names
 
 
-def test_runs_get_params_dict(runs: Runs):
+def test_runs_get_params_dict(runs: RunCollection):
     params = runs.get_param_dict()
     assert params["p"] == ["0", "1", "2", "3", "4", "5"]
     assert params["q"] == ["0"]
     assert params["r"] == ["0", "1", "2"]
 
 
-def test_runs_find(runs: Runs):
+def test_runs_find(runs: RunCollection):
     from hydraflow.runs import Run
 
     run = runs.find({"r": 0})
@@ -194,12 +194,12 @@ def test_runs_find(runs: Runs):
     assert run.data.params["p"] == "2"
 
 
-def test_runs_find_none(runs: Runs):
+def test_runs_find_none(runs: RunCollection):
     run = runs.find({"r": 10})
     assert run is None
 
 
-def test_runs_find_last(runs: Runs):
+def test_runs_find_last(runs: RunCollection):
     from hydraflow.runs import Run
 
     run = runs.find_last({"r": 0})
@@ -210,6 +210,6 @@ def test_runs_find_last(runs: Runs):
     assert run.data.params["p"] == "5"
 
 
-def test_runs_find_last_none(runs: Runs):
+def test_runs_find_last_none(runs: RunCollection):
     run = runs.find_last({"p": 10})
     assert run is None

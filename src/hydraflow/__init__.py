@@ -2,7 +2,7 @@ from .context import Info, chdir_artifact, log_run, watch
 from .mlflow import set_experiment
 from .runs import (
     Run,
-    Runs,
+    RunCollection,
     filter_runs,
     get_param_dict,
     get_param_names,
@@ -14,7 +14,7 @@ from .runs import (
 __all__ = [
     "Info",
     "Run",
-    "Runs",
+    "RunCollection",
     "chdir_artifact",
     "filter_runs",
     "get_param_dict",

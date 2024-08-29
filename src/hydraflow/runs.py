@@ -1,7 +1,7 @@
 """
 This module provides functionality for managing and interacting with MLflow runs.
-It includes the `Runs` class and various methods to filter runs, retrieve run information,
-log artifacts, and load configurations.
+It includes the `RunCollection` class and various methods to filter runs,
+retrieve run information, log artifacts, and load configurations.
 """
 
 from __future__ import annotations
@@ -31,12 +31,12 @@ def search_runs(
     order_by: list[str] | None = None,
     search_all_experiments: bool = False,
     experiment_names: list[str] | None = None,
-) -> Runs:
+) -> RunCollection:
     """
     Search for Runs that fit the specified criteria.
 
     This function wraps the `mlflow.search_runs` function and returns the results
-    as a `Runs` object. It allows for flexible searching of MLflow runs based on
+    as a `RunCollection` object. It allows for flexible searching of MLflow runs based on
     various criteria.
 
     Note:
@@ -65,7 +65,7 @@ def search_runs(
             experiment if ``experiment_ids`` is ``None`` or ``[]``.
 
     Returns:
-        A `Runs` object containing the search results.
+        A `RunCollection` object containing the search results.
     """
     runs = mlflow.search_runs(
         experiment_ids=experiment_ids,
@@ -78,11 +78,11 @@ def search_runs(
         experiment_names=experiment_names,
     )
     runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
-    return Runs(runs)  # type: ignore
+    return RunCollection(runs)  # type: ignore
 
 
 @dataclass
-class Runs:
+class RunCollection:
     """
     A class to represent a collection of MLflow runs.
 
@@ -99,7 +99,7 @@ class Runs:
     def __len__(self) -> int:
         return len(self._runs)
 
-    def filter(self, config: object | None = None, **kwargs) -> Runs:
+    def filter(self, config: object | None = None, **kwargs) -> RunCollection:
         """
         Filter the runs based on the provided configuration.
 
@@ -107,15 +107,15 @@ class Runs:
         specified configuration object. The configuration object should
         contain key-value pairs that correspond to the parameters of the
         runs. Only the runs that match all the specified parameters will
-        be included in the returned `Runs` object.
+        be included in the returned `RunCollection` object.
 
         Args:
             config: The configuration object to filter the runs.
 
         Returns:
-            A new `Runs` object containing the filtered runs.
+            A new `RunCollection` object containing the filtered runs.
         """
-        return Runs(filter_runs(self._runs, config, **kwargs))
+        return RunCollection(filter_runs(self._runs, config, **kwargs))
 
     def find(self, config: object | None = None, **kwargs) -> Run | None:
         """
