@@ -90,6 +90,7 @@ class Runs:
     """
 
     runs: list[Run]
+    """A list of MLflow Run objects."""
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({len(self)})"
@@ -363,13 +364,15 @@ def load_config(run: Run) -> DictConfig:
 
     This function loads the configuration for the provided Run instance
     by downloading the configuration file from the MLflow artifacts and
-    loading it using OmegaConf.
+    loading it using OmegaConf. It returns an empty config if
+    `.hydra/config.yaml` is not found in the run's artifact directory.
 
     Args:
-        run: The Run instance to load the configuration for.
+        run: The Run instance for which to load the configuration.
 
     Returns:
-        The loaded configuration.
+        The loaded configuration as a DictConfig object. Returns an empty
+        DictConfig if the configuration file is not found.
     """
     run_id = run.info.run_id
     return _load_config(run_id)

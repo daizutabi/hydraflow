@@ -17,14 +17,23 @@
 
 ## Overview
 
-Hydraflow is a powerful library designed to seamlessly integrate [Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/), making it easier to manage and track machine learning experiments. By combining the flexibility of Hydra's configuration management with the robust experiment tracking capabilities of MLflow, Hydraflow provides a comprehensive solution for managing complex machine learning workflows.
+Hydraflow is a powerful library designed to seamlessly integrate
+[Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/), making it easier to
+manage and track machine learning experiments. By combining the flexibility of
+Hydra's configuration management with the robust experiment tracking capabilities
+of MLflow, Hydraflow provides a comprehensive solution for managing complex
+machine learning workflows.
 
 ## Key Features
 
-- **Configuration Management**: Utilize Hydra's advanced configuration management to handle complex parameter sweeps and experiment setups.
-- **Experiment Tracking**: Leverage MLflow's tracking capabilities to log parameters, metrics, and artifacts for each run.
-- **Artifact Management**: Automatically log and manage artifacts, such as model checkpoints and configuration files, with MLflow.
-- **Seamless Integration**: Easily integrate Hydra and MLflow in your machine learning projects with minimal setup.
+- **Configuration Management**: Utilize Hydra's advanced configuration management
+  to handle complex parameter sweeps and experiment setups.
+- **Experiment Tracking**: Leverage MLflow's tracking capabilities to log parameters,
+  metrics, and artifacts for each run.
+- **Artifact Management**: Automatically log and manage artifacts, such as model
+  checkpoints and configuration files, with MLflow.
+- **Seamless Integration**: Easily integrate Hydra and MLflow in your machine learning
+  projects with minimal setup.
 
 ## Installation
 

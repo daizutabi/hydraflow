@@ -5,9 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import mlflow
 import pytest
-from mlflow.entities import Run
-
 from hydraflow.runs import Runs
+from mlflow.entities import Run
 
 
 @pytest.fixture
@@ -275,3 +274,9 @@ def test_search_runs_no_results(mock_mlflow_search_runs):
 
     assert isinstance(result, Runs)
     assert len(result.runs) == 0
+
+
+def test_load_config_empty(runs: list[Run]):
+    from hydraflow.runs import load_config
+
+    assert load_config(runs[0]) == {}
