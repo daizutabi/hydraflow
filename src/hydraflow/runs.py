@@ -138,13 +138,23 @@ class RunCollection:
         Filter the runs based on the provided configuration.
 
         This method filters the runs in the collection according to the
-        specified configuration object. The configuration object should
-        contain key-value pairs that correspond to the parameters of the
-        runs. Only the runs that match all the specified parameters will
-        be included in the returned `RunCollection` object.
+        specified configuration object and additional key-value pairs.
+        The configuration object and key-value pairs should contain
+        key-value pairs that correspond to the parameters of the runs.
+        Only the runs that match all the specified parameters will be
+        included in the returned `RunCollection` object.
+
+        The filtering supports:
+        - Exact matches for single values.
+        - Membership checks for lists of values.
+        - Range checks for tuples of two values (inclusive of the lower bound and
+          exclusive of the upper bound).
 
         Args:
-            config: The configuration object to filter the runs.
+            config: The configuration object to filter the runs. This can be any
+                object that provides key-value pairs through the `iter_params`
+                function.
+            **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
             A new `RunCollection` object containing the filtered runs.
@@ -161,10 +171,14 @@ class RunCollection:
 
         Args:
             config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
             The first run object that matches the provided configuration, or None
             if no runs match the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering logic.
         """
         return find_run(self._runs, config, **kwargs)
 
@@ -178,10 +192,14 @@ class RunCollection:
 
         Args:
             config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
             The last run object that matches the provided configuration, or None
             if no runs match the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering logic.
         """
         return find_last_run(self._runs, config, **kwargs)
 
@@ -196,13 +214,17 @@ class RunCollection:
 
         Args:
             config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
             The run object that matches the provided configuration, or None
             if no runs match the criteria.
 
         Raises:
-            ValueError: If the number of filtered runs is not exactly one.
+            ValueError: If more than one run matches the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering logic.
         """
         return get_run(self._runs, config, **kwargs)
 
@@ -300,11 +322,10 @@ class RunCollection:
         None is passed to the function.
 
         Args:
-            func: A function that takes an artifact URI (string) and returns a result.
+            func: A function that takes an artifact URI (string or None) and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each artifact URI
-            in the collection.
+        Yields:
+            The results obtained by applying the function to each artifact URI in the collection.
         """
         return (func(run.info.artifact_uri) for run in self._runs)
 
@@ -316,7 +337,7 @@ class RunCollection:
         and applies the provided function to the directory path.
 
         Args:
-            func: A function that takes an artifact directory and returns a result.
+            func: A function that takes an artifact directory path (string) and returns a result.
 
         Returns:
             An iterator of results obtained by applying the function to each artifact directory
@@ -325,7 +346,21 @@ class RunCollection:
         return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
 
-def _contains(run: Run, key: str, value: Any) -> bool:
+def _param_matches(run: Run, key: str, value: Any) -> bool:
+    """
+    Check if the run's parameter matches the specified key-value pair.
+
+    This function checks if the run's parameters contain the specified key-value pair.
+    It handles different types of values, including lists and tuples.
+
+    Args:
+        run: The run object to check.
+        key: The parameter key to check.
+        value: The parameter value to check.
+
+    Returns:
+        True if the run's parameter matches the specified key-value pair, False otherwise.
+    """
     param = run.data.params.get(key, value)
 
     # FIXME: This is a workaround to handle the case where the parameter value is a list
@@ -337,8 +372,14 @@ def _contains(run: Run, key: str, value: Any) -> bool:
     if param is None:
         return False
 
-    if isinstance(value, list):
-        return param in value
+    if param == "None":
+        return value is None
+
+    if isinstance(value, list) and value:
+        return type(value[0])(param) in value
+
+    if isinstance(value, tuple) and len(value) == 2:
+        return value[0] <= type(value[0])(param) < value[1]
 
     return type(value)(param) == value
 
@@ -348,21 +389,29 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
     Filter the runs based on the provided configuration.
 
     This method filters the runs in the collection according to the
-    specified configuration object. The configuration object should
-    contain key-value pairs that correspond to the parameters of the
-    runs. Only the runs that match all the specified parameters will
-    be included in the returned list of runs.
+    specified configuration object and additional key-value pairs.
+    The configuration object and key-value pairs should contain
+    key-value pairs that correspond to the parameters of the runs.
+    Only the runs that match all the specified parameters will be
+    included in the returned list of runs.
+
+    The filtering supports:
+    - Exact matches for single values.
+    - Membership checks for lists of values.
+    - Range checks for tuples of two values (inclusive of the lower bound and
+      exclusive of the upper bound).
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to filter the runs.
+        runs: The list of runs to filter.
+        config: The configuration object to filter the runs. This can be any object that
+                provides key-value pairs through the `iter_params` function.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
-        A filtered list of runs.
+        A list of runs that match the specified configuration and key-value pairs.
     """
     for key, value in chain(iter_params(config), kwargs.items()):
-        runs = [run for run in runs if _contains(run, key, value)]
+        runs = [run for run in runs if _param_matches(run, key, value)]
 
         if len(runs) == 0:
             return []

@@ -20,7 +20,7 @@ def runs(monkeypatch, tmp_path):
     for x in range(6):
         with mlflow.start_run(run_name=f"{x}"):
             mlflow.log_param("p", x)
-            mlflow.log_param("q", 0)
+            mlflow.log_param("q", 0 if x < 5 else None)
             mlflow.log_param("r", x % 3)
             mlflow.log_text(f"{x}", "abc.txt")
 
@@ -59,9 +59,23 @@ def test_filter_all(run_list: list[Run]):
 
     assert len(run_list) == 6
     x = filter_runs(run_list, {"q": 0})
-    assert len(x) == 6
+    assert len(x) == 5
     x = filter_runs(run_list, q=0)
-    assert len(x) == 6
+    assert len(x) == 5
+
+
+def test_filter_list(run_list: list[Run]):
+    from hydraflow.runs import filter_runs
+
+    x = filter_runs(run_list, p=[0, 4, 5])
+    assert len(x) == 3
+
+
+def test_filter_tuple(run_list: list[Run]):
+    from hydraflow.runs import filter_runs
+
+    x = filter_runs(run_list, p=(1, 3))
+    assert len(x) == 2
 
 
 def test_filter_invalid_param(run_list: list[Run]):
@@ -123,7 +137,7 @@ def test_get_param_dict(run_list: list[Run]):
 
     params = get_param_dict(run_list)
     assert len(params["p"]) == 6
-    assert len(params["q"]) == 1
+    assert len(params["q"]) == 2
 
 
 @pytest.mark.parametrize("i", range(6))
@@ -144,10 +158,10 @@ def test_runs_filter(runs: RunCollection):
     assert len(runs.filter()) == 6
     assert len(runs.filter({})) == 6
     assert len(runs.filter({"p": 1})) == 1
-    assert len(runs.filter({"q": 0})) == 6
+    assert len(runs.filter({"q": 0})) == 5
     assert len(runs.filter({"q": -1})) == 0
     assert len(runs.filter(p=5)) == 1
-    assert len(runs.filter(q=0)) == 6
+    assert len(runs.filter(q=0)) == 5
     assert len(runs.filter(q=-1)) == 0
     assert len(runs.filter({"r": 2})) == 2
     assert len(runs.filter(r=0)) == 2
@@ -173,7 +187,7 @@ def test_runs_get_params_names(runs: RunCollection):
 def test_runs_get_params_dict(runs: RunCollection):
     params = runs.get_param_dict()
     assert params["p"] == ["0", "1", "2", "3", "4", "5"]
-    assert params["q"] == ["0"]
+    assert params["q"] == ["0", "None"]
     assert params["r"] == ["0", "1", "2"]
 
 
