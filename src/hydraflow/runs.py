@@ -9,9 +9,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import cache
 from itertools import chain
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import mlflow
+from mlflow.artifacts import download_artifacts
 from mlflow.entities import ViewType
 from mlflow.entities.run import Run
 from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
@@ -20,6 +21,7 @@ from omegaconf import DictConfig, OmegaConf
 from hydraflow.config import iter_params
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
     from typing import Any
 
 
@@ -108,6 +110,9 @@ def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
         experiment_names = [e.name for e in experiments if e.name != "Default"]
 
     return search_runs(experiment_names=experiment_names)
+
+
+T = TypeVar("T")
 
 
 @dataclass
@@ -228,6 +233,96 @@ class RunCollection:
             of parameter values.
         """
         return get_param_dict(self._runs)
+
+    def first(self) -> Run | None:
+        """
+        Return the first run in the collection.
+
+        Returns:
+            The first Run object if the collection is not empty, otherwise None.
+        """
+        return self._runs[0] if self._runs else None
+
+    def last(self) -> Run | None:
+        """
+        Return the last run in the collection.
+
+        Returns:
+            The last Run object if the collection is not empty, otherwise None.
+        """
+        return self._runs[-1] if self._runs else None
+
+    def map(self, func: Callable[[Run], T]) -> Iterator[T]:
+        """
+        Apply a function to each run in the collection and return an iterator of results.
+
+        Args:
+            func: A function that takes a Run object and returns a result.
+
+        Returns:
+            An iterator of results obtained by applying the function to each run
+            in the collection.
+        """
+        return (func(run) for run in self._runs)
+
+    def map_run_id(self, func: Callable[[str], T]) -> Iterator[T]:
+        """
+        Apply a function to each run id in the collection and return an iterator of results.
+
+        Args:
+            func: A function that takes a run id and returns a result.
+
+        Returns:
+            An iterator of results obtained by applying the function to each run id
+            in the collection.
+        """
+        return (func(run.info.run_id) for run in self._runs)
+
+    def map_config(self, func: Callable[[DictConfig], T]) -> Iterator[T]:
+        """
+        Apply a function to each run config in the collection and return an iterator of results.
+
+        Args:
+            func: A function that takes a run config and returns a result.
+
+        Returns:
+            An iterator of results obtained by applying the function to each run config
+            in the collection.
+        """
+        return (func(load_config(run)) for run in self._runs)
+
+    def map_uri(self, func: Callable[[str | None], T]) -> Iterator[T]:
+        """
+        Apply a function to each artifact URI in the collection and return an iterator of results.
+
+        This method iterates over each run in the collection, retrieves the artifact URI,
+        and applies the provided function to it. If a run does not have an artifact URI,
+        None is passed to the function.
+
+        Args:
+            func: A function that takes an artifact URI (string) and returns a result.
+
+        Returns:
+            An iterator of results obtained by applying the function to each artifact URI
+            in the collection.
+        """
+        return (func(run.info.artifact_uri) for run in self._runs)
+
+    def map_dir(self, func: Callable[[str], T]) -> Iterator[T]:
+        """
+        Apply a function to each artifact directory in the collection and return an iterator of results.
+
+        This method iterates over each run in the collection, downloads the artifact directory,
+        and applies the provided function to the directory path.
+
+        Args:
+            func: A function that takes an artifact directory and returns a result.
+
+        Returns:
+            An iterator of results obtained by applying the function to each artifact directory
+            in the collection.
+        """
+        return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
 
 def _is_equal(run: Run, key: str, value: Any) -> bool:
@@ -412,10 +507,7 @@ def load_config(run: Run) -> DictConfig:
 @cache
 def _load_config(run_id: str) -> DictConfig:
     try:
-        path = mlflow.artifacts.download_artifacts(
-            run_id=run_id,
-            artifact_path=".hydra/config.yaml",
-        )
+        path = download_artifacts(run_id=run_id, artifact_path=".hydra/config.yaml")
     except OSError:
         return DictConfig({})
 
