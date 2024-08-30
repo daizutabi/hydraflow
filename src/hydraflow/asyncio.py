@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
 from asyncio.subprocess import PIPE
 from pathlib import Path
 from typing import TYPE_CHECKING
