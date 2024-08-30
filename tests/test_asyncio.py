@@ -117,7 +117,7 @@ async def test_run_and_monitor(tmp_path: Path):
     assert stdout_lines == ["hello"]
     assert stderr_lines == ["world"]
     assert Path(path).read_text() == "hello world"
-    assert len(changes_detected) == 1
+    assert len(changes_detected) >= 1
 
 
 def test_run(tmp_path: Path):

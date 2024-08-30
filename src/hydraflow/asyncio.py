@@ -86,6 +86,7 @@ async def monitor_file_changes(
     paths: list[str | Path],
     callback: Callable[[set[tuple[Change, str]]], None],
     stop_event: asyncio.Event,
+    **awatch_kwargs,
 ) -> None:
     """
     Watches for file changes in specified paths and pass the changes to a
@@ -96,10 +97,11 @@ async def monitor_file_changes(
         callback (Callable[[set[tuple[Change, str]]], None]): The callback
         function to handle file changes.
         stop_event (asyncio.Event): Event to signal when to stop watching.
+        **awatch_kwargs: Additional keyword arguments to pass to watchfiles.awatch.
     """
     str_paths = [str(path) for path in paths]
     try:
-        async for changes in watchfiles.awatch(*str_paths, debug=True, stop_event=stop_event):
+        async for changes in watchfiles.awatch(*str_paths, stop_event=stop_event, **awatch_kwargs):
             callback(changes)
     except Exception as e:
         logger.error(f"Error watching files: {e}")
@@ -112,6 +114,7 @@ async def run_and_monitor(
     stderr: Callable[[str], None] | None = None,
     watch: Callable[[set[tuple[Change, str]]], None] | None = None,
     paths: list[str | Path] | None = None,
+    **awatch_kwargs,
 ) -> int:
     """
     Runs a command and optionally watch for file changes concurrently.
@@ -130,7 +133,9 @@ async def run_and_monitor(
         execute_command(program, *args, stop_event=stop_event, stdout=stdout, stderr=stderr)
     )
     if watch and paths:
-        monitor_task = asyncio.create_task(monitor_file_changes(paths, watch, stop_event))
+        monitor_task = asyncio.create_task(
+            monitor_file_changes(paths, watch, stop_event, **awatch_kwargs)
+        )
     else:
         monitor_task = None
 
@@ -158,40 +163,38 @@ def run(
     stderr: Callable[[str], None] | None = None,
     watch: Callable[[set[tuple[Change, str]]], None] | None = None,
     paths: list[str | Path] | None = None,
+    **awatch_kwargs,
 ) -> int:
     """
-    Runs a command and optionally watch for file changes concurrently.
+    Run a command synchronously and optionally watch for file changes.
+
+    This function is a synchronous wrapper around the asynchronous `run_and_monitor` function.
+    It runs a specified command and optionally monitors specified paths for file changes,
+    invoking the provided callbacks for standard output, standard error, and file changes.
 
     Args:
         program (str): The program to run.
         *args (str): Arguments for the program.
-        stdout (Callable[[str], None] | None): Callback for standard output.
-        stderr (Callable[[str], None] | None): Callback for standard error.
-        watch (Callable[[set[tuple[Change, str]]], None] | None): Callback for
-        file changes.
-        paths (list[str | Path] | None): List of paths to monitor for changes.
+        stdout (Callable[[str], None] | None): Callback for handling standard output lines.
+        stderr (Callable[[str], None] | None): Callback for handling standard error lines.
+        watch (Callable[[set[tuple[Change, str]]], None] | None): Callback for handling file changes.
+        paths (list[str | Path] | None): List of paths to monitor for file changes.
+        **awatch_kwargs: Additional keyword arguments to pass to `watchfiles.awatch`.
+
+    Returns:
+        int: The return code of the process.
     """
+    if watch and not paths:
+        paths = [Path.cwd()]
+
     return asyncio.run(
-        run_and_monitor(program, *args, stdout=stdout, stderr=stderr, watch=watch, paths=paths)
-    )
-
-
-if __name__ == "__main__":
-
-    def stdout(line: str) -> None:
-        logger.info(f"STDOUT: {line}")
-
-    def stderr(line: str) -> None:
-        logger.error(f"STDERR: {line}")
-
-    def watch(changes: set[tuple[Change, str]]):
-        logger.info(f"File changes detected: {changes}")
-
-    run(
-        sys.executable,
-        "a.py",
-        stdout=stdout,
-        stderr=stderr,
-        watch=watch,
-        paths=["."],
+        run_and_monitor(
+            program,
+            *args,
+            stdout=stdout,
+            stderr=stderr,
+            watch=watch,
+            paths=paths,
+            **awatch_kwargs,
+        )
     )
