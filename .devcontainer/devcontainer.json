@@ -1,6 +1,6 @@
 {
   "name": "hydraflow",
-  "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04",
+  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.12",
   "features": {
     "ghcr.io/devcontainers-contrib/features/starship:1": {},
     "ghcr.io/va-h/devcontainers-features/uv:1": {}
@@ -9,7 +9,6 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
-        "henriiik.vscode-sort",
         "ms-python.python",
         "ms-python.vscode-pylance"
       ]
