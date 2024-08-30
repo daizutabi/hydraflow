@@ -1,7 +1,7 @@
 """
-This module provides functionality for managing and interacting with MLflow runs.
-It includes the `RunCollection` class and various methods to filter runs,
-retrieve run information, log artifacts, and load configurations.
+This module provides functionality for managing and interacting with MLflow
+runs. It includes the `RunCollection` class and various methods to filter
+runs, retrieve run information, log artifacts, and load configurations.
 """
 
 from __future__ import annotations
@@ -37,34 +37,39 @@ def search_runs(
     """
     Search for Runs that fit the specified criteria.
 
-    This function wraps the `mlflow.search_runs` function and returns the results
-    as a `RunCollection` object. It allows for flexible searching of MLflow runs based on
-    various criteria.
+    This function wraps the `mlflow.search_runs` function and returns the
+    results as a `RunCollection` object. It allows for flexible searching of
+    MLflow runs based on various criteria.
 
     Note:
         The returned runs are sorted by their start time in ascending order.
 
     Args:
-        experiment_ids: List of experiment IDs. Search can work with experiment IDs or
-            experiment names, but not both in the same call. Values other than
-            ``None`` or ``[]`` will result in error if ``experiment_names`` is
-            also not ``None`` or ``[]``. ``None`` will default to the active
-            experiment if ``experiment_names`` is ``None`` or ``[]``.
+        experiment_ids: List of experiment IDs. Search can work with experiment
+            IDs or experiment names, but not both in the same call. Values
+            other than ``None`` or ``[]`` will result in error if
+            ``experiment_names`` is also not ``None`` or ``[]``. ``None`` will
+            default to the active experiment if ``experiment_names`` is ``None``
+            or ``[]``.
         filter_string: Filter query string, defaults to searching all runs.
-        run_view_type: one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``, or ``ALL`` runs
-            defined in :py:class:`mlflow.entities.ViewType`.
-        max_results: The maximum number of runs to put in the dataframe. Default is 100,000
-            to avoid causing out-of-memory issues on the user's machine.
-        order_by: List of columns to order by (e.g., "metrics.rmse"). The ``order_by`` column
-            can contain an optional ``DESC`` or ``ASC`` value. The default is ``ASC``.
-            The default ordering is to sort by ``start_time DESC``, then ``run_id``.
-        search_all_experiments: Boolean specifying whether all experiments should be searched.
-            Only honored if ``experiment_ids`` is ``[]`` or ``None``.
-        experiment_names: List of experiment names. Search can work with experiment IDs or
-            experiment names, but not both in the same call. Values other
-            than ``None`` or ``[]`` will result in error if ``experiment_ids``
-            is also not ``None`` or ``[]``. ``None`` will default to the active
-            experiment if ``experiment_ids`` is ``None`` or ``[]``.
+        run_view_type: one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``, or
+            ``ALL`` runs defined in :py:class:`mlflow.entities.ViewType`.
+        max_results: The maximum number of runs to put in the dataframe. Default
+            is 100,000 to avoid causing out-of-memory issues on the user's
+            machine.
+        order_by: List of columns to order by (e.g., "metrics.rmse"). The
+            ``order_by`` column can contain an optional ``DESC`` or ``ASC``
+            value. The default is ``ASC``. The default ordering is to sort by
+            ``start_time DESC``, then ``run_id``.
+        search_all_experiments: Boolean specifying whether all experiments
+            should be searched. Only honored if ``experiment_ids`` is ``[]`` or
+            ``None``.
+        experiment_names: List of experiment names. Search can work with
+            experiment IDs or experiment names, but not both in the same call.
+            Values other than ``None`` or ``[]`` will result in error if
+            ``experiment_ids`` is also not ``None`` or ``[]``. ``None`` will
+            default to the active experiment if ``experiment_ids`` is ``None``
+            or ``[]``.
 
     Returns:
         A `RunCollection` object containing the search results.
@@ -133,27 +138,77 @@ class RunCollection:
     def __len__(self) -> int:
         return len(self._runs)
 
+    def first(self) -> Run:
+        """
+        Get the first run in the collection.
+
+        Returns:
+            The first run object in the collection.
+
+        Raises:
+            ValueError: If the collection is empty.
+        """
+        if not self._runs:
+            raise ValueError("The collection is empty.")
+
+        return self._runs[0]
+
+    def try_first(self) -> Run | None:
+        """
+        Try to get the first run in the collection.
+
+        Returns:
+            The first run object in the collection, or None if the collection
+            is empty.
+        """
+        return self._runs[0] if self._runs else None
+
+    def last(self) -> Run:
+        """
+        Get the last run in the collection.
+
+        Returns:
+            The last run object in the collection.
+
+        Raises:
+            ValueError: If the collection is empty.
+        """
+        if not self._runs:
+            raise ValueError("The collection is empty.")
+
+        return self._runs[-1]
+
+    def try_last(self) -> Run | None:
+        """
+        Try to get the last run in the collection.
+
+        Returns:
+            The last run object in the collection, or None if the collection is
+            empty.
+        """
+        return self._runs[-1] if self._runs else None
+
     def filter(self, config: object | None = None, **kwargs) -> RunCollection:
         """
         Filter the runs based on the provided configuration.
 
         This method filters the runs in the collection according to the
-        specified configuration object and additional key-value pairs.
-        The configuration object and key-value pairs should contain
-        key-value pairs that correspond to the parameters of the runs.
-        Only the runs that match all the specified parameters will be
-        included in the returned `RunCollection` object.
+        specified configuration object and additional key-value pairs. The
+        configuration object and key-value pairs should contain key-value pairs
+        that correspond to the parameters of the runs. Only the runs that match
+        all the specified parameters will be included in the returned
+        `RunCollection` object.
 
         The filtering supports:
         - Exact matches for single values.
         - Membership checks for lists of values.
-        - Range checks for tuples of two values (inclusive of the lower bound and
-          exclusive of the upper bound).
+        - Range checks for tuples of two values (inclusive of the lower bound
+          and exclusive of the upper bound).
 
         Args:
-            config: The configuration object to filter the runs. This can be any
-                object that provides key-value pairs through the `iter_params`
-                function.
+            config: The configuration object to filter the runs. This can be
+                any object that provides key-value pairs through the
+                `iter_params` function.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -161,80 +216,161 @@ class RunCollection:
         """
         return RunCollection(filter_runs(self._runs, config, **kwargs))
 
-    def find(self, config: object | None = None, **kwargs) -> Run | None:
+    def find(self, config: object | None = None, **kwargs) -> Run:
         """
         Find the first run based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the first run that matches
-        the provided parameters. If no run matches the criteria, None is returned.
+        the provided parameters. If no run matches the criteria, a `ValueError`
+        is raised.
 
         Args:
             config: The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
-            The first run object that matches the provided configuration, or None
-            if no runs match the criteria.
+            The first run object that matches the provided configuration.
+
+        Raises:
+            ValueError: If no run matches the criteria.
 
         See Also:
-            RunCollection.filter: The method that performs the actual filtering logic.
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
         """
         return find_run(self._runs, config, **kwargs)
 
-    def find_last(self, config: object | None = None, **kwargs) -> Run | None:
+    def try_find(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Find the first run based on the provided configuration.
+
+        This method filters the runs in the collection according to the
+        specified configuration object and returns the first run that matches
+        the provided parameters. If no run matches the criteria, None is
+        returned.
+
+        Args:
+            config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
+
+        Returns:
+            The first run object that matches the provided configuration, or
+            None if no runs match the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
+        """
+        return try_find_run(self._runs, config, **kwargs)
+
+    def find_last(self, config: object | None = None, **kwargs) -> Run:
         """
         Find the last run based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the last run that matches
-        the provided parameters. If no run matches the criteria, None is returned.
+        the provided parameters. If no run matches the criteria, a `ValueError`
+        is raised.
 
         Args:
             config: The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
-            The last run object that matches the provided configuration, or None
-            if no runs match the criteria.
+            The last run object that matches the provided configuration.
+
+        Raises:
+            ValueError: If no run matches the criteria.
 
         See Also:
-            RunCollection.filter: The method that performs the actual filtering logic.
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
         """
         return find_last_run(self._runs, config, **kwargs)
 
-    def get(self, config: object | None = None, **kwargs) -> Run | None:
+    def try_find_last(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Find the last run based on the provided configuration.
+
+        This method filters the runs in the collection according to the
+        specified configuration object and returns the last run that matches
+        the provided parameters. If no run matches the criteria, None is
+        returned.
+
+        Args:
+            config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
+
+        Returns:
+            The last run object that matches the provided configuration, or
+            None if no runs match the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
+        """
+        return try_find_last_run(self._runs, config, **kwargs)
+
+    def get(self, config: object | None = None, **kwargs) -> Run:
         """
         Retrieve a specific run based on the provided configuration.
 
         This method filters the runs in the collection according to the
-        specified configuration object and returns the run that matches
-        the provided parameters. If more than one run matches the criteria,
-        a `ValueError` is raised.
+        specified configuration object and returns the run that matches the
+        provided parameters. If no run matches the criteria, or if more than
+        one run matches the criteria, a `ValueError` is raised.
 
         Args:
             config: The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
-            The run object that matches the provided configuration, or None
-            if no runs match the criteria.
+            The run object that matches the provided configuration.
+
+        Raises:
+            ValueError: If no run matches the criteria or if more than one run
+            matches the criteria.
+
+        See Also:
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
+        """
+        return get_run(self._runs, config, **kwargs)
+
+    def try_get(self, config: object | None = None, **kwargs) -> Run | None:
+        """
+        Retrieve a specific run based on the provided configuration.
+
+        This method filters the runs in the collection according to the
+        specified configuration object and returns the run that matches the
+        provided parameters. If no run matches the criteria, None is returned.
+        If more than one run matches the criteria, a `ValueError` is raised.
+
+        Args:
+            config: The configuration object to identify the run.
+            **kwargs: Additional key-value pairs to filter the runs.
+
+        Returns:
+            The run object that matches the provided configuration, or None if
+            no runs match the criteria.
 
         Raises:
             ValueError: If more than one run matches the criteria.
 
         See Also:
-            RunCollection.filter: The method that performs the actual filtering logic.
+            RunCollection.filter: The method that performs the actual filtering
+            logic.
         """
-        return get_run(self._runs, config, **kwargs)
+        return try_get_run(self._runs, config, **kwargs)
 
     def get_param_names(self) -> list[str]:
         """
         Get the parameter names from the runs.
 
-        This method extracts the unique parameter names from the provided list of runs.
-        It iterates through each run and collects the parameter names into a set to
-        ensure uniqueness.
+        This method extracts the unique parameter names from the provided list
+        of runs. It iterates through each run and collects the parameter names
+        into a set to ensure uniqueness.
 
         Returns:
             A list of unique parameter names.
@@ -246,112 +382,111 @@ class RunCollection:
         Get the parameter dictionary from the list of runs.
 
         This method extracts the parameter names and their corresponding values
-        from the provided list of runs. It iterates through each run and collects
-        the parameter values into a dictionary where the keys are parameter names
-        and the values are lists of parameter values.
+        from the provided list of runs. It iterates through each run and
+        collects the parameter values into a dictionary where the keys are
+        parameter names and the values are lists of parameter values.
 
         Returns:
-            A dictionary where the keys are parameter names and the values are lists
-            of parameter values.
+            A dictionary where the keys are parameter names and the values are
+            lists of parameter values.
         """
         return get_param_dict(self._runs)
 
-    def first(self) -> Run | None:
-        """
-        Return the first run in the collection.
-
-        Returns:
-            The first Run object if the collection is not empty, otherwise None.
-        """
-        return self._runs[0] if self._runs else None
-
-    def last(self) -> Run | None:
-        """
-        Return the last run in the collection.
-
-        Returns:
-            The last Run object if the collection is not empty, otherwise None.
-        """
-        return self._runs[-1] if self._runs else None
-
     def map(self, func: Callable[[Run], T]) -> Iterator[T]:
         """
-        Apply a function to each run in the collection and return an iterator of results.
+        Apply a function to each run in the collection and return an iterator of
+        results.
 
         Args:
-            func: A function that takes a Run object and returns a result.
+            func: A function that takes a run and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run
-            in the collection.
+        Yields:
+            Results obtained by applying the function to each run in the
+            collection.
         """
         return (func(run) for run in self._runs)
 
     def map_run_id(self, func: Callable[[str], T]) -> Iterator[T]:
         """
-        Apply a function to each run id in the collection and return an iterator of results.
+        Apply a function to each run id in the collection and return an iterator
+        of results.
 
         Args:
             func: A function that takes a run id and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run id
-            in the collection.
+        Yields:
+            Results obtained by applying the function to each run id in the
+            collection.
         """
         return (func(run.info.run_id) for run in self._runs)
 
     def map_config(self, func: Callable[[DictConfig], T]) -> Iterator[T]:
         """
-        Apply a function to each run config in the collection and return an iterator of results.
+        Apply a function to each run configuration in the collection and return
+        an iterator of results.
 
         Args:
-            func: A function that takes a run config and returns a result.
+            func: A function that takes a run configuration and returns a
+            result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run config
+        Yields:
+            Results obtained by applying the function to each run configuration
             in the collection.
         """
         return (func(load_config(run)) for run in self._runs)
 
     def map_uri(self, func: Callable[[str | None], T]) -> Iterator[T]:
         """
-        Apply a function to each artifact URI in the collection and return an iterator of results.
+        Apply a function to each artifact URI in the collection and return an
+        iterator of results.
 
-        This method iterates over each run in the collection, retrieves the artifact URI,
-        and applies the provided function to it. If a run does not have an artifact URI,
-        None is passed to the function.
+        This method iterates over each run in the collection, retrieves the
+        artifact URI, and applies the provided function to it. If a run does not
+        have an artifact URI, None is passed to the function.
 
         Args:
-            func: A function that takes an artifact URI (string or None) and returns a result.
+            func: A function that takes an artifact URI (string or None) and
+            returns a result.
 
         Yields:
-            The results obtained by applying the function to each artifact URI in the collection.
+            Results obtained by applying the function to each artifact URI in the
+            collection.
         """
         return (func(run.info.artifact_uri) for run in self._runs)
 
     def map_dir(self, func: Callable[[str], T]) -> Iterator[T]:
         """
-        Apply a function to each artifact directory in the collection and return an iterator of results.
+        Apply a function to each artifact directory in the collection and return
+        an iterator of results.
 
-        This method iterates over each run in the collection, downloads the artifact directory,
-        and applies the provided function to the directory path.
+        This method iterates over each run in the collection, downloads the
+        artifact directory, and applies the provided function to the directory
+        path.
 
         Args:
-            func: A function that takes an artifact directory path (string) and returns a result.
+            func: A function that takes an artifact directory path (string) and
+            returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each artifact directory
+        Yields:
+            Results obtained by applying the function to each artifact directory
             in the collection.
         """
-        return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
+        for run in self._runs:
+            try:
+                dir_path = download_artifacts(run_id=run.info.run_id)
+                yield func(dir_path)
+            except Exception as e:
+                print(f"Error downloading artifacts for run {run.info.run_id}: {e}")
+                yield func("")
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
     """
     Check if the run's parameter matches the specified key-value pair.
 
-    This function checks if the run's parameters contain the specified key-value pair.
-    It handles different types of values, including lists and tuples.
+    This function checks if the run's parameters contain the specified
+    key-value pair. It handles different types of values, including lists
+    and tuples.
 
     Args:
         run: The run object to check.
@@ -359,15 +494,10 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
         value: The parameter value to check.
 
     Returns:
-        True if the run's parameter matches the specified key-value pair, False otherwise.
+        True if the run's parameter matches the specified key-value pair,
+        False otherwise.
     """
     param = run.data.params.get(key, value)
-
-    # FIXME: This is a workaround to handle the case where the parameter value is a list
-    #        We need to improve the logic to handle different types of values
-    #        For now, we assume that if the parameter is a list, we should check if it contains the value
-    #        This is not ideal, but it works for the case where the parameter value is a list of strings
-    #        We should improve the logic to handle different types of values in the future
 
     if param is None:
         return False
@@ -392,8 +522,8 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
     specified configuration object and additional key-value pairs.
     The configuration object and key-value pairs should contain
     key-value pairs that correspond to the parameters of the runs.
-    Only the runs that match all the specified parameters will be
-    included in the returned list of runs.
+    Only the runs that match all the specified parameters will
+    be included in the returned list of runs.
 
     The filtering supports:
     - Exact matches for single values.
@@ -403,8 +533,9 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
 
     Args:
         runs: The list of runs to filter.
-        config: The configuration object to filter the runs. This can be any object that
-                provides key-value pairs through the `iter_params` function.
+        config: The configuration object to filter the runs. This can be any
+                object that provides key-value pairs through the `iter_params`
+                function.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -419,7 +550,38 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
     return runs
 
 
-def find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+def find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run:
+    """
+    Find the first run based on the provided configuration.
+
+    This method filters the runs in the collection according to the
+    specified configuration object and returns the first run that matches
+    the provided parameters. If no run matches the criteria, a `ValueError` is
+    raised.
+
+    Args:
+        runs: The runs to filter.
+        config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The first run object that matches the provided configuration.
+
+    Raises:
+        ValueError: If no run matches the criteria.
+
+    See Also:
+        RunCollection.filter: The method that performs the actual filtering logic.
+    """
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
+        raise ValueError("No run matches the provided configuration.")
+
+    return filtered_runs[0]
+
+
+def try_find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
     """
     Find the first run based on the provided configuration.
 
@@ -436,11 +598,47 @@ def find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | N
         The first run object that matches the provided configuration, or None
         if no runs match the criteria.
     """
-    runs = filter_runs(runs, config, **kwargs)
-    return runs[0] if runs else None
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
+        return None
+
+    return filtered_runs[0]
 
 
-def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Run:
+    """
+    Find the last run based on the provided configuration.
+
+    This method filters the runs in the collection according to the
+    specified configuration object and returns the last run that matches
+    the provided parameters. If no run matches the criteria, a `ValueError`
+    is raised.
+
+    Args:
+        runs: The runs to filter.
+        config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The last run object that matches the provided configuration.
+
+    Raises:
+        ValueError: If no run matches the criteria.
+
+    See Also:
+        RunCollection.filter: The method that performs the actual filtering
+        logic.
+    """
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
+        raise ValueError("No run matches the provided configuration.")
+
+    return filtered_runs[-1]
+
+
+def try_find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
     """
     Find the last run based on the provided configuration.
 
@@ -457,18 +655,62 @@ def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Ru
         The last run object that matches the provided configuration, or None
         if no runs match the criteria.
     """
-    runs = filter_runs(runs, config, **kwargs)
-    return runs[-1] if runs else None
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
+        return None
+
+    return filtered_runs[-1]
 
 
-def get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+def get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run:
     """
     Retrieve a specific run based on the provided configuration.
 
     This method filters the runs in the collection according to the
     specified configuration object and returns the run that matches
-    the provided parameters. If more than one run matches the criteria,
-    a `ValueError` is raised.
+    the provided parameters. If no run matches the criteria, or if more
+    than one run matches the criteria, a `ValueError` is raised.
+
+    Args:
+        runs: The runs to filter.
+        config: The configuration object to identify the run.
+        **kwargs: Additional key-value pairs to filter the runs.
+
+    Returns:
+        The run object that matches the provided configuration.
+
+    Raises:
+        ValueError: If no run matches the criteria or if more than one run
+        matches the criteria.
+
+    See Also:
+        RunCollection.filter: The method that performs the actual filtering
+        logic.
+    """
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
+        raise ValueError("No run matches the provided configuration.")
+
+    if len(filtered_runs) == 1:
+        return filtered_runs[0]
+
+    msg = (
+        f"Multiple runs were filtered. Expected number of runs is 1, "
+        f"but found {len(filtered_runs)} runs."
+    )
+    raise ValueError(msg)
+
+
+def try_get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+    """
+    Retrieve a specific run based on the provided configuration.
+
+    This method filters the runs in the collection according to the
+    specified configuration object and returns the run that matches
+    the provided parameters. If no run matches the criteria, None is returned.
+    If more than one run matches the criteria, a `ValueError` is raised.
 
     Args:
         runs: The runs to filter.
@@ -481,16 +723,23 @@ def get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | No
 
     Raises:
         ValueError: If more than one run matches the criteria.
-    """
-    runs = filter_runs(runs, config, **kwargs)
 
-    if len(runs) == 0:
+    See Also:
+        RunCollection.filter: The method that performs the actual filtering
+        logic.
+    """
+    filtered_runs = filter_runs(runs, config, **kwargs)
+
+    if len(filtered_runs) == 0:
         return None
 
-    if len(runs) == 1:
-        return runs[0]
+    if len(filtered_runs) == 1:
+        return filtered_runs[0]
 
-    msg = f"Multiple runs were filtered. Expected number of runs is 1, but found {len(runs)} runs."
+    msg = (
+        "Multiple runs were filtered. Expected number of runs is 1, "
+        f"but found {len(filtered_runs)} runs."
+    )
     raise ValueError(msg)
 
 
@@ -498,9 +747,9 @@ def get_param_names(runs: list[Run]) -> list[str]:
     """
     Get the parameter names from the runs.
 
-    This method extracts the unique parameter names from the provided list of runs.
-    It iterates through each run and collects the parameter names into a set to
-    ensure uniqueness.
+    This method extracts the unique parameter names from the provided list of
+    runs. It iterates through each run and collects the parameter names into a
+    set to ensure uniqueness.
 
     Args:
         runs: The list of runs from which to extract parameter names.

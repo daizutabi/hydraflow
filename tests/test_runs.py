@@ -154,6 +154,40 @@ def test_runs_repr(runs: RunCollection):
     assert repr(runs) == "RunCollection(6)"
 
 
+def test_runs_first(runs: RunCollection):
+    run = runs.first()
+    assert isinstance(run, Run)
+    assert run.data.params["p"] == "0"
+
+
+def test_runs_first_empty(runs: RunCollection):
+    runs._runs = []
+    with pytest.raises(ValueError):
+        runs.first()
+
+
+def test_runs_try_first_none(runs: RunCollection):
+    runs._runs = []
+    assert runs.try_first() is None
+
+
+def test_runs_last(runs: RunCollection):
+    run = runs.last()
+    assert isinstance(run, Run)
+    assert run.data.params["p"] == "5"
+
+
+def test_runs_last_empty(runs: RunCollection):
+    runs._runs = []
+    with pytest.raises(ValueError):
+        runs.last()
+
+
+def test_runs_try_last_none(runs: RunCollection):
+    runs._runs = []
+    assert runs.try_last() is None
+
+
 def test_runs_filter(runs: RunCollection):
     assert len(runs.filter()) == 6
     assert len(runs.filter({})) == 6
@@ -174,6 +208,15 @@ def test_runs_get(runs: RunCollection):
     assert isinstance(run, Run)
     run = runs.get(p=2)
     assert isinstance(run, Run)
+
+
+def test_runs_try_get(runs: RunCollection):
+    run = runs.try_get({"p": 5})
+    assert isinstance(run, Run)
+    run = runs.try_get(p=1)
+    assert isinstance(run, Run)
+    run = runs.try_get(p=-1)
+    assert run is None
 
 
 def test_runs_get_params_names(runs: RunCollection):
@@ -203,7 +246,12 @@ def test_runs_find(runs: RunCollection):
 
 
 def test_runs_find_none(runs: RunCollection):
-    run = runs.find({"r": 10})
+    with pytest.raises(ValueError):
+        runs.find({"r": 10})
+
+
+def test_runs_try_find_none(runs: RunCollection):
+    run = runs.try_find({"r": 10})
     assert run is None
 
 
@@ -219,7 +267,12 @@ def test_runs_find_last(runs: RunCollection):
 
 
 def test_runs_find_last_none(runs: RunCollection):
-    run = runs.find_last({"p": 10})
+    with pytest.raises(ValueError):
+        runs.find_last({"p": 10})
+
+
+def test_runs_try_find_last_none(runs: RunCollection):
+    run = runs.try_find_last({"p": 10})
     assert run is None
 
 
