@@ -1,5 +1,6 @@
 .coverage
+.env
 .venv/
 __pycache__/
-lcov.info
 dist/
+lcov.info
