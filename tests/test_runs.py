@@ -86,7 +86,7 @@ def test_filter_invalid_param(run_list: list[Run]):
 
 
 def test_find_run(run_list: list[Run]):
-    from hydraflow.runs import find_run
+    from hydraflow.runs import find_run, try_find_run
 
     x = find_run(run_list, {"r": 1})
     assert isinstance(x, Run)
@@ -94,10 +94,26 @@ def test_find_run(run_list: list[Run]):
     x = find_run(run_list, r=2)
     assert isinstance(x, Run)
     assert x.data.params["p"] == "2"
+    x = try_find_run(run_list, r=2)
+    assert isinstance(x, Run)
+    assert x.data.params["p"] == "2"
+
+
+def test_find_run_none(run_list: list[Run]):
+    from hydraflow.runs import find_run
+
+    with pytest.raises(ValueError):
+        find_run(run_list, {"r": 10})
+
+
+def test_try_find_run_none_empty(run_list: list[Run]):
+    from hydraflow.runs import try_find_run
+
+    assert try_find_run([]) is None
 
 
 def test_find_last_run(run_list: list[Run]):
-    from hydraflow.runs import find_last_run
+    from hydraflow.runs import find_last_run, try_find_last_run
 
     x = find_last_run(run_list, {"r": 1})
     assert isinstance(x, Run)
@@ -105,6 +121,22 @@ def test_find_last_run(run_list: list[Run]):
     x = find_last_run(run_list, r=2)
     assert isinstance(x, Run)
     assert x.data.params["p"] == "5"
+    x = try_find_last_run(run_list, r=2)
+    assert isinstance(x, Run)
+    assert x.data.params["p"] == "5"
+
+
+def test_find_last_run_none(run_list: list[Run]):
+    from hydraflow.runs import find_last_run
+
+    with pytest.raises(ValueError):
+        find_last_run(run_list, {"r": 10})
+
+
+def test_try_find_last_run_none(run_list: list[Run]):
+    from hydraflow.runs import try_find_last_run
+
+    assert try_find_last_run([]) is None
 
 
 def test_get_run(run_list: list[Run]):
@@ -115,11 +147,27 @@ def test_get_run(run_list: list[Run]):
     assert run.data.params["p"] == "4"
 
 
-def test_get_error(run_list: list[Run]):
+def test_get_run_error(run_list: list[Run]):
     from hydraflow.runs import get_run
 
     with pytest.raises(ValueError):
         get_run(run_list, {"q": 0})
+
+    with pytest.raises(ValueError):
+        get_run(run_list, {"q": -1})
+
+
+def test_try_get_run_none(run_list: list[Run]):
+    from hydraflow.runs import try_get_run
+
+    assert try_get_run(run_list, {"q": -1}) is None
+
+
+def test_try_get_run_error(run_list: list[Run]):
+    from hydraflow.runs import try_get_run
+
+    with pytest.raises(ValueError):
+        try_get_run(run_list, {"q": 0})
 
 
 def test_get_param_names(run_list: list[Run]):

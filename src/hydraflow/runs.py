@@ -471,13 +471,7 @@ class RunCollection:
             Results obtained by applying the function to each artifact directory
             in the collection.
         """
-        for run in self._runs:
-            try:
-                dir_path = download_artifacts(run_id=run.info.run_id)
-                yield func(dir_path)
-            except Exception as e:
-                print(f"Error downloading artifacts for run {run.info.run_id}: {e}")
-                yield func("")
+        return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
