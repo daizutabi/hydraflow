@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import cache
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import mlflow
 from mlflow.artifacts import download_artifacts
@@ -133,18 +133,48 @@ class RunCollection:
     def __len__(self) -> int:
         return len(self._runs)
 
-    def first(self) -> Run | None:
+    def first(self) -> Run:
         """
         Get the first run in the collection.
+
+        Returns:
+            The first run object in the collection.
+
+        Raises:
+            ValueError: If the collection is empty.
+        """
+        if not self._runs:
+            raise ValueError("The collection is empty.")
+
+        return self._runs[0]
+
+    def try_first(self) -> Run | None:
+        """
+        Try to get the first run in the collection.
 
         Returns:
             The first run object in the collection, or None if the collection is empty.
         """
         return self._runs[0] if self._runs else None
 
-    def last(self) -> Run | None:
+    def last(self) -> Run:
         """
         Get the last run in the collection.
+
+        Returns:
+            The last run object in the collection.
+
+        Raises:
+            ValueError: If the collection is empty.
+        """
+        if not self._runs:
+            raise ValueError("The collection is empty.")
+
+        return self._runs[-1]
+
+    def try_last(self) -> Run | None:
+        """
+        Try to get the last run in the collection.
 
         Returns:
             The last run object in the collection, or None if the collection is empty.
@@ -351,8 +381,8 @@ class RunCollection:
         Args:
             func: A function that takes a run and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run in the collection.
+        Yields:
+            Results obtained by applying the function to each run in the collection.
         """
         return (func(run) for run in self._runs)
 
@@ -363,8 +393,8 @@ class RunCollection:
         Args:
             func: A function that takes a run id and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run id in the collection.
+        Yields:
+            Results obtained by applying the function to each run id in the collection.
         """
         return (func(run.info.run_id) for run in self._runs)
 
@@ -375,8 +405,8 @@ class RunCollection:
         Args:
             func: A function that takes a run configuration and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each run configuration in the collection.
+        Yields:
+            Results obtained by applying the function to each run configuration in the collection.
         """
         return (func(load_config(run)) for run in self._runs)
 
@@ -391,8 +421,8 @@ class RunCollection:
         Args:
             func: A function that takes an artifact URI (string or None) and returns a result.
 
-        Returns:
-            An iterator of results obtained by applying the function to each artifact URI in the collection.
+        Yields:
+            Results obtained by applying the function to each artifact URI in the collection.
         """
         return (func(run.info.artifact_uri) for run in self._runs)
 
@@ -407,7 +437,7 @@ class RunCollection:
             func: A function that takes an artifact directory path (string) and returns a result.
 
         Yields:
-            The results obtained by applying the function to each artifact directory in the collection.
+            Results obtained by applying the function to each artifact directory in the collection.
         """
         for run in self._runs:
             try:
@@ -744,3 +774,37 @@ def _load_config(run_id: str) -> DictConfig:
         return DictConfig({})
 
     return OmegaConf.load(path)  # type: ignore
+
+
+# def get_hydra_output_dir(run: Run_ | Series | str) -> Path:
+#     """
+#     Get the Hydra output directory.
+
+#     Args:
+#         run: The run object.
+
+#     Returns:
+#         Path: The Hydra output directory.
+#     """
+#     path = get_artifact_dir(run) / ".hydra/hydra.yaml"
+
+#     if path.exists():
+#         hc = OmegaConf.load(path)
+#         return Path(hc.hydra.runtime.output_dir)
+
+#     raise FileNotFoundError
+
+
+# def log_hydra_output_dir(run: Run_ | Series | str) -> None:
+#     """
+#     Log the Hydra output directory.
+
+#     Args:
+#         run: The run object.
+
+#     Returns:
+#         None
+#     """
+#     output_dir = get_hydra_output_dir(run)
+#     run_id = run if isinstance(run, str) else run.info.run_id
+#     mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)

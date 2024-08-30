@@ -160,10 +160,32 @@ def test_runs_first(runs: RunCollection):
     assert run.data.params["p"] == "0"
 
 
+def test_runs_first_empty(runs: RunCollection):
+    runs._runs = []
+    with pytest.raises(ValueError):
+        runs.first()
+
+
+def test_runs_try_first_none(runs: RunCollection):
+    runs._runs = []
+    assert runs.try_first() is None
+
+
 def test_runs_last(runs: RunCollection):
     run = runs.last()
     assert isinstance(run, Run)
     assert run.data.params["p"] == "5"
+
+
+def test_runs_last_empty(runs: RunCollection):
+    runs._runs = []
+    with pytest.raises(ValueError):
+        runs.last()
+
+
+def test_runs_try_last_none(runs: RunCollection):
+    runs._runs = []
+    assert runs.try_last() is None
 
 
 def test_runs_filter(runs: RunCollection):
