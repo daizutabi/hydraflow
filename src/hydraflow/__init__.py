@@ -7,6 +7,7 @@ from .runs import (
     get_param_dict,
     get_param_names,
     get_run,
+    list_runs,
     load_config,
     search_runs,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "get_param_dict",
     "get_param_names",
     "get_run",
+    "list_runs",
     "load_config",
     "log_run",
     "search_runs",
