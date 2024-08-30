@@ -98,7 +98,7 @@ async def test_run_and_monitor(tmp_path: Path):
     def watch(changes: set[tuple[Change, str]]) -> None:
         changes_detected.extend(changes)
 
-    path = (tmp_path / "test.txt").absolute()
+    path = (tmp_path / "test.txt").as_posix()
     c = "import sys;print('hello');print('world', file=sys.stderr);"
     c += f"import pathlib;pathlib.Path('{path}').write_text('hello world');"
     c += "import time;time.sleep(1);sys.exit(200)"
@@ -136,7 +136,7 @@ def test_run(tmp_path: Path):
     def watch(changes: set[tuple[Change, str]]) -> None:
         changes_detected.extend(changes)
 
-    path = (tmp_path / "test").absolute()
+    path = (tmp_path / "test").as_posix()
     c = "import sys;print('hello');print('world', file=sys.stderr);"
     c += f"import pathlib;pathlib.Path('{path}').write_text('hello world');"
     c += f"pathlib.Path('{path}2').write_text('hello world2');"
