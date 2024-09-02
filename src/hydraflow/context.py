@@ -90,6 +90,64 @@ def log_run(
 
 
 @contextmanager
+def start_run(
+    config: object,
+    *,
+    run_id: str | None = None,
+    experiment_id: str | None = None,
+    run_name: str | None = None,
+    nested: bool = False,
+    parent_run_id: str | None = None,
+    tags: dict[str, str] | None = None,
+    description: str | None = None,
+    log_system_metrics: bool | None = None,
+    synchronous: bool | None = None,
+) -> Iterator[Run]:
+    """
+    Start an MLflow run and log parameters using the provided configuration object.
+
+    This context manager starts an MLflow run and logs parameters using the specified
+    configuration object. It ensures that the run is properly closed after completion.
+
+    Args:
+        config (object): The configuration object to log parameters from.
+        run_id (str | None): The existing run ID. Defaults to None.
+        experiment_id (str | None): The experiment ID. Defaults to None.
+        run_name (str | None): The name of the run. Defaults to None.
+        nested (bool): Whether to allow nested runs. Defaults to False.
+        parent_run_id (str | None): The parent run ID. Defaults to None.
+        tags (dict[str, str] | None): Tags to associate with the run. Defaults to None.
+        description (str | None): A description of the run. Defaults to None.
+        log_system_metrics (bool | None): Whether to log system metrics. Defaults to None.
+        synchronous (bool | None): Whether to log parameters synchronously. Defaults to None.
+
+    Yields:
+        Run: An MLflow Run object representing the started run.
+
+    Example:
+        with start_run(config) as run:
+            # Perform operations within the MLflow run context
+            pass
+
+    See Also:
+        `mlflow.start_run`: The MLflow function to start a run directly.
+        `log_run`: A context manager to log parameters and manage the MLflow run context.
+    """
+    with mlflow.start_run(
+        run_id=run_id,
+        experiment_id=experiment_id,
+        run_name=run_name,
+        nested=nested,
+        parent_run_id=parent_run_id,
+        tags=tags,
+        description=description,
+        log_system_metrics=log_system_metrics,
+    ) as run:
+        with log_run(config, synchronous=synchronous):
+            yield run
+
+
+@contextmanager
 def watch(
     func: Callable[[Path], None],
     dir: Path | str = "",
