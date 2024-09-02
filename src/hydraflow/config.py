@@ -22,9 +22,9 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     representing the parameters. The keys are prefixed with the provided prefix.
 
     Args:
-        config: The configuration object to iterate over. This can be a dictionary,
-            list, DictConfig, or ListConfig.
-        prefix: The prefix to prepend to the parameter keys.
+        config (object): The configuration object to iterate over. This can be a
+            dictionary, list, DictConfig, or ListConfig.
+        prefix (str): The prefix to prepend to the parameter keys.
             Defaults to an empty string.
 
     Yields:
