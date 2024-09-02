@@ -148,6 +148,22 @@ class RunCollection:
     def __len__(self) -> int:
         return len(self._runs)
 
+    def __iter__(self) -> Iterator[Run]:
+        return iter(self._runs)
+
+    def __getitem__(self, index: int) -> Run:
+        return self._runs[index]
+
+    def __contains__(self, run: Run) -> bool:
+        return run in self._runs
+
+    def sort(
+        self,
+        key: Callable[[Run], Any] | None = None,
+        reverse: bool = False,
+    ) -> None:
+        self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
+
     def first(self) -> Run:
         """
         Get the first run in the collection.
