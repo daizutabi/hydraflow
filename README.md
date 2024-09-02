@@ -68,12 +68,9 @@ def my_app(cfg: MySQLConfig) -> None:
     # Set experiment by Hydra job name.
     hydraflow.set_experiment()
 
-    # Automatically log params using Hydra config.
-    with mlflow.start_run(), hydraflow.log_run(cfg) as info:
+    # Automatically log Hydra config as params.
+    with hydraflow.start_run():
         # Your app code below.
-
-        # `info.output_dir` is the Hydra output directory.
-        # `info.artifact_dir` is the MLflow artifact directory.
 
         with hydraflow.watch(callback):
             # Watch files in the MLflow artifact directory.

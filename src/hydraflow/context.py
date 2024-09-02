@@ -28,18 +28,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-@dataclass
-class Info:
-    output_dir: Path
-    artifact_dir: Path
-
-
 @contextmanager
 def log_run(
     config: object,
     *,
     synchronous: bool | None = None,
-) -> Iterator[Info]:
+) -> Iterator[None]:
     """
     Log the parameters from the given configuration object and manage the MLflow
     run context.
@@ -54,11 +48,10 @@ def log_run(
             Defaults to None.
 
     Yields:
-        Info: An `Info` object containing the output directory and artifact directory
-        paths.
+        None
 
     Example:
-        with log_run(config) as info:
+        with log_run(config):
             # Perform operations within the MLflow run context
             pass
     """
@@ -66,7 +59,6 @@ def log_run(
 
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
-    info = Info(output_dir, get_artifact_dir())
 
     # Save '.hydra' config directory first.
     output_subdir = output_dir / (hc.output_subdir or "")
@@ -78,7 +70,7 @@ def log_run(
 
     try:
         with watch(log_artifact, output_dir):
-            yield info
+            yield
 
     except Exception as e:
         log.error(f"Error during log_run: {e}")
