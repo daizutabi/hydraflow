@@ -49,8 +49,8 @@ def log_run(
     are logged and the run is properly closed.
 
     Args:
-        config: The configuration object to log the parameters from.
-        synchronous: Whether to log the parameters synchronously.
+        config (object): The configuration object to log the parameters from.
+        synchronous (bool | None): Whether to log the parameters synchronously.
             Defaults to None.
 
     Yields:
@@ -105,12 +105,12 @@ def watch(
     period or until the context is exited.
 
     Args:
-        func: The function to call when a change is
+        func (Callable[[Path], None]): The function to call when a change is
             detected. It should accept a single argument of type `Path`,
             which is the path of the modified file.
-        dir: The directory to watch. If not specified,
+        dir (Path | str): The directory to watch. If not specified,
             the current MLflow artifact URI is used. Defaults to "".
-        timeout: The timeout period in seconds for the watcher
+        timeout (int): The timeout period in seconds for the watcher
             to run after the context is exited. Defaults to 60.
 
     Yields:
@@ -122,6 +122,8 @@ def watch(
             pass
     """
     dir = dir or get_artifact_dir()
+    if isinstance(dir, Path):
+        dir = dir.as_posix()
 
     handler = Handler(func)
     observer = Observer()
@@ -152,7 +154,7 @@ class Handler(FileSystemEventHandler):
         self.func = func
 
     def on_modified(self, event: FileModifiedEvent) -> None:
-        file = Path(event.src_path)
+        file = Path(str(event.src_path))
         if file.is_file():
             self.func(file)
 
@@ -171,8 +173,8 @@ def chdir_artifact(
     to the original directory after the context is exited.
 
     Args:
-        run: The run to get the artifact directory from.
-        artifact_path: The artifact path.
+        run (Run): The run to get the artifact directory from.
+        artifact_path (str | None): The artifact path.
     """
     curdir = Path.cwd()
     path = mlflow.artifacts.download_artifacts(

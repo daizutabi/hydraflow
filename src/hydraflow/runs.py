@@ -45,28 +45,38 @@ def search_runs(
         The returned runs are sorted by their start time in ascending order.
 
     Args:
-        experiment_ids: List of experiment IDs. Search can work with experiment
-            IDs or experiment names, but not both in the same call. Values
-            other than ``None`` or ``[]`` will result in error if
+        experiment_ids (list[str] | None): List of experiment IDs. Search can
+            work with experiment IDs or experiment names, but not both in the
+            same call. Values other than ``None`` or ``[]`` will result in
+            error if ``experiment_names`` is also not ``None`` or ``[]``.
+            ``None`` will default to the active experiment if ``experiment_names``
+            is ``None`` or ``[]``.
+        experiment_ids (list[str] | None): List of experiment IDs. Search can
+            work with experiment IDs or experiment names, but not both in the
+            same call. Values other than ``None`` or ``[]`` will result in
+            error if ``experiment_names`` is also not ``None`` or ``[]``.
             ``experiment_names`` is also not ``None`` or ``[]``. ``None`` will
             default to the active experiment if ``experiment_names`` is ``None``
             or ``[]``.
-        filter_string: Filter query string, defaults to searching all runs.
-        run_view_type: one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``, or
-            ``ALL`` runs defined in :py:class:`mlflow.entities.ViewType`.
-        max_results: The maximum number of runs to put in the dataframe. Default
-            is 100,000 to avoid causing out-of-memory issues on the user's
+        filter_string (str): Filter query string, defaults to searching all
+            runs.
+        run_view_type (int): one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``,
+            or ``ALL`` runs defined in :py:class:`mlflow.entities.ViewType`.
+        max_results (int): The maximum number of runs to put in the dataframe.
+            Default is 100,000 to avoid causing out-of-memory issues on the user's
             machine.
-        order_by: List of columns to order by (e.g., "metrics.rmse"). The
-            ``order_by`` column can contain an optional ``DESC`` or ``ASC``
-            value. The default is ``ASC``. The default ordering is to sort by
+        order_by (list[str] | None): List of columns to order by (e.g.,
+            "metrics.rmse"). The ``order_by`` column can contain an optional
+            ``DESC`` or ``ASC`` value. The default is ``ASC``. The default
+            ordering is to sort by ``start_time DESC``, then ``run_id``.
             ``start_time DESC``, then ``run_id``.
-        search_all_experiments: Boolean specifying whether all experiments
-            should be searched. Only honored if ``experiment_ids`` is ``[]`` or
-            ``None``.
-        experiment_names: List of experiment names. Search can work with
-            experiment IDs or experiment names, but not both in the same call.
-            Values other than ``None`` or ``[]`` will result in error if
+        search_all_experiments (bool): Boolean specifying whether all
+            experiments should be searched. Only honored if ``experiment_ids``
+            is ``[]`` or ``None``.
+        experiment_names (list[str] | None): List of experiment names. Search
+            can work with experiment IDs or experiment names, but not both in
+            the same call. Values other than ``None`` or ``[]`` will result in
+            error if ``experiment_ids`` is also not ``None`` or ``[]``.
             ``experiment_ids`` is also not ``None`` or ``[]``. ``None`` will
             default to the active experiment if ``experiment_ids`` is ``None``
             or ``[]``.
@@ -102,10 +112,10 @@ def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
         The returned runs are sorted by their start time in ascending order.
 
     Args:
-        experiment_names: List of experiment names to search for runs.
-        If None or an empty list is provided, the function will search
-        the currently active experiment or all experiments except the
-        "Default" experiment.
+        experiment_names (list[str] | None): List of experiment names to search
+            for runs. If None or an empty list is provided, the function will
+            search the currently active experiment or all experiments except
+            the "Default" experiment.
 
     Returns:
         A `RunCollection` object containing the runs for the specified experiments.
@@ -206,9 +216,9 @@ class RunCollection:
           and exclusive of the upper bound).
 
         Args:
-            config: The configuration object to filter the runs. This can be
-                any object that provides key-value pairs through the
-                `iter_params` function.
+            config (object | None): The configuration object to filter the runs.
+                This can be any object that provides key-value pairs through
+                the `iter_params` function.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -226,7 +236,7 @@ class RunCollection:
         is raised.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -251,7 +261,7 @@ class RunCollection:
         returned.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -274,7 +284,7 @@ class RunCollection:
         is raised.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -299,7 +309,7 @@ class RunCollection:
         returned.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -322,7 +332,7 @@ class RunCollection:
         one run matches the criteria, a `ValueError` is raised.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -348,7 +358,7 @@ class RunCollection:
         If more than one run matches the criteria, a `ValueError` is raised.
 
         Args:
-            config: The configuration object to identify the run.
+            config (object | None): The configuration object to identify the run.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -398,7 +408,8 @@ class RunCollection:
         results.
 
         Args:
-            func: A function that takes a run and returns a result.
+            func (Callable[[Run], T]): A function that takes a run and returns a
+                result.
 
         Yields:
             Results obtained by applying the function to each run in the
@@ -412,7 +423,8 @@ class RunCollection:
         of results.
 
         Args:
-            func: A function that takes a run id and returns a result.
+            func (Callable[[str], T]): A function that takes a run id and returns a
+                result.
 
         Yields:
             Results obtained by applying the function to each run id in the
@@ -426,8 +438,8 @@ class RunCollection:
         an iterator of results.
 
         Args:
-            func: A function that takes a run configuration and returns a
-            result.
+            func (Callable[[DictConfig], T]): A function that takes a run
+                configuration and returns a result.
 
         Yields:
             Results obtained by applying the function to each run configuration
@@ -445,8 +457,8 @@ class RunCollection:
         have an artifact URI, None is passed to the function.
 
         Args:
-            func: A function that takes an artifact URI (string or None) and
-            returns a result.
+            func (Callable[[str | None], T]): A function that takes an
+            artifact URI (string or None) and returns a result.
 
         Yields:
             Results obtained by applying the function to each artifact URI in the
@@ -464,8 +476,8 @@ class RunCollection:
         path.
 
         Args:
-            func: A function that takes an artifact directory path (string) and
-            returns a result.
+            func (Callable[[str], T]): A function that takes an artifact directory
+                path (string) and returns a result.
 
         Yields:
             Results obtained by applying the function to each artifact directory
@@ -483,9 +495,9 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
     and tuples.
 
     Args:
-        run: The run object to check.
-        key: The parameter key to check.
-        value: The parameter value to check.
+        run (Run): The run object to check.
+        key (str): The parameter key to check.
+        value (Any): The parameter value to check.
 
     Returns:
         True if the run's parameter matches the specified key-value pair,
@@ -526,10 +538,10 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
       exclusive of the upper bound).
 
     Args:
-        runs: The list of runs to filter.
-        config: The configuration object to filter the runs. This can be any
-                object that provides key-value pairs through the `iter_params`
-                function.
+        runs (list[Run]): The list of runs to filter.
+        config (object | None): The configuration object to filter the runs.
+            This can be any object that provides key-value pairs through the
+            `iter_params` function.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -554,8 +566,8 @@ def find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run:
     raised.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -584,8 +596,8 @@ def try_find_run(runs: list[Run], config: object | None = None, **kwargs) -> Run
     the provided parameters. If no run matches the criteria, None is returned.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -610,8 +622,8 @@ def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Ru
     is raised.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -641,8 +653,8 @@ def try_find_last_run(runs: list[Run], config: object | None = None, **kwargs) -
     the provided parameters. If no run matches the criteria, None is returned.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -667,8 +679,8 @@ def get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run:
     than one run matches the criteria, a `ValueError` is raised.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -707,8 +719,8 @@ def try_get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run 
     If more than one run matches the criteria, a `ValueError` is raised.
 
     Args:
-        runs: The runs to filter.
-        config: The configuration object to identify the run.
+        runs (list[Run]): The runs to filter.
+        config (object | None): The configuration object to identify the run.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -746,7 +758,7 @@ def get_param_names(runs: list[Run]) -> list[str]:
     set to ensure uniqueness.
 
     Args:
-        runs: The list of runs from which to extract parameter names.
+        runs (list[Run]): The list of runs from which to extract parameter names.
 
     Returns:
         A list of unique parameter names.
@@ -770,7 +782,8 @@ def get_param_dict(runs: list[Run]) -> dict[str, list[str]]:
     and the values are lists of parameter values.
 
     Args:
-        runs: The list of runs from which to extract parameter names and values.
+        runs (list[Run]): The list of runs from which to extract parameter names
+        and values.
 
     Returns:
         A dictionary where the keys are parameter names and the values are lists
@@ -795,7 +808,7 @@ def load_config(run: Run) -> DictConfig:
     `.hydra/config.yaml` is not found in the run's artifact directory.
 
     Args:
-        run: The Run instance for which to load the configuration.
+        run (Run): The Run instance for which to load the configuration.
 
     Returns:
         The loaded configuration as a DictConfig object. Returns an empty
