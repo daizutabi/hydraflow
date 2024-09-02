@@ -9,7 +9,6 @@ import logging
 import os
 import time
 from contextlib import contextmanager
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
