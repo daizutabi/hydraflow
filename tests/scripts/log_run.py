@@ -7,7 +7,7 @@ import hydra
 import mlflow
 from hydra.core.config_store import ConfigStore
 
-from hydraflow.context import log_run
+import hydraflow
 
 log = logging.getLogger(__name__)
 
@@ -25,11 +25,13 @@ cs.store(name="config", node=MySQLConfig)
 @hydra.main(version_base=None, config_name="config")
 def app(cfg: MySQLConfig):
     mlflow.set_experiment("log_run")
-    with mlflow.start_run(), log_run(cfg) as info:
+    with hydraflow.start_run(cfg):
+        artifact_dir = hydraflow.get_artifact_dir()
+        output_dir = hydraflow.get_hydra_output_dir()
         log.info(f"START, {cfg.host}, {cfg.port} ")
-        mlflow.log_text("A " + info.artifact_dir.as_posix(), "artifact_dir.txt")
-        mlflow.log_text("B " + info.output_dir.as_posix(), "output_dir.txt")
-        (info.artifact_dir / "a.txt").write_text("abc")
+        mlflow.log_text("A " + artifact_dir.as_posix(), "artifact_dir.txt")
+        mlflow.log_text("B " + output_dir.as_posix(), "output_dir.txt")
+        (artifact_dir / "a.txt").write_text("abc")
         log.info("END")
 
 

@@ -26,7 +26,7 @@ def runs(monkeypatch, tmp_path):
 
 @pytest.fixture(params=range(4))
 def run(runs, request):
-    run = runs[request.param]
+    run = runs[request.param]  # type: ignore
     assert isinstance(run, Run)
     return run
 

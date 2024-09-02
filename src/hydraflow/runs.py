@@ -842,37 +842,3 @@ def _load_config(run_id: str) -> DictConfig:
         return DictConfig({})
 
     return OmegaConf.load(path)  # type: ignore
-
-
-# def get_hydra_output_dir(run: Run_ | Series | str) -> Path:
-#     """
-#     Get the Hydra output directory.
-
-#     Args:
-#         run: The run object.
-
-#     Returns:
-#         Path: The Hydra output directory.
-#     """
-#     path = get_artifact_dir(run) / ".hydra/hydra.yaml"
-
-#     if path.exists():
-#         hc = OmegaConf.load(path)
-#         return Path(hc.hydra.runtime.output_dir)
-
-#     raise FileNotFoundError
-
-
-# def log_hydra_output_dir(run: Run_ | Series | str) -> None:
-#     """
-#     Log the Hydra output directory.
-
-#     Args:
-#         run: The run object.
-
-#     Returns:
-#         None
-#     """
-#     output_dir = get_hydra_output_dir(run)
-#     run_id = run if isinstance(run, str) else run.info.run_id
-#     mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 import mlflow
 from hydra.core.hydra_config import HydraConfig
+from mlflow.tracking import artifact_utils
+from omegaconf import OmegaConf
 
 from hydraflow.config import iter_params
 
@@ -63,7 +65,11 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         mlflow.log_param(key, value, synchronous=synchronous)
 
 
-def get_artifact_dir(artifact_path: str | None = None) -> Path:
+def get_artifact_dir(
+    artifact_path: str | None = None,
+    *,
+    run_id: str | None = None,
+) -> Path:
     """
     Get the artifact directory for the given artifact path.
 
@@ -74,11 +80,45 @@ def get_artifact_dir(artifact_path: str | None = None) -> Path:
     Args:
         artifact_path (str | None): The artifact path for which to get the
             directory. Defaults to None.
+        run_id (str | None): The run ID for which to get the artifact directory.
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
     """
-    uri = mlflow.get_artifact_uri(artifact_path)
+    if run_id is None:
+        uri = mlflow.get_artifact_uri(artifact_path)
+    else:
+        uri = artifact_utils.get_artifact_uri(run_id, artifact_path)
+
     dir = mlflow.artifacts.download_artifacts(artifact_uri=uri)
 
     return Path(dir)
+
+
+def get_hydra_output_dir(*, run_id: str | None = None) -> Path:
+    if run_id is None:
+        hc = HydraConfig.get()
+        return Path(hc.runtime.output_dir)
+
+    path = get_artifact_dir(run_id=run_id) / ".hydra/hydra.yaml"
+
+    if path.exists():
+        hc = OmegaConf.load(path)
+        return Path(hc.hydra.runtime.output_dir)
+
+    raise FileNotFoundError
+
+
+# def log_hydra_output_dir(run: Run_ | Series | str) -> None:
+#     """
+#     Log the Hydra output directory.
+
+#     Args:
+#         run: The run object.
+
+#     Returns:
+#         None
+#     """
+#     output_dir = get_hydra_output_dir(run)
+#     run_id = run if isinstance(run, str) else run.info.run_id
+#     mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)
