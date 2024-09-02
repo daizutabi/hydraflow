@@ -396,6 +396,29 @@ def test_run_collection_map_dir(runs: RunCollection):
     assert all(isinstance(dir_path, str) for dir_path in results)
 
 
+def test_run_collection_sort(runs: RunCollection):
+    runs.sort(key=lambda x: x.data.params["p"])
+    assert [run.data.params["p"] for run in runs] == ["0", "1", "2", "3", "4", "5"]
+
+    runs.sort(reverse=True)
+    assert [run.data.params["p"] for run in runs] == ["5", "4", "3", "2", "1", "0"]
+
+
+def test_run_collection_iter(runs: RunCollection):
+    assert list(runs) == runs._runs
+
+
+@pytest.mark.parametrize("i", range(6))
+def test_run_collection_getitem(runs: RunCollection, i: int):
+    assert runs[i] == runs._runs[i]
+
+
+@pytest.mark.parametrize("i", range(6))
+def test_run_collection_contains(runs: RunCollection, i: int):
+    assert runs[i] in runs
+    assert runs._runs[i] in runs
+
+
 # def test_hydra_output_dir_error(runs_list: list[Run]):
 #     from hydraflow.runs import get_hydra_output_dir
 
