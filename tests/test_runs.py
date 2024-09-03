@@ -419,6 +419,21 @@ def test_run_collection_contains(runs: RunCollection, i: int):
     assert runs._runs[i] in runs
 
 
+def test_run_collection_group_by(runs: RunCollection):
+    grouped = runs.group_by(["p"])
+    assert len(grouped) == 6
+    assert all(isinstance(group, RunCollection) for group in grouped.values())
+    assert all(len(group) == 1 for group in grouped.values())
+    assert grouped[("0",)][0] == runs[0]
+    assert grouped[("1",)][0] == runs[1]
+
+    grouped = runs.group_by(["q"])
+    assert len(grouped) == 2
+
+    grouped = runs.group_by(["r"])
+    assert len(grouped) == 3
+
+
 # def test_hydra_output_dir_error(runs_list: list[Run]):
 #     from hydraflow.runs import get_hydra_output_dir
 

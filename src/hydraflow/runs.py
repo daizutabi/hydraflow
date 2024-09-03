@@ -501,6 +501,33 @@ class RunCollection:
         """
         return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
+    def group_by(
+        self, names: list[str] | None = None, *args
+    ) -> dict[tuple[str, ...], RunCollection]:
+        """
+        Group the runs by the specified parameter names and return a dictionary
+        where the keys are the parameter values and the values are the runs.
+
+        Args:
+            names (list[str] | None): The parameter names to group by.
+            *args: Additional positional arguments to specify parameter names.
+
+        Returns:
+            A dictionary where the keys are the parameter values and the values
+            are the runs.
+        """
+        names = names[:] if names else []
+        names.extend(args)
+
+        grouped_runs = {}
+        for run in self._runs:
+            key = get_params(run, names)
+            if key not in grouped_runs:
+                grouped_runs[key] = []
+            grouped_runs[key].append(run)
+
+        return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
+
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
     """
@@ -763,6 +790,13 @@ def try_get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run 
         f"but found {len(filtered_runs)} runs."
     )
     raise ValueError(msg)
+
+
+def get_params(run: Run, names: list[str] | None = None, *args) -> tuple[str, ...]:
+    names = names[:] if names else []
+    names.extend(args)
+
+    return tuple(run.data.params[name] for name in names)
 
 
 def get_param_names(runs: list[Run]) -> list[str]:
