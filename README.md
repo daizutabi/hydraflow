@@ -17,7 +17,7 @@
 
 ## Overview
 
-Hydraflow is a powerful library designed to seamlessly integrate
+Hydraflow is a library designed to seamlessly integrate
 [Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/), making it easier to
 manage and track machine learning experiments. By combining the flexibility of
 Hydra's configuration management with the robust experiment tracking capabilities
