@@ -1,3 +1,5 @@
+import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import mlflow
@@ -67,14 +69,20 @@ def test_log_run_error_handling():
                 pass
 
 
-def test_watch_error_handling():
-    func = MagicMock()
-    dir = "/tmp"
+def test_watch_context_manager(tmp_path: Path):
+    test_dir = tmp_path / "test_watch"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file = test_dir / "test_file.txt"
 
-    with patch("hydraflow.context.Observer") as mock_observer:
-        mock_observer_instance = mock_observer.return_value
-        mock_observer_instance.start.side_effect = Exception("Test exception")
+    called = []
 
-        with pytest.raises(Exception, match="Test exception"):
-            with watch(func, dir):
-                pass
+    def mock_func(path: Path):
+        assert path == test_file
+        called.append(path)
+
+    with watch(mock_func, test_dir):
+        test_file.write_text("new content")
+        time.sleep(1)
+
+    assert len(called) == 1
+    assert called[0] == test_file
