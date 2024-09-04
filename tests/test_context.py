@@ -19,7 +19,7 @@ def runs(monkeypatch, tmp_path):
         patch("hydraflow.context.HydraConfig.get") as mock_hydra_config,
         patch("hydraflow.context.mlflow.log_artifacts") as mock_log_artifacts,
     ):
-        mock_hydra_config.return_value.runtime.output_dir = "/tmp"
+        mock_hydra_config.return_value.runtime.output_dir = tmp_path.as_posix()
         mock_log_artifacts.return_value = None
 
         mlflow.set_experiment("test_run")
@@ -51,7 +51,7 @@ def test_runs_params_dict(runs: RunCollection, i: int):
     assert runs[i].data.params["d.i"] == str(i)
 
 
-def test_log_run_error_handling():
+def test_log_run_error_handling(tmp_path: Path):
     config = MagicMock()
     config.some_param = "value"
 
@@ -61,7 +61,7 @@ def test_log_run_error_handling():
         patch("hydraflow.context.mlflow.log_artifacts") as mock_log_artifacts,
     ):
         mock_log_params.side_effect = Exception("Test exception")
-        mock_hydra_config.return_value.runtime.output_dir = "/tmp"
+        mock_hydra_config.return_value.runtime.output_dir = tmp_path.as_posix()
         mock_log_artifacts.return_value = None
 
         with pytest.raises(Exception, match="Test exception"):
