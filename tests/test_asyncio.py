@@ -77,6 +77,7 @@ async def test_monitor_file_changes(tmp_path: Path, write_soon: Callable[[Path],
     await asyncio.sleep(1)
     stop_event.set()
     await monitor_task
+    await asyncio.sleep(1)
 
     assert len(changes_detected) > 0
 

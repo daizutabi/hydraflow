@@ -1,3 +1,5 @@
+import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import mlflow
@@ -17,7 +19,7 @@ def runs(monkeypatch, tmp_path):
         patch("hydraflow.context.HydraConfig.get") as mock_hydra_config,
         patch("hydraflow.context.mlflow.log_artifacts") as mock_log_artifacts,
     ):
-        mock_hydra_config.return_value.runtime.output_dir = "/tmp"
+        mock_hydra_config.return_value.runtime.output_dir = tmp_path.as_posix()
         mock_log_artifacts.return_value = None
 
         mlflow.set_experiment("test_run")
@@ -49,7 +51,7 @@ def test_runs_params_dict(runs: RunCollection, i: int):
     assert runs[i].data.params["d.i"] == str(i)
 
 
-def test_log_run_error_handling():
+def test_log_run_error_handling(tmp_path: Path):
     config = MagicMock()
     config.some_param = "value"
 
@@ -59,7 +61,7 @@ def test_log_run_error_handling():
         patch("hydraflow.context.mlflow.log_artifacts") as mock_log_artifacts,
     ):
         mock_log_params.side_effect = Exception("Test exception")
-        mock_hydra_config.return_value.runtime.output_dir = "/tmp"
+        mock_hydra_config.return_value.runtime.output_dir = tmp_path.as_posix()
         mock_log_artifacts.return_value = None
 
         with pytest.raises(Exception, match="Test exception"):
@@ -67,14 +69,20 @@ def test_log_run_error_handling():
                 pass
 
 
-def test_watch_error_handling():
-    func = MagicMock()
-    dir = "/tmp"
+def test_watch_context_manager(tmp_path: Path):
+    test_dir = tmp_path / "test_watch"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_file = test_dir / "test_file.txt"
 
-    with patch("hydraflow.context.Observer") as mock_observer:
-        mock_observer_instance = mock_observer.return_value
-        mock_observer_instance.start.side_effect = Exception("Test exception")
+    called = []
 
-        with pytest.raises(Exception, match="Test exception"):
-            with watch(func, dir):
-                pass
+    def mock_func(path: Path):
+        assert path == test_file
+        called.append(path)
+
+    with watch(mock_func, test_dir):
+        test_file.write_text("new content")
+        time.sleep(1)
+
+    assert len(called) == 1
+    assert called[0] == test_file
