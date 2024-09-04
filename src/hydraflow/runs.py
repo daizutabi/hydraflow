@@ -51,13 +51,6 @@ def search_runs(
             error if ``experiment_names`` is also not ``None`` or ``[]``.
             ``None`` will default to the active experiment if ``experiment_names``
             is ``None`` or ``[]``.
-        experiment_ids (list[str] | None): List of experiment IDs. Search can
-            work with experiment IDs or experiment names, but not both in the
-            same call. Values other than ``None`` or ``[]`` will result in
-            error if ``experiment_names`` is also not ``None`` or ``[]``.
-            ``experiment_names`` is also not ``None`` or ``[]``. ``None`` will
-            default to the active experiment if ``experiment_names`` is ``None``
-            or ``[]``.
         filter_string (str): Filter query string, defaults to searching all
             runs.
         run_view_type (int): one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``,
@@ -501,30 +494,28 @@ class RunCollection:
         """
         return (func(download_artifacts(run_id=run.info.run_id)) for run in self._runs)
 
-    def group_by(
-        self, names: list[str] | None = None, *args
-    ) -> dict[tuple[str, ...], RunCollection]:
+    def group_by(self, *names: str | list[str]) -> dict[tuple[str | None, ...], RunCollection]:
         """
-        Group the runs by the specified parameter names and return a dictionary
-        where the keys are the parameter values and the values are the runs.
+        Group runs by specified parameter names.
+
+        This method groups the runs in the collection based on the values of the
+        specified parameters. Each unique combination of parameter values will
+        form a key in the returned dictionary.
 
         Args:
-            names (list[str] | None): The parameter names to group by.
-            *args: Additional positional arguments to specify parameter names.
+            *names (str | list[str]): The names of the parameters to group by.
+                This can be a single parameter name or multiple names provided
+                as separate arguments or as a list.
 
         Returns:
-            A dictionary where the keys are the parameter values and the values
-            are the runs.
+            dict[tuple[str | None, ...], RunCollection]: A dictionary where the keys
+            are tuples of parameter values and the values are RunCollection objects
+            containing the runs that match those parameter values.
         """
-        names = names[:] if names else []
-        names.extend(args)
-
-        grouped_runs = {}
+        grouped_runs: dict[tuple[str | None, ...], list[Run]] = {}
         for run in self._runs:
-            key = get_params(run, names)
-            if key not in grouped_runs:
-                grouped_runs[key] = []
-            grouped_runs[key].append(run)
+            key = get_params(run, *names)
+            grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
 
@@ -792,11 +783,32 @@ def try_get_run(runs: list[Run], config: object | None = None, **kwargs) -> Run 
     raise ValueError(msg)
 
 
-def get_params(run: Run, names: list[str] | None = None, *args) -> tuple[str, ...]:
-    names = names[:] if names else []
-    names.extend(args)
+def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
+    """
+    Retrieve the values of specified parameters from the given run.
 
-    return tuple(run.data.params[name] for name in names)
+    This function extracts the values of the parameters identified by the
+    provided names from the specified run. It can accept both individual
+    parameter names and lists of parameter names.
+
+    Args:
+        run (Run): The run object from which to extract parameter values.
+        *names (str | list[str]): The names of the parameters to retrieve.
+            This can be a single parameter name or multiple names provided
+            as separate arguments or as a list.
+
+    Returns:
+        tuple[str | None, ...]: A tuple containing the values of the specified
+        parameters in the order they were provided.
+    """
+    names_ = []
+    for name in names:
+        if isinstance(name, list):
+            names_.extend(name)
+        else:
+            names_.append(name)
+
+    return tuple(run.data.params.get(name) for name in names_)
 
 
 def get_param_names(runs: list[Run]) -> list[str]:
