@@ -52,3 +52,13 @@ def test_info_artifact_dir(runs: RunCollection):
     dir = runs.info.artifact_dir
     assert all(isinstance(d, Path) for d in dir)
     assert all(d.stem == "artifacts" for d in dir)  # type: ignore
+
+
+def test_info_empty_run_collection():
+    rc = RunCollection([])
+    assert rc.info.run_id == []
+    assert rc.info.params == []
+    assert rc.info.metrics == []
+    assert rc.info.artifact_uri == []
+    assert rc.info.artifact_dir == []
+    assert rc.info.config == []

@@ -36,7 +36,7 @@ def app(cfg: MySQLConfig):
         mlflow.log_text("A " + artifact_dir.as_posix(), "artifact_dir.txt")
         mlflow.log_text("B " + output_dir.as_posix(), "output_dir.txt")
 
-        with hydraflow.watch(callback):
+        with hydraflow.watch(callback, ignore_patterns=["b.txt"]):
             (artifact_dir / "a.txt").write_text("abc")
             time.sleep(0.1)
 

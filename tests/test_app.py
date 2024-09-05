@@ -6,6 +6,7 @@ from pathlib import Path
 
 import mlflow
 import pytest
+from omegaconf import DictConfig
 
 from hydraflow.run_collection import RunCollection
 
@@ -76,3 +77,33 @@ def test_app_hydra_output_dir(rc: RunCollection):
     assert dirs[1].stem == "1"
     assert dirs[2].stem == "2"
     assert dirs[3].stem == "3"
+
+
+def test_app_map_config(rc: RunCollection):
+    ports = []
+
+    def func(c: DictConfig, *, a: int):
+        ports.append(c.port + 1)
+        return c.host
+
+    hosts = list(rc.map_config(func, a=1))
+    assert hosts == ["x", "x", "y", "y"]
+    assert ports == [2, 3, 2, 3]
+
+
+def test_app_group_by(rc: RunCollection):
+    grouped = rc.group_by("host")
+    assert len(grouped) == 2
+    assert grouped[("x",)].info.params[0] == {"port": "1", "host": "x"}
+    assert grouped[("x",)].info.params[1] == {"port": "2", "host": "x"}
+    assert grouped[("y",)].info.params[0] == {"port": "1", "host": "y"}
+    assert grouped[("y",)].info.params[1] == {"port": "2", "host": "y"}
+
+
+def test_app_group_by_values(rc: RunCollection):
+    grouped = rc.group_by_values("port")
+    assert len(grouped) == 2
+    assert grouped[0].info.params[0] == {"port": "1", "host": "x"}
+    assert grouped[0].info.params[1] == {"port": "1", "host": "y"}
+    assert grouped[1].info.params[0] == {"port": "2", "host": "x"}
+    assert grouped[1].info.params[1] == {"port": "2", "host": "y"}
