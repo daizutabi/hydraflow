@@ -7,7 +7,7 @@ from hydraflow.mlflow import get_artifact_dir
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from hydraflow.runs import RunCollection
+    from hydraflow.run_collection import RunCollection
 
 
 class RunCollectionInfo:

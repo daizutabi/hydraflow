@@ -7,12 +7,12 @@ import pytest
 from mlflow.entities import Run
 from omegaconf import DictConfig
 
-from hydraflow.runs import RunCollection
+from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    from hydraflow.runs import search_runs
+    from hydraflow.run_collection import search_runs
 
     monkeypatch.chdir(tmp_path)
 
@@ -39,13 +39,13 @@ def test_search_runs_sorted(run_list: list[Run]):
 
 
 def test_filter_none(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     assert run_list == filter_runs(run_list)
 
 
 def test_filter_one(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     assert len(run_list) == 6
     x = filter_runs(run_list, {"p": 1})
@@ -55,7 +55,7 @@ def test_filter_one(run_list: list[Run]):
 
 
 def test_filter_all(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     assert len(run_list) == 6
     x = filter_runs(run_list, {"q": 0})
@@ -65,28 +65,28 @@ def test_filter_all(run_list: list[Run]):
 
 
 def test_filter_list(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, p=[0, 4, 5])
     assert len(x) == 3
 
 
 def test_filter_tuple(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, p=(1, 3))
     assert len(x) == 2
 
 
 def test_filter_invalid_param(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, {"invalid": 0})
     assert len(x) == 6
 
 
 def test_find_run(run_list: list[Run]):
-    from hydraflow.runs import find_run, try_find_run
+    from hydraflow.run_collection import find_run, try_find_run
 
     x = find_run(run_list, {"r": 1})
     assert isinstance(x, Run)
@@ -100,20 +100,20 @@ def test_find_run(run_list: list[Run]):
 
 
 def test_find_run_none(run_list: list[Run]):
-    from hydraflow.runs import find_run
+    from hydraflow.run_collection import find_run
 
     with pytest.raises(ValueError):
         find_run(run_list, {"r": 10})
 
 
 def test_try_find_run_none_empty(run_list: list[Run]):
-    from hydraflow.runs import try_find_run
+    from hydraflow.run_collection import try_find_run
 
     assert try_find_run([]) is None
 
 
 def test_find_last_run(run_list: list[Run]):
-    from hydraflow.runs import find_last_run, try_find_last_run
+    from hydraflow.run_collection import find_last_run, try_find_last_run
 
     x = find_last_run(run_list, {"r": 1})
     assert isinstance(x, Run)
@@ -127,20 +127,20 @@ def test_find_last_run(run_list: list[Run]):
 
 
 def test_find_last_run_none(run_list: list[Run]):
-    from hydraflow.runs import find_last_run
+    from hydraflow.run_collection import find_last_run
 
     with pytest.raises(ValueError):
         find_last_run(run_list, {"r": 10})
 
 
 def test_try_find_last_run_none(run_list: list[Run]):
-    from hydraflow.runs import try_find_last_run
+    from hydraflow.run_collection import try_find_last_run
 
     assert try_find_last_run([]) is None
 
 
 def test_get_run(run_list: list[Run]):
-    from hydraflow.runs import get_run
+    from hydraflow.run_collection import get_run
 
     run = get_run(run_list, {"p": 4})
     assert isinstance(run, Run)
@@ -148,7 +148,7 @@ def test_get_run(run_list: list[Run]):
 
 
 def test_get_run_error(run_list: list[Run]):
-    from hydraflow.runs import get_run
+    from hydraflow.run_collection import get_run
 
     with pytest.raises(ValueError):
         get_run(run_list, {"q": 0})
@@ -158,20 +158,20 @@ def test_get_run_error(run_list: list[Run]):
 
 
 def test_try_get_run_none(run_list: list[Run]):
-    from hydraflow.runs import try_get_run
+    from hydraflow.run_collection import try_get_run
 
     assert try_get_run(run_list, {"q": -1}) is None
 
 
 def test_try_get_run_error(run_list: list[Run]):
-    from hydraflow.runs import try_get_run
+    from hydraflow.run_collection import try_get_run
 
     with pytest.raises(ValueError):
         try_get_run(run_list, {"q": 0})
 
 
 def test_get_params(run_list: list[Run]):
-    from hydraflow.runs import get_params
+    from hydraflow.run_collection import get_params
 
     assert get_params(run_list[1], "p") == ("1",)
     assert get_params(run_list[2], "p", "q") == ("2", "0")
@@ -181,7 +181,7 @@ def test_get_params(run_list: list[Run]):
 
 
 def test_get_param_names(run_list: list[Run]):
-    from hydraflow.runs import get_param_names
+    from hydraflow.run_collection import get_param_names
 
     params = get_param_names(run_list)
     assert len(params) == 3
@@ -191,7 +191,7 @@ def test_get_param_names(run_list: list[Run]):
 
 
 def test_get_param_dict(run_list: list[Run]):
-    from hydraflow.runs import get_param_dict
+    from hydraflow.run_collection import get_param_dict
 
     params = get_param_dict(run_list)
     assert len(params["p"]) == 6
@@ -260,7 +260,7 @@ def test_runs_filter(runs: RunCollection):
 
 
 def test_runs_get(runs: RunCollection):
-    from hydraflow.runs import Run
+    from hydraflow.run_collection import Run
 
     run = runs.get({"p": 4})
     assert isinstance(run, Run)
@@ -293,7 +293,7 @@ def test_runs_get_params_dict(runs: RunCollection):
 
 
 def test_runs_find(runs: RunCollection):
-    from hydraflow.runs import Run
+    from hydraflow.run_collection import Run
 
     run = runs.find({"r": 0})
     assert isinstance(run, Run)
@@ -314,7 +314,7 @@ def test_runs_try_find_none(runs: RunCollection):
 
 
 def test_runs_find_last(runs: RunCollection):
-    from hydraflow.runs import Run
+    from hydraflow.run_collection import Run
 
     run = runs.find_last({"r": 0})
     assert isinstance(run, Run)
@@ -343,7 +343,7 @@ def runs2(monkeypatch, tmp_path):
 
 
 def test_list_runs(runs, runs2):
-    from hydraflow.runs import list_runs
+    from hydraflow.run_collection import list_runs
 
     mlflow.set_experiment("test_run")
     all_runs = list_runs()
@@ -355,7 +355,7 @@ def test_list_runs(runs, runs2):
 
 
 def test_list_runs_empty_list(runs, runs2):
-    from hydraflow.runs import list_runs
+    from hydraflow.run_collection import list_runs
 
     all_runs = list_runs([])
     assert len(all_runs) == 9
@@ -363,14 +363,14 @@ def test_list_runs_empty_list(runs, runs2):
 
 @pytest.mark.parametrize(["name", "n"], [("test_run", 6), ("test_run2", 3)])
 def test_list_runs_list(runs, runs2, name, n):
-    from hydraflow.runs import list_runs
+    from hydraflow.run_collection import list_runs
 
     filtered_runs = list_runs(experiment_names=[name])
     assert len(filtered_runs) == n
 
 
 def test_list_runs_none(runs, runs2):
-    from hydraflow.runs import list_runs
+    from hydraflow.run_collection import list_runs
 
     no_runs = list_runs(experiment_names=["non_existent_experiment"])
     assert len(no_runs) == 0
@@ -456,28 +456,28 @@ def test_run_collection_group_by(runs: RunCollection):
 
 
 def test_filter_runs_empty_list():
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     x = filter_runs([], p=[0, 1, 2])
     assert x == []
 
 
 def test_filter_runs_no_match(run_list: list[Run]):
-    from hydraflow.runs import filter_runs
+    from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, p=[10, 11, 12])
     assert x == []
 
 
 def test_get_run_no_match(run_list: list[Run]):
-    from hydraflow.runs import get_run
+    from hydraflow.run_collection import get_run
 
     with pytest.raises(ValueError):
         get_run(run_list, {"p": 10})
 
 
 def test_get_run_multiple_params(run_list: list[Run]):
-    from hydraflow.runs import get_run
+    from hydraflow.run_collection import get_run
 
     run = get_run(run_list, {"p": 4, "q": 0})
     assert isinstance(run, Run)
@@ -486,13 +486,13 @@ def test_get_run_multiple_params(run_list: list[Run]):
 
 
 def test_try_get_run_no_match(run_list: list[Run]):
-    from hydraflow.runs import try_get_run
+    from hydraflow.run_collection import try_get_run
 
     assert try_get_run(run_list, {"p": 10}) is None
 
 
 def test_try_get_run_multiple_params(run_list: list[Run]):
-    from hydraflow.runs import try_get_run
+    from hydraflow.run_collection import try_get_run
 
     run = try_get_run(run_list, {"p": 4, "q": 0})
     assert isinstance(run, Run)

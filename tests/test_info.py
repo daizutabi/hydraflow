@@ -3,12 +3,12 @@ from pathlib import Path
 import mlflow
 import pytest
 
-from hydraflow.runs import RunCollection
+from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    from hydraflow.runs import search_runs
+    from hydraflow.run_collection import search_runs
 
     monkeypatch.chdir(tmp_path)
 
