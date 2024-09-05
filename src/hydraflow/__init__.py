@@ -1,9 +1,9 @@
 from .context import chdir_artifact, log_run, start_run, watch
+from .info import load_config
 from .mlflow import get_artifact_dir, get_hydra_output_dir, set_experiment
 from .run_collection import (
     RunCollection,
     list_runs,
-    load_config,
     search_runs,
 )
 

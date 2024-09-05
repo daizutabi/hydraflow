@@ -5,7 +5,6 @@ from pathlib import Path
 import mlflow
 import pytest
 from mlflow.entities import Run
-from omegaconf import DictConfig
 
 from hydraflow.run_collection import RunCollection
 
@@ -396,12 +395,6 @@ def test_run_collection_map_run_id(runs: RunCollection):
 def test_run_collection_map_run_id_kwargs(runs: RunCollection):
     results = list(runs.map_run_id(lambda run_id, x: x + run_id, x="test"))
     assert all(x.startswith("test") for x in results)
-
-
-def test_run_collection_map_config(runs: RunCollection):
-    results = list(runs.map_config(lambda config: config))
-    assert len(results) == len(runs._runs)
-    assert all(isinstance(config, DictConfig) for config in results)
 
 
 def test_run_collection_map_uri(runs: RunCollection):
