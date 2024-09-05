@@ -6,12 +6,12 @@ import mlflow
 import pytest
 
 from hydraflow.context import log_run, start_run, watch
-from hydraflow.runs import RunCollection
+from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    from hydraflow.runs import list_runs
+    from hydraflow.run_collection import list_runs
 
     monkeypatch.chdir(tmp_path)
 

@@ -17,6 +17,7 @@ from hydraflow.config import iter_params
 
 if TYPE_CHECKING:
     from mlflow.entities.experiment import Experiment
+    from mlflow.entities.run import Run
 
 
 def set_experiment(
@@ -65,60 +66,54 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         mlflow.log_param(key, value, synchronous=synchronous)
 
 
-def get_artifact_dir(
-    artifact_path: str | None = None,
-    *,
-    run_id: str | None = None,
-) -> Path:
+def get_artifact_dir(run: Run | None = None) -> Path:
     """
-    Get the artifact directory for the given artifact path.
+    Retrieve the artifact directory for the given run.
 
-    This function retrieves the artifact URI for the specified artifact path
-    using MLflow, downloads the artifacts to a local directory, and returns
-    the path to that directory.
+    This function uses MLflow to get the artifact directory for the given run.
 
     Args:
-        artifact_path (str | None): The artifact path for which to get the
-            directory. Defaults to None.
-        run_id (str | None): The run ID for which to get the artifact directory.
+        run (Run | None): The run object. Defaults to None.
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
     """
-    if run_id is None:
-        uri = mlflow.get_artifact_uri(artifact_path)
+    if run is None:
+        uri = mlflow.get_artifact_uri()
     else:
-        uri = artifact_utils.get_artifact_uri(run_id, artifact_path)
+        uri = artifact_utils.get_artifact_uri(run.info.run_id)
 
-    dir = mlflow.artifacts.download_artifacts(artifact_uri=uri)
-
-    return Path(dir)
+    return Path(mlflow.artifacts.download_artifacts(uri))
 
 
-def get_hydra_output_dir(*, run_id: str | None = None) -> Path:
-    if run_id is None:
+def get_hydra_output_dir(*, run: Run | None = None) -> Path:
+    """
+    Retrieve the Hydra output directory for the given run.
+
+    This function returns the Hydra output directory. If no run is provided,
+    it retrieves the output directory from the current Hydra configuration.
+    If a run is provided, it retrieves the artifact path for the run, loads
+    the Hydra configuration from the downloaded artifacts, and returns the
+    output directory specified in that configuration.
+
+    Args:
+        run (Run | None): The run object. Defaults to None.
+
+    Returns:
+        Path: The path to the Hydra output directory.
+
+    Raises:
+        FileNotFoundError: If the Hydra configuration file is not found
+            in the artifacts.
+    """
+    if run is None:
         hc = HydraConfig.get()
         return Path(hc.runtime.output_dir)
 
-    path = get_artifact_dir(run_id=run_id) / ".hydra/hydra.yaml"
+    path = get_artifact_dir(run) / ".hydra/hydra.yaml"
 
     if path.exists():
         hc = OmegaConf.load(path)
         return Path(hc.hydra.runtime.output_dir)
 
     raise FileNotFoundError
-
-
-# def log_hydra_output_dir(run: Run_ | Series | str) -> None:
-#     """
-#     Log the Hydra output directory.
-
-#     Args:
-#         run: The run object.
-
-#     Returns:
-#         None
-#     """
-#     output_dir = get_hydra_output_dir(run)
-#     run_id = run if isinstance(run, str) else run.info.run_id
-#     mlflow.log_artifacts(output_dir.as_posix(), run_id=run_id)
