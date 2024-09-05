@@ -17,7 +17,8 @@ from hydra.core.hydra_config import HydraConfig
 from watchdog.events import FileModifiedEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-from hydraflow.mlflow import get_artifact_dir, log_params
+from hydraflow.info import get_artifact_dir
+from hydraflow.mlflow import log_params
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator

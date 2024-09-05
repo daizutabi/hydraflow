@@ -11,7 +11,7 @@ from hydraflow.run_collection import RunCollection
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    from hydraflow.run_collection import search_runs
+    from hydraflow.mlflow import search_runs
 
     monkeypatch.chdir(tmp_path)
 
@@ -342,7 +342,7 @@ def runs2(monkeypatch, tmp_path):
 
 
 def test_list_runs(runs, runs2):
-    from hydraflow.run_collection import list_runs
+    from hydraflow.mlflow import list_runs
 
     mlflow.set_experiment("test_run")
     all_runs = list_runs()
@@ -354,7 +354,7 @@ def test_list_runs(runs, runs2):
 
 
 def test_list_runs_empty_list(runs, runs2):
-    from hydraflow.run_collection import list_runs
+    from hydraflow.mlflow import list_runs
 
     all_runs = list_runs([])
     assert len(all_runs) == 9
@@ -362,14 +362,14 @@ def test_list_runs_empty_list(runs, runs2):
 
 @pytest.mark.parametrize(["name", "n"], [("test_run", 6), ("test_run2", 3)])
 def test_list_runs_list(runs, runs2, name, n):
-    from hydraflow.run_collection import list_runs
+    from hydraflow.mlflow import list_runs
 
     filtered_runs = list_runs(experiment_names=[name])
     assert len(filtered_runs) == n
 
 
 def test_list_runs_none(runs, runs2):
-    from hydraflow.run_collection import list_runs
+    from hydraflow.mlflow import list_runs
 
     no_runs = list_runs(experiment_names=["non_existent_experiment"])
     assert len(no_runs) == 0

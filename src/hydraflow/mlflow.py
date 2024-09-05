@@ -10,14 +10,14 @@ from typing import TYPE_CHECKING
 
 import mlflow
 from hydra.core.hydra_config import HydraConfig
-from mlflow.tracking import artifact_utils
-from omegaconf import OmegaConf
+from mlflow.entities import ViewType
+from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
 
 from hydraflow.config import iter_params
+from hydraflow.run_collection import RunCollection
 
 if TYPE_CHECKING:
     from mlflow.entities.experiment import Experiment
-    from mlflow.entities.run import Run
 
 
 def set_experiment(
@@ -66,54 +66,96 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         mlflow.log_param(key, value, synchronous=synchronous)
 
 
-def get_artifact_dir(run: Run | None = None) -> Path:
+def search_runs(
+    experiment_ids: list[str] | None = None,
+    filter_string: str = "",
+    run_view_type: int = ViewType.ACTIVE_ONLY,
+    max_results: int = SEARCH_MAX_RESULTS_PANDAS,
+    order_by: list[str] | None = None,
+    search_all_experiments: bool = False,
+    experiment_names: list[str] | None = None,
+) -> RunCollection:
     """
-    Retrieve the artifact directory for the given run.
+    Search for Runs that fit the specified criteria.
 
-    This function uses MLflow to get the artifact directory for the given run.
+    This function wraps the `mlflow.search_runs` function and returns the
+    results as a `RunCollection` object. It allows for flexible searching of
+    MLflow runs based on various criteria.
+
+    Note:
+        The returned runs are sorted by their start time in ascending order.
 
     Args:
-        run (Run | None): The run object. Defaults to None.
+        experiment_ids (list[str] | None): List of experiment IDs. Search can
+            work with experiment IDs or experiment names, but not both in the
+            same call. Values other than ``None`` or ``[]`` will result in
+            error if ``experiment_names`` is also not ``None`` or ``[]``.
+            ``None`` will default to the active experiment if ``experiment_names``
+            is ``None`` or ``[]``.
+        filter_string (str): Filter query string, defaults to searching all
+            runs.
+        run_view_type (int): one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``,
+            or ``ALL`` runs defined in :py:class:`mlflow.entities.ViewType`.
+        max_results (int): The maximum number of runs to put in the dataframe.
+            Default is 100,000 to avoid causing out-of-memory issues on the user's
+            machine.
+        order_by (list[str] | None): List of columns to order by (e.g.,
+            "metrics.rmse"). The ``order_by`` column can contain an optional
+            ``DESC`` or ``ASC`` value. The default is ``ASC``. The default
+            ordering is to sort by ``start_time DESC``, then ``run_id``.
+            ``start_time DESC``, then ``run_id``.
+        search_all_experiments (bool): Boolean specifying whether all
+            experiments should be searched. Only honored if ``experiment_ids``
+            is ``[]`` or ``None``.
+        experiment_names (list[str] | None): List of experiment names. Search
+            can work with experiment IDs or experiment names, but not both in
+            the same call. Values other than ``None`` or ``[]`` will result in
+            error if ``experiment_ids`` is also not ``None`` or ``[]``.
+            ``experiment_ids`` is also not ``None`` or ``[]``. ``None`` will
+            default to the active experiment if ``experiment_ids`` is ``None``
+            or ``[]``.
 
     Returns:
-        The local path to the directory where the artifacts are downloaded.
+        A `RunCollection` object containing the search results.
     """
-    if run is None:
-        uri = mlflow.get_artifact_uri()
-    else:
-        uri = artifact_utils.get_artifact_uri(run.info.run_id)
+    runs = mlflow.search_runs(
+        experiment_ids=experiment_ids,
+        filter_string=filter_string,
+        run_view_type=run_view_type,
+        max_results=max_results,
+        order_by=order_by,
+        output_format="list",
+        search_all_experiments=search_all_experiments,
+        experiment_names=experiment_names,
+    )
+    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
+    return RunCollection(runs)  # type: ignore
 
-    return Path(mlflow.artifacts.download_artifacts(uri))
 
-
-def get_hydra_output_dir(run: Run | None = None) -> Path:
+def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
     """
-    Retrieve the Hydra output directory for the given run.
+    List all runs for the specified experiments.
 
-    This function returns the Hydra output directory. If no run is provided,
-    it retrieves the output directory from the current Hydra configuration.
-    If a run is provided, it retrieves the artifact path for the run, loads
-    the Hydra configuration from the downloaded artifacts, and returns the
-    output directory specified in that configuration.
+    This function retrieves all runs for the given list of experiment names.
+    If no experiment names are provided (None), it defaults to searching all runs
+    for the currently active experiment. If an empty list is provided, the function
+    will search all runs for all experiments except the "Default" experiment.
+    The function returns the results as a `RunCollection` object.
+
+    Note:
+        The returned runs are sorted by their start time in ascending order.
 
     Args:
-        run (Run | None): The run object. Defaults to None.
+        experiment_names (list[str] | None): List of experiment names to search
+            for runs. If None or an empty list is provided, the function will
+            search the currently active experiment or all experiments except
+            the "Default" experiment.
 
     Returns:
-        Path: The path to the Hydra output directory.
-
-    Raises:
-        FileNotFoundError: If the Hydra configuration file is not found
-            in the artifacts.
+        A `RunCollection` object containing the runs for the specified experiments.
     """
-    if run is None:
-        hc = HydraConfig.get()
-        return Path(hc.runtime.output_dir)
+    if experiment_names == []:
+        experiments = mlflow.search_experiments()
+        experiment_names = [e.name for e in experiments if e.name != "Default"]
 
-    path = get_artifact_dir(run) / ".hydra/hydra.yaml"
-
-    if path.exists():
-        hc = OmegaConf.load(path)
-        return Path(hc.hydra.runtime.output_dir)
-
-    raise FileNotFoundError
+    return search_runs(experiment_names=experiment_names)

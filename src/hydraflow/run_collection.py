@@ -10,10 +10,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
-import mlflow
-from mlflow.entities import ViewType
 from mlflow.entities.run import Run
-from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
 
 from hydraflow.config import iter_params
 from hydraflow.info import RunCollectionInfo
@@ -24,101 +21,6 @@ if TYPE_CHECKING:
     from typing import Any
 
     from omegaconf import DictConfig
-
-
-def search_runs(
-    experiment_ids: list[str] | None = None,
-    filter_string: str = "",
-    run_view_type: int = ViewType.ACTIVE_ONLY,
-    max_results: int = SEARCH_MAX_RESULTS_PANDAS,
-    order_by: list[str] | None = None,
-    search_all_experiments: bool = False,
-    experiment_names: list[str] | None = None,
-) -> RunCollection:
-    """
-    Search for Runs that fit the specified criteria.
-
-    This function wraps the `mlflow.search_runs` function and returns the
-    results as a `RunCollection` object. It allows for flexible searching of
-    MLflow runs based on various criteria.
-
-    Note:
-        The returned runs are sorted by their start time in ascending order.
-
-    Args:
-        experiment_ids (list[str] | None): List of experiment IDs. Search can
-            work with experiment IDs or experiment names, but not both in the
-            same call. Values other than ``None`` or ``[]`` will result in
-            error if ``experiment_names`` is also not ``None`` or ``[]``.
-            ``None`` will default to the active experiment if ``experiment_names``
-            is ``None`` or ``[]``.
-        filter_string (str): Filter query string, defaults to searching all
-            runs.
-        run_view_type (int): one of enum values ``ACTIVE_ONLY``, ``DELETED_ONLY``,
-            or ``ALL`` runs defined in :py:class:`mlflow.entities.ViewType`.
-        max_results (int): The maximum number of runs to put in the dataframe.
-            Default is 100,000 to avoid causing out-of-memory issues on the user's
-            machine.
-        order_by (list[str] | None): List of columns to order by (e.g.,
-            "metrics.rmse"). The ``order_by`` column can contain an optional
-            ``DESC`` or ``ASC`` value. The default is ``ASC``. The default
-            ordering is to sort by ``start_time DESC``, then ``run_id``.
-            ``start_time DESC``, then ``run_id``.
-        search_all_experiments (bool): Boolean specifying whether all
-            experiments should be searched. Only honored if ``experiment_ids``
-            is ``[]`` or ``None``.
-        experiment_names (list[str] | None): List of experiment names. Search
-            can work with experiment IDs or experiment names, but not both in
-            the same call. Values other than ``None`` or ``[]`` will result in
-            error if ``experiment_ids`` is also not ``None`` or ``[]``.
-            ``experiment_ids`` is also not ``None`` or ``[]``. ``None`` will
-            default to the active experiment if ``experiment_ids`` is ``None``
-            or ``[]``.
-
-    Returns:
-        A `RunCollection` object containing the search results.
-    """
-    runs = mlflow.search_runs(
-        experiment_ids=experiment_ids,
-        filter_string=filter_string,
-        run_view_type=run_view_type,
-        max_results=max_results,
-        order_by=order_by,
-        output_format="list",
-        search_all_experiments=search_all_experiments,
-        experiment_names=experiment_names,
-    )
-    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
-    return RunCollection(runs)  # type: ignore
-
-
-def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
-    """
-    List all runs for the specified experiments.
-
-    This function retrieves all runs for the given list of experiment names.
-    If no experiment names are provided (None), it defaults to searching all runs
-    for the currently active experiment. If an empty list is provided, the function
-    will search all runs for all experiments except the "Default" experiment.
-    The function returns the results as a `RunCollection` object.
-
-    Note:
-        The returned runs are sorted by their start time in ascending order.
-
-    Args:
-        experiment_names (list[str] | None): List of experiment names to search
-            for runs. If None or an empty list is provided, the function will
-            search the currently active experiment or all experiments except
-            the "Default" experiment.
-
-    Returns:
-        A `RunCollection` object containing the runs for the specified experiments.
-    """
-    if experiment_names == []:
-        experiments = mlflow.search_experiments()
-        experiment_names = [e.name for e in experiments if e.name != "Default"]
-
-    return search_runs(experiment_names=experiment_names)
 
 
 T = TypeVar("T")
