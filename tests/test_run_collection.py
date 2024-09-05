@@ -5,7 +5,6 @@ from pathlib import Path
 import mlflow
 import pytest
 from mlflow.entities import Run
-from omegaconf import DictConfig
 
 from hydraflow.run_collection import RunCollection
 
