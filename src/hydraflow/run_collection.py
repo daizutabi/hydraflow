@@ -7,25 +7,23 @@ runs, retrieve run information, log artifacts, and load configurations.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cache
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import mlflow
-from mlflow.artifacts import download_artifacts
 from mlflow.entities import ViewType
 from mlflow.entities.run import Run
 from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
-from omegaconf import DictConfig, OmegaConf
 
 from hydraflow.config import iter_params
 from hydraflow.info import RunCollectionInfo
-from hydraflow.mlflow import get_artifact_dir
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from pathlib import Path
     from typing import Any
+
+    from omegaconf import DictConfig
 
 
 def search_runs(
@@ -492,7 +490,7 @@ class RunCollection:
             Results obtained by applying the function to each run configuration
             in the collection.
         """
-        return (func(load_config(run), *args, **kwargs) for run in self)
+        return (func(config, *args, **kwargs) for config in self.info.config)
 
     def map_uri(
         self,
@@ -570,6 +568,25 @@ class RunCollection:
             grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
+
+    def group_by_values(self, *names: str | list[str]) -> list[RunCollection]:
+        """
+        Group runs by specified parameter names.
+
+        This method groups the runs in the collection based on the values of the
+        specified parameters. Each unique combination of parameter values will
+        form a separate RunCollection in the returned list.
+
+        Args:
+            *names (str | list[str]): The names of the parameters to group by.
+                This can be a single parameter name or multiple names provided
+                as separate arguments or as a list.
+
+        Returns:
+            list[RunCollection]: A list of RunCollection objects, where each
+            object contains runs that match the specified parameter values.
+        """
+        return list(self.group_by(*names).values())
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
@@ -910,33 +927,3 @@ def get_param_dict(runs: list[Run]) -> dict[str, list[str]]:
         params[name] = sorted(set(it))
 
     return params
-
-
-def load_config(run: Run) -> DictConfig:
-    """
-    Load the configuration for a given run.
-
-    This function loads the configuration for the provided Run instance
-    by downloading the configuration file from the MLflow artifacts and
-    loading it using OmegaConf. It returns an empty config if
-    `.hydra/config.yaml` is not found in the run's artifact directory.
-
-    Args:
-        run (Run): The Run instance for which to load the configuration.
-
-    Returns:
-        The loaded configuration as a DictConfig object. Returns an empty
-        DictConfig if the configuration file is not found.
-    """
-    run_id = run.info.run_id
-    return _load_config(run_id)
-
-
-@cache
-def _load_config(run_id: str) -> DictConfig:
-    try:
-        path = download_artifacts(run_id=run_id, artifact_path=".hydra/config.yaml")
-    except OSError:
-        return DictConfig({})
-
-    return OmegaConf.load(path)  # type: ignore

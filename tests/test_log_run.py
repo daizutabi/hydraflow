@@ -49,7 +49,7 @@ def read_log(run_id: str, path: str) -> str:
 
 
 def test_load_config(run: Run):
-    from hydraflow.run_collection import load_config
+    from hydraflow.info import load_config
 
     log = read_log(run.info.run_id, "log_run.log")
     assert "START" in log
