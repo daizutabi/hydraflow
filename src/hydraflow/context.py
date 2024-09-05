@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import mlflow
 from hydra.core.hydra_config import HydraConfig
-from watchdog.events import FileModifiedEvent, FileSystemEventHandler
+from watchdog.events import FileModifiedEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from hydraflow.mlflow import get_artifact_dir, log_params
@@ -68,7 +68,7 @@ def log_run(
         mlflow.log_artifact(local_path)
 
     try:
-        with watch(log_artifact, output_dir):
+        with watch(log_artifact, output_dir, ignore_log=False):
             yield
 
     except Exception as e:
@@ -140,9 +140,11 @@ def start_run(
 
 @contextmanager
 def watch(
-    func: Callable[[Path], None],
+    callback: Callable[[Path], None],
     dir: Path | str = "",
     timeout: int = 60,
+    ignore_patterns: list[str] | None = None,
+    ignore_log: bool = True,
 ) -> Iterator[None]:
     """
     Watch the given directory for changes and call the provided function
@@ -154,7 +156,7 @@ def watch(
     period or until the context is exited.
 
     Args:
-        func (Callable[[Path], None]): The function to call when a change is
+        callback (Callable[[Path], None]): The function to call when a change is
             detected. It should accept a single argument of type `Path`,
             which is the path of the modified file.
         dir (Path | str): The directory to watch. If not specified,
@@ -174,7 +176,7 @@ def watch(
     if isinstance(dir, Path):
         dir = dir.as_posix()
 
-    handler = Handler(func)
+    handler = Handler(callback, ignore_patterns=ignore_patterns, ignore_log=ignore_log)
     observer = Observer()
     observer.schedule(handler, dir, recursive=True)
     observer.start()
@@ -198,9 +200,22 @@ def watch(
         observer.join()
 
 
-class Handler(FileSystemEventHandler):
-    def __init__(self, func: Callable[[Path], None]) -> None:
+class Handler(PatternMatchingEventHandler):
+    def __init__(
+        self,
+        func: Callable[[Path], None],
+        ignore_patterns: list[str] | None = None,
+        ignore_log: bool = True,
+    ) -> None:
         self.func = func
+
+        if ignore_log:
+            if ignore_patterns:
+                ignore_patterns.append("*.log")
+            else:
+                ignore_patterns = ["*.log"]
+
+        super().__init__(ignore_patterns=ignore_patterns)
 
     def on_modified(self, event: FileModifiedEvent) -> None:
         file = Path(str(event.src_path))

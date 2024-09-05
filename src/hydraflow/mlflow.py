@@ -86,7 +86,7 @@ def get_artifact_dir(run: Run | None = None) -> Path:
     return Path(mlflow.artifacts.download_artifacts(uri))
 
 
-def get_hydra_output_dir(*, run: Run | None = None) -> Path:
+def get_hydra_output_dir(run: Run | None = None) -> Path:
     """
     Retrieve the Hydra output directory for the given run.
 

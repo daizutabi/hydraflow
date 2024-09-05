@@ -12,12 +12,14 @@ from mlflow.entities.run import Run
 
 @pytest.fixture
 def runs(monkeypatch, tmp_path):
-    file = Path("tests/scripts/log_run.py").absolute()
+    file = Path("tests/scripts/app.py").absolute()
     monkeypatch.chdir(tmp_path)
 
-    subprocess.check_call([sys.executable, file.as_posix(), "-m", "host=x,y", "port=1,2"])
+    args = [sys.executable, file.as_posix(), "-m"]
+    args += ["host=x,y", "port=1,2", "hydra.job.name=log_run"]
+    subprocess.check_call(args)
 
-    mlflow.set_experiment("log_run")
+    mlflow.set_experiment("_log_run_")
     runs = mlflow.search_runs(output_format="list")
     assert len(runs) == 4
     assert isinstance(runs, list)

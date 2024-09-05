@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import mlflow
@@ -13,6 +15,7 @@ def runs(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
 
     mlflow.set_experiment("test_info")
+
     for x in range(3):
         with mlflow.start_run(run_name=f"{x}"):
             mlflow.log_param("p", x)
