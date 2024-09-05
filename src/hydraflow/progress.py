@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
         kwargs = {}
         if unknown_total:
-            kwargs["main_task_name"] = "unknown"
+            kwargs["main_description"] = "unknown"
 
         multi_task_progress(tasks, *columns, n_jobs=4, **kwargs)
 
