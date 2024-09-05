@@ -382,10 +382,20 @@ def test_run_collection_map(runs: RunCollection):
     assert all(isinstance(run_id, str) for run_id in results)
 
 
+def test_run_collection_map_args(runs: RunCollection):
+    results = list(runs.map(lambda run, x: run.info.run_id + x, "test"))
+    assert all(x.endswith("test") for x in results)
+
+
 def test_run_collection_map_run_id(runs: RunCollection):
     results = list(runs.map_run_id(lambda run_id: run_id))
     assert len(results) == len(runs._runs)
     assert all(isinstance(run_id, str) for run_id in results)
+
+
+def test_run_collection_map_run_id_kwargs(runs: RunCollection):
+    results = list(runs.map_run_id(lambda run_id, x: x + run_id, x="test"))
+    assert all(x.startswith("test") for x in results)
 
 
 def test_run_collection_map_config(runs: RunCollection):
@@ -401,9 +411,10 @@ def test_run_collection_map_uri(runs: RunCollection):
 
 
 def test_run_collection_map_dir(runs: RunCollection):
-    results = list(runs.map_dir(lambda dir_path: dir_path))
+    results = list(runs.map_dir(lambda dir_path, x: dir_path / x, "a.csv"))
     assert len(results) == len(runs._runs)
-    assert all(isinstance(dir_path, str) for dir_path in results)
+    assert all(isinstance(dir_path, Path) for dir_path in results)
+    assert all(dir_path.stem == "a" for dir_path in results)
 
 
 def test_run_collection_sort(runs: RunCollection):
