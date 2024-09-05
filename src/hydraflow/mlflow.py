@@ -1,6 +1,20 @@
 """
-This module provides functionality to log parameters from Hydra
-configuration objects and set up experiments using MLflow.
+This module provides functionality to log parameters from Hydra configuration objects
+and set up experiments using MLflow. It includes methods for managing experiments,
+searching for runs, and logging parameters and artifacts.
+
+Key Features:
+- **Experiment Management**: Set and manage MLflow experiments with customizable names
+  based on Hydra configuration.
+- **Run Logging**: Log parameters and metrics from Hydra configuration objects to
+  MLflow, ensuring that all relevant information is captured during experiments.
+- **Run Search**: Search for runs based on various criteria, allowing for flexible
+  retrieval of experiment results.
+- **Artifact Management**: Retrieve and log artifacts associated with runs, facilitating
+  easy access to outputs generated during experiments.
+
+This module is designed to integrate seamlessly with Hydra, providing a robust
+solution for tracking machine learning experiments and their associated metadata.
 """
 
 from __future__ import annotations
@@ -26,7 +40,7 @@ def set_experiment(
     uri: str | Path | None = None,
 ) -> Experiment:
     """
-    Set the experiment name and tracking URI optionally.
+    Sets the experiment name and tracking URI optionally.
 
     This function sets the experiment name by combining the given prefix,
     the job name from HydraConfig, and the given suffix. Optionally, it can

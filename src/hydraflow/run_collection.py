@@ -1,7 +1,24 @@
 """
-This module provides functionality for managing and interacting with MLflow
-runs. It includes the `RunCollection` class and various methods to filter
-runs, retrieve run information, log artifacts, and load configurations.
+This module provides functionality for managing and interacting with MLflow runs.
+It includes the `RunCollection` class, which serves as a container for multiple MLflow
+run objects, and various methods to filter, retrieve, and manipulate these runs.
+
+Key Features:
+- **Run Management**: The `RunCollection` class allows for easy management of multiple
+  MLflow runs, providing methods to access, filter, and sort runs based on various
+  criteria.
+- **Filtering**: The module supports filtering runs based on specific configurations
+  and parameters, enabling users to easily find runs that match certain conditions.
+- **Retrieval**: Users can retrieve specific runs, including the first, last, or any
+  run that matches a given configuration.
+- **Artifact Handling**: The module provides methods to access and manipulate the
+  artifacts associated with each run, including retrieving artifact URIs and directories.
+
+The `RunCollection` class is designed to work seamlessly with the MLflow tracking
+API, providing a robust solution for managing machine learning experiment runs and
+their associated metadata. This module is particularly useful for data scientists and
+machine learning engineers who need to track and analyze the results of their experiments
+efficiently.
 """
 
 from __future__ import annotations
@@ -34,6 +51,11 @@ class RunCollection:
 
     This class provides methods to interact with the runs, such as filtering,
     retrieving specific runs, and accessing run information.
+
+    Key Features:
+    - Filtering: Easily filter runs based on various criteria.
+    - Retrieval: Access specific runs by index or through methods.
+    - Metadata: Access run metadata and associated information.
     """
 
     _runs: list[Run]
