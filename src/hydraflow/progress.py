@@ -160,43 +160,32 @@ def multi_tasks_progress(
     iterables = list(iterables)
 
     with Progress(*columns, transient=transient or False, **kwargs) as progress:
-        n = len(iterables)
-
-        task_main = progress.add_task(main_description, total=None) if n > 1 else None
-        tasks = [
-            progress.add_task(description.format(i), start=False, total=None)
-            for i in range(n)
-        ]
-
+        task_main = progress.add_task(main_description, total=None)
         total = {}
         completed = {}
 
-        def func(i: int) -> None:
+        def func(i: int, iterable: Iterable[int | tuple[int, int]]) -> None:
+            task_id = progress.add_task(description.format(i), total=None)
             completed[i] = 0
             total[i] = None
-            progress.start_task(tasks[i])
 
-            for index in iterables[i]:
+            for index in iterable:
                 if isinstance(index, tuple):
                     completed[i], total[i] = index[0] + 1, index[1]
                 else:
                     completed[i] = index + 1
 
-                progress.update(tasks[i], total=total[i], completed=completed[i])
-                if task_main is not None:
-                    if all(t is not None for t in total.values()):
-                        t = sum(total.values())
-                    else:
-                        t = None
-                    c = sum(completed.values())
-                    progress.update(task_main, total=t, completed=c)
+                progress.update(task_id, total=total[i], completed=completed[i])
 
-            if transient or n > 1:
-                progress.remove_task(tasks[i])
+                if all(t is not None for t in total.values()):
+                    t = sum(total.values())
+                else:
+                    t = None
+                c = sum(completed.values())
+                progress.update(task_main, total=t, completed=c)
 
-        if n > 1:
-            it = (joblib.delayed(func)(i) for i in range(n))
-            joblib.Parallel(n_jobs, prefer="threads")(it)
+            if transient is not False:
+                progress.remove_task(task_id)
 
-        else:
-            func(0)
+        it = (joblib.delayed(func)(i, it) for i, it in enumerate(iterables))
+        joblib.Parallel(n_jobs, prefer="threads")(it)
