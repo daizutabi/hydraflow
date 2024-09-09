@@ -63,7 +63,7 @@ asyncio_default_fixture_loop_scope = "function"
 exclude_lines = ["no cov", "raise NotImplementedError", "if TYPE_CHECKING:"]
 
 [tool.ruff]
-line-length = 100
+line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]

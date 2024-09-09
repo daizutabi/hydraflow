@@ -41,7 +41,9 @@ async def execute_command(
         int: The return code of the process.
     """
     try:
-        process = await asyncio.create_subprocess_exec(program, *args, stdout=PIPE, stderr=PIPE)
+        process = await asyncio.create_subprocess_exec(
+            program, *args, stdout=PIPE, stderr=PIPE
+        )
         await asyncio.gather(
             process_stream(process.stdout, stdout),
             process_stream(process.stderr, stderr),
@@ -100,7 +102,9 @@ async def monitor_file_changes(
     """
     str_paths = [str(path) for path in paths]
     try:
-        async for changes in watchfiles.awatch(*str_paths, stop_event=stop_event, **awatch_kwargs):
+        async for changes in watchfiles.awatch(
+            *str_paths, stop_event=stop_event, **awatch_kwargs
+        ):
             callback(changes)
     except Exception as e:
         logger.error(f"Error watching files: {e}")
@@ -129,7 +133,9 @@ async def run_and_monitor(
     """
     stop_event = asyncio.Event()
     run_task = asyncio.create_task(
-        execute_command(program, *args, stop_event=stop_event, stdout=stdout, stderr=stderr)
+        execute_command(
+            program, *args, stop_event=stop_event, stdout=stdout, stderr=stderr
+        )
     )
     if watch and paths:
         monitor_task = asyncio.create_task(

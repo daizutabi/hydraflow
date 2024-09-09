@@ -5,6 +5,7 @@ from .mlflow import (
     search_runs,
     set_experiment,
 )
+from .progress import multi_tasks_progress, parallel_progress
 from .run_collection import RunCollection
 
 __all__ = [
@@ -15,6 +16,8 @@ __all__ = [
     "list_runs",
     "load_config",
     "log_run",
+    "multi_tasks_progress",
+    "parallel_progress",
     "search_runs",
     "set_experiment",
     "start_run",

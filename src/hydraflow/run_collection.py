@@ -468,7 +468,9 @@ class RunCollection:
         """
         return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)
 
-    def group_by(self, *names: str | list[str]) -> dict[tuple[str | None, ...], RunCollection]:
+    def group_by(
+        self, *names: str | list[str]
+    ) -> dict[tuple[str | None, ...], RunCollection]:
         """
         Group runs by specified parameter names.
 
@@ -492,25 +494,6 @@ class RunCollection:
             grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
-
-    def group_by_values(self, *names: str | list[str]) -> list[RunCollection]:
-        """
-        Group runs by specified parameter names.
-
-        This method groups the runs in the collection based on the values of the
-        specified parameters. Each unique combination of parameter values will
-        form a separate RunCollection in the returned list.
-
-        Args:
-            *names (str | list[str]): The names of the parameters to group by.
-                This can be a single parameter name or multiple names provided
-                as separate arguments or as a list.
-
-        Returns:
-            list[RunCollection]: A list of RunCollection objects, where each
-            object contains runs that match the specified parameter values.
-        """
-        return list(self.group_by(*names).values())
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
@@ -671,7 +654,9 @@ def find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Ru
     return filtered_runs[-1]
 
 
-def try_find_last_run(runs: list[Run], config: object | None = None, **kwargs) -> Run | None:
+def try_find_last_run(
+    runs: list[Run], config: object | None = None, **kwargs
+) -> Run | None:
     """
     Find the last run based on the provided configuration.
 

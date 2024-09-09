@@ -98,12 +98,3 @@ def test_app_group_by(rc: RunCollection):
     assert grouped[("x",)].info.params[1] == {"port": "2", "host": "x"}
     assert grouped[("y",)].info.params[0] == {"port": "1", "host": "y"}
     assert grouped[("y",)].info.params[1] == {"port": "2", "host": "y"}
-
-
-def test_app_group_by_values(rc: RunCollection):
-    grouped = rc.group_by_values("port")
-    assert len(grouped) == 2
-    assert grouped[0].info.params[0] == {"port": "1", "host": "x"}
-    assert grouped[0].info.params[1] == {"port": "1", "host": "y"}
-    assert grouped[1].info.params[0] == {"port": "2", "host": "x"}
-    assert grouped[1].info.params[1] == {"port": "2", "host": "y"}
