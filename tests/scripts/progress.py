@@ -13,16 +13,7 @@ from rich.progress import (
 from hydraflow import multi_tasks_progress, parallel_progress
 
 
-def task(total):
-    for i in range(total or 90):
-        if total is None:
-            yield i
-        else:
-            yield i, total
-        time.sleep(random.random() / 30)
-
-
-def parallel_progress_test():
+def test_parallel_progress(**kwargs):
     def func(x: int) -> str:
         time.sleep(1)
         return f"result: {x}"
@@ -36,14 +27,22 @@ def parallel_progress_test():
         TimeElapsedColumn(),
     ]
 
-    results = parallel_progress(func, it, *columns, n_jobs=4)
-    print(results)
+    parallel_progress(func, it, *columns, n_jobs=-1, **kwargs)
 
 
-def multi_tasks_progress_test(unknown_total: bool):
-    tasks = [task(random.randint(80, 100)) for _ in range(4)]
-    if unknown_total:
-        tasks = [task(None), *tasks, task(None)]
+def task(total):
+    for i in range(total or 90):
+        if total is None:
+            yield i
+        else:
+            yield i, total
+        time.sleep(random.random() / 30)
+
+
+def test_multi_tasks_progress(total: bool, **kwargs):
+    tasks = (task(random.randint(80, 100)) for _ in range(4))
+    if total:
+        tasks = (task(None), *list(tasks)[:2], task(None))
 
     columns = [
         SpinnerColumn(),
@@ -52,21 +51,15 @@ def multi_tasks_progress_test(unknown_total: bool):
         TimeElapsedColumn(),
     ]
 
-    kwargs = {}
-    if unknown_total:
+    if total:
         kwargs["main_description"] = "unknown"
 
     multi_tasks_progress(tasks, *columns, n_jobs=4, **kwargs)
 
 
 if __name__ == "__main__":
-    parallel_progress_test()
-
-    multi_tasks_progress_test(False)
-    multi_tasks_progress_test(True)
-    multi_tasks_progress([task(100)])
-    multi_tasks_progress([task(None)], description="unknown")
-
-    desc = "transient"
-    multi_tasks_progress([task(100), task(None)], main_description=desc, transient=True)
-    multi_tasks_progress([task(100)], description=desc, transient=True)
+    test_parallel_progress(description="parallel")
+    test_parallel_progress(transient=True)
+    test_multi_tasks_progress(False)
+    test_multi_tasks_progress(True, transient=False)
+    test_multi_tasks_progress(False, transient=True)
