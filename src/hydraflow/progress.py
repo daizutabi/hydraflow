@@ -161,21 +161,27 @@ def multi_tasks_progress(
 
     with Progress(*columns, transient=transient or False, **kwargs) as progress:
         task_main = progress.add_task(main_description, total=None)
+
+        task_ids = [
+            progress.add_task(description.format(i), start=False, total=None)
+            for i in range(len(iterables))
+        ]
+
         total = {}
         completed = {}
 
-        def func(i: int, iterable: Iterable[int | tuple[int, int]]) -> None:
-            task_id = progress.add_task(description.format(i), total=None)
+        def func(i: int) -> None:
             completed[i] = 0
             total[i] = None
+            progress.start_task(task_ids[i])
 
-            for index in iterable:
+            for index in iterables[i]:
                 if isinstance(index, tuple):
                     completed[i], total[i] = index[0] + 1, index[1]
                 else:
                     completed[i] = index + 1
 
-                progress.update(task_id, total=total[i], completed=completed[i])
+                progress.update(task_ids[i], total=total[i], completed=completed[i])
 
                 if all(t is not None for t in total.values()):
                     t = sum(total.values())
@@ -185,7 +191,7 @@ def multi_tasks_progress(
                 progress.update(task_main, total=t, completed=c)
 
             if transient is not False:
-                progress.remove_task(task_id)
+                progress.remove_task(task_ids[i])
 
-        it = (joblib.delayed(func)(i, it) for i, it in enumerate(iterables))
+        it = (joblib.delayed(func)(i) for i in range(len(iterables)))
         joblib.Parallel(n_jobs, prefer="threads")(it)
