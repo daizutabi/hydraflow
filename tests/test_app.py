@@ -26,6 +26,20 @@ def rc(monkeypatch, tmp_path):
     yield hydraflow.list_runs()
 
 
+@pytest.mark.parametrize("n_jobs", [0, 1, 2, 4, -1])
+def test_list_runs_parallel(rc: RunCollection, n_jobs: int):
+    from hydraflow.mlflow import list_runs
+
+    rc_ = list_runs("_info_", n_jobs=n_jobs)
+    assert len(rc) == len(rc_)
+
+    for a, b in zip(rc, rc_):
+        assert a.info.run_id == b.info.run_id
+        assert a.info.start_time == b.info.start_time
+        assert a.info.status == b.info.status
+        assert a.info.artifact_uri == b.info.artifact_uri
+
+
 def test_app_info_run_id(rc: RunCollection):
     assert len(rc.info.run_id) == 4
 

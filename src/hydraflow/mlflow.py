@@ -22,6 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import joblib
 import mlflow
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import ViewType
@@ -146,7 +147,9 @@ def search_runs(
     return RunCollection(runs)  # type: ignore
 
 
-def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
+def list_runs(
+    experiment_names: str | list[str] | None = None, *, n_jobs: int = 0
+) -> RunCollection:
     """
     List all runs for the specified experiments.
 
@@ -168,8 +171,30 @@ def list_runs(experiment_names: list[str] | None = None) -> RunCollection:
     Returns:
         A `RunCollection` object containing the runs for the specified experiments.
     """
-    if experiment_names == []:
+    if isinstance(experiment_names, str):
+        experiment_names = [experiment_names]
+
+    elif experiment_names == []:
         experiments = mlflow.search_experiments()
         experiment_names = [e.name for e in experiments if e.name != "Default"]
 
-    return search_runs(experiment_names=experiment_names)
+    if n_jobs == 0:
+        return search_runs(experiment_names=experiment_names)
+
+    if experiment_names is None:
+        raise NotImplementedError
+
+    run_ids = []
+
+    for name in experiment_names:
+        if experiment := mlflow.get_experiment_by_name(name):
+            loc = experiment.artifact_location
+
+            if isinstance(loc, str) and loc.startswith("file://"):
+                path = Path(mlflow.artifacts.download_artifacts(loc))
+                run_ids.extend(file.stem for file in path.iterdir() if file.is_dir())
+
+    it = (joblib.delayed(mlflow.get_run)(run_id) for run_id in run_ids)
+    runs = joblib.Parallel(n_jobs, prefer="threads")(it)
+    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
+    return RunCollection(runs)  # type: ignore

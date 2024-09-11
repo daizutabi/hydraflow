@@ -364,14 +364,14 @@ def test_list_runs_empty_list(runs, runs2):
 def test_list_runs_list(runs, runs2, name, n):
     from hydraflow.mlflow import list_runs
 
-    filtered_runs = list_runs(experiment_names=[name])
+    filtered_runs = list_runs(name)
     assert len(filtered_runs) == n
 
 
 def test_list_runs_none(runs, runs2):
     from hydraflow.mlflow import list_runs
 
-    no_runs = list_runs(experiment_names=["non_existent_experiment"])
+    no_runs = list_runs(["non_existent_experiment"])
     assert len(no_runs) == 0
 
 
