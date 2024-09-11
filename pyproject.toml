@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hydraflow"
-version = "0.2.12"
+version = "0.2.13"
 description = "Hydraflow integrates Hydra and MLflow to manage and track machine learning experiments."
 readme = "README.md"
 license = "MIT"
@@ -15,8 +15,6 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
-  "Topic :: Documentation",
-  "Topic :: Software Development :: Documentation",
 ]
 requires-python = ">=3.10"
 dependencies = [

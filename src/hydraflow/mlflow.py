@@ -148,7 +148,7 @@ def search_runs(
 
 
 def list_runs(
-    experiment_names: str | list[str] | None = None, *, n_jobs: int = 0
+    experiment_names: str | list[str] | None = None, n_jobs: int = 0
 ) -> RunCollection:
     """
     List all runs for the specified experiments.
@@ -169,7 +169,8 @@ def list_runs(
             the "Default" experiment.
 
     Returns:
-        A `RunCollection` object containing the runs for the specified experiments.
+        RunCollection: A `RunCollection` instance containing the runs for the
+        specified experiments.
     """
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
