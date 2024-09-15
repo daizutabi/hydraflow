@@ -7,16 +7,12 @@ of tasks in parallel while displaying progress updates.
 
 The following key components are provided:
 
-- JoblibProgress: A context manager for tracking progress with Rich's Progress
+- JoblibProgress: A context manager for tracking progress with Rich's progress
     bar.
 - parallel_progress: A function to execute a given function in parallel over
     an iterable with progress tracking.
 - multi_tasks_progress: A function to render auto-updating progress bars for
     multiple tasks concurrently.
-
-Usage:
-    Import the necessary functions and use them to manage progress in your
-    parallel processing tasks.
 """
 
 from __future__ import annotations
@@ -56,8 +52,10 @@ def JoblibProgress(
         Progress: A Progress instance for managing the progress bar.
 
     Example:
+        ```python
         with JoblibProgress("task", total=100) as progress:
             # Your parallel processing code here
+        ```
     """
     if not columns:
         columns = Progress.get_default_columns()
