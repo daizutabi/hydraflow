@@ -1,0 +1,54 @@
+site_name: hydraflow
+site_url: https://daizutabi.github.io/hydraflow/
+site_description: Hydraflow integrates Hydra and MLflow to manage and track machine learning experiments.
+site_author: daizutabi
+repo_url: https://github.com/daizutabi/hydraflow/
+repo_name: daizutabi/hydraflow
+edit_uri: edit/main/docs/
+theme:
+  name: material
+  font:
+    text: Fira Sans
+    code: Fira Code
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      primary: black
+      accent: black
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - content.code.annotate
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+plugins:
+  - search
+  - mkapi
+markdown_extensions:
+  - pymdownx.magiclink
+  - pymdownx.highlight:
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+nav:
+  - Home: index.md
+  - Reference: $api/hydraflow.**
