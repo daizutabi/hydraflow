@@ -90,6 +90,16 @@ def test_filter_invalid_param(run_list: list[Run]):
     assert len(x) == 6
 
 
+def test_filter_status(run_list: list[Run]):
+    from hydraflow.run_collection import filter_runs
+
+    assert not filter_runs(run_list, status="RUNNING")
+    assert filter_runs(run_list, status="finished") == run_list
+    assert filter_runs(run_list, status=["finished", "running"]) == run_list
+    assert filter_runs(run_list, status="!RUNNING") == run_list
+    assert not filter_runs(run_list, status="!finished")
+
+
 def test_get_params(run_list: list[Run]):
     from hydraflow.run_collection import get_params
 
