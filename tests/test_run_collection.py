@@ -33,6 +33,12 @@ def run_list(runs: RunCollection):
     return runs._runs
 
 
+def test_from_list(run_list: list[Run]):
+    rc = RunCollection.from_list(run_list)
+    assert len(rc) == len(run_list)
+    assert all(run in rc for run in run_list)
+
+
 def test_search_runs_sorted(run_list: list[Run]):
     assert [run.data.params["p"] for run in run_list] == ["0", "1", "2", "3", "4", "5"]
 
