@@ -51,9 +51,11 @@ def log_run(
         None
 
     Example:
+        ```python
         with log_run(config):
             # Perform operations within the MLflow run context
             pass
+        ```
     """
     log_params(config, synchronous=synchronous)
 
@@ -122,8 +124,9 @@ def start_run(
             pass
 
     See Also:
-        `mlflow.start_run`: The MLflow function to start a run directly.
-        `log_run`: A context manager to log parameters and manage the MLflow run context.
+        - `mlflow.start_run`: The MLflow function to start a run directly.
+        - `log_run`: A context manager to log parameters and manage the MLflow
+           run context.
     """
     with mlflow.start_run(
         run_id=run_id,
@@ -169,9 +172,11 @@ def watch(
         None
 
     Example:
+        ```python
         with watch(log_artifact, "/path/to/dir"):
             # Perform operations while watching the directory for changes
             pass
+        ```
     """
     dir = dir or get_artifact_dir()
     if isinstance(dir, Path):

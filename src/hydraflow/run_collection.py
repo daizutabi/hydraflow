@@ -213,7 +213,7 @@ class RunCollection:
             ValueError: If no run matches the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
+            `filter`: Perform the actual filtering logic.
         """
         try:
             return self.filter(config, **kwargs).first()
@@ -222,7 +222,7 @@ class RunCollection:
 
     def try_find(self, config: object | None = None, **kwargs) -> Run | None:
         """
-        Find the first `Run` instance based on the provided configuration.
+        Try to find the first `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the first run that matches
@@ -238,8 +238,7 @@ class RunCollection:
             None if no runs match the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
-            logic.
+            `filter`: Perform the actual filtering logic.
         """
         return self.filter(config, **kwargs).try_first()
 
@@ -263,7 +262,7 @@ class RunCollection:
             ValueError: If no run matches the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
+            `filter`: Perform the actual filtering logic.
         """
         try:
             return self.filter(config, **kwargs).last()
@@ -272,7 +271,7 @@ class RunCollection:
 
     def try_find_last(self, config: object | None = None, **kwargs) -> Run | None:
         """
-        Find the last `Run` instance based on the provided configuration.
+        Try to find the last `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the last run that matches
@@ -288,7 +287,7 @@ class RunCollection:
             None if no runs match the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
+            `filter`: Perform the actual filtering logic.
         """
         return self.filter(config, **kwargs).try_last()
 
@@ -313,7 +312,7 @@ class RunCollection:
             matches the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
+            `filter`: Perform the actual filtering logic.
         """
         try:
             return self.filter(config, **kwargs).one()
@@ -323,7 +322,7 @@ class RunCollection:
 
     def try_get(self, config: object | None = None, **kwargs) -> Run | None:
         """
-        Retrieve a specific `Run` instance based on the provided configuration.
+        Try to retrieve a specific `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the run that matches the
@@ -342,7 +341,7 @@ class RunCollection:
             ValueError: If more than one run matches the criteria.
 
         See Also:
-            `RunCollection.filter`: Perform the actual filtering logic.
+            `filter`: Perform the actual filtering logic.
         """
         return self.filter(config, **kwargs).try_one()
 
