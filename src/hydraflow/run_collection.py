@@ -601,7 +601,13 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
     return type(value)(param) == value
 
 
-def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list[Run]:
+def filter_runs(
+    runs: list[Run],
+    config: object | None = None,
+    *,
+    status: str | list[str] | None = None,
+    **kwargs,
+) -> list[Run]:
     """
     Filter the runs based on the provided configuration.
 
@@ -623,6 +629,7 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
         config (object | None): The configuration object to filter the runs.
             This can be any object that provides key-value pairs through the
             `iter_params` function.
+        status (str | list[str] | None): The status of the runs to filter.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -633,6 +640,15 @@ def filter_runs(runs: list[Run], config: object | None = None, **kwargs) -> list
 
         if len(runs) == 0:
             return []
+
+    if isinstance(status, str) and status.startswith("!"):
+        status = status[1:].lower()
+        return [run for run in runs if run.info.status.lower() != status]
+
+    if status:
+        status = [status] if isinstance(status, str) else status
+        status = [s.lower() for s in status]
+        return [run for run in runs if run.info.status.lower() in status]
 
     return runs
 
