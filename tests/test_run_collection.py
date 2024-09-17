@@ -325,6 +325,33 @@ def test_run_collection_getitem(runs: RunCollection, i: int):
 
 
 @pytest.mark.parametrize("i", range(6))
+def test_run_collection_getitem_slice(runs: RunCollection, i: int):
+    assert runs[i : i + 2]._runs == runs._runs[i : i + 2]
+
+
+@pytest.mark.parametrize("i", range(6))
+def test_run_collection_getitem_slice_step(runs: RunCollection, i: int):
+    assert runs[i::2]._runs == runs._runs[i::2]
+
+
+@pytest.mark.parametrize("i", range(6))
+def test_run_collection_getitem_slice_step_neg(runs: RunCollection, i: int):
+    assert runs[i::-2]._runs == runs._runs[i::-2]
+
+
+def test_run_collection_take(runs: RunCollection):
+    assert runs.take(3)._runs == runs._runs[:3]
+    assert len(runs.take(4)) == 4
+    assert runs.take(10)._runs == runs._runs
+
+
+def test_run_collection_take_neg(runs: RunCollection):
+    assert runs.take(-3)._runs == runs._runs[-3:]
+    assert len(runs.take(-4)) == 4
+    assert runs.take(-10)._runs == runs._runs
+
+
+@pytest.mark.parametrize("i", range(6))
 def test_run_collection_contains(runs: RunCollection, i: int):
     assert runs[i] in runs
     assert runs._runs[i] in runs
