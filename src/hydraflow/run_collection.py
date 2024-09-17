@@ -87,6 +87,12 @@ class RunCollection:
     def __contains__(self, run: Run) -> bool:
         return run in self._runs
 
+    @classmethod
+    def from_list(cls, runs: list[Run]) -> RunCollection:
+        """Create a new `RunCollection` instance from a list of MLflow `Run` instances."""
+
+        return cls(runs)
+
     @property
     def info(self) -> RunCollectionInfo:
         """An instance of `RunCollectionInfo`."""
