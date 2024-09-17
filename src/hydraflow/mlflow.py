@@ -26,7 +26,7 @@ import joblib
 import mlflow
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import ViewType
-from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS
+from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS, _get_experiment_id
 
 from hydraflow.config import iter_params
 from hydraflow.run_collection import RunCollection
@@ -183,7 +183,8 @@ def list_runs(
         return search_runs(experiment_names=experiment_names)
 
     if experiment_names is None:
-        raise NotImplementedError
+        experiment_id = _get_experiment_id()
+        experiment_names = [mlflow.get_experiment(experiment_id).name]
 
     run_ids = []
 
