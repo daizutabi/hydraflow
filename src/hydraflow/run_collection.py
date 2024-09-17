@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
 from mlflow.entities.run import Run
 
@@ -72,7 +72,16 @@ class RunCollection:
     def __iter__(self) -> Iterator[Run]:
         return iter(self._runs)
 
-    def __getitem__(self, index: int) -> Run:
+    @overload
+    def __getitem__(self, index: int) -> Run: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> RunCollection: ...
+
+    def __getitem__(self, index: int | slice) -> Run | RunCollection:
+        if isinstance(index, slice):
+            return self.__class__(self._runs[index])
+
         return self._runs[index]
 
     def __contains__(self, run: Run) -> bool:
@@ -82,6 +91,25 @@ class RunCollection:
     def info(self) -> RunCollectionInfo:
         """An instance of `RunCollectionInfo`."""
         return self._info
+
+    def take(self, n: int) -> RunCollection:
+        """Take the first n runs from the collection.
+
+        If n is negative, the method returns the last n runs
+        from the collection.
+
+        Args:
+            n (int): The number of runs to take. If n is negative, the method
+            returns the last n runs from the collection.
+
+        Returns:
+            A new `RunCollection` instance containing the first n runs if n is
+            positive, or the last n runs if n is negative.
+        """
+        if n < 0:
+            return self.__class__(self._runs[n:])
+
+        return self.__class__(self._runs[:n])
 
     def sort(
         self,
