@@ -33,7 +33,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
       - name: Install package
-        run: pip install -e .[dev]
+        run: pip install -e . pytest-asyncio pytest-clarity pytest-cov pytest-randomly pytest-xdist
       - name: Run test
         run: pytest -n 8 --junitxml=junit.xml
       - name: Upload Codecov Results
