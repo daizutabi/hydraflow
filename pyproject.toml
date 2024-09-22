@@ -66,6 +66,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["ALL"]
+unfixable = ["F401"]
 ignore = [
   "ANN003",
   "ANN401",
