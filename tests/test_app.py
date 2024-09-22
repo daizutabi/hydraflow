@@ -3,12 +3,15 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
-from omegaconf import DictConfig
 
-from hydraflow.run_collection import RunCollection
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+    from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture
@@ -32,7 +35,7 @@ def test_list_runs_all(rc: RunCollection):
     rc_ = list_runs([])
     assert len(rc) == len(rc_)
 
-    for a, b in zip(rc, rc_):
+    for a, b in zip(rc, rc_, strict=False):
         assert a.info.run_id == b.info.run_id
         assert a.info.start_time == b.info.start_time
         assert a.info.status == b.info.status
@@ -46,7 +49,7 @@ def test_list_runs_parallel(rc: RunCollection, n_jobs: int):
     rc_ = list_runs("_info_", n_jobs=n_jobs)
     assert len(rc) == len(rc_)
 
-    for a, b in zip(rc, rc_):
+    for a, b in zip(rc, rc_, strict=False):
         assert a.info.run_id == b.info.run_id
         assert a.info.start_time == b.info.start_time
         assert a.info.status == b.info.status
@@ -61,7 +64,7 @@ def test_list_runs_parallel_active(rc: RunCollection, n_jobs: int):
     rc_ = list_runs(n_jobs=n_jobs)
     assert len(rc) == len(rc_)
 
-    for a, b in zip(rc, rc_):
+    for a, b in zip(rc, rc_, strict=False):
         assert a.info.run_id == b.info.run_id
         assert a.info.start_time == b.info.start_time
         assert a.info.status == b.info.status
@@ -98,7 +101,6 @@ def test_app_info_config(rc: RunCollection):
 
 def test_app_info_artifact_uri(rc: RunCollection):
     uris = rc.info.artifact_uri
-    print(uris)
     assert all(uri.startswith("file://") for uri in uris)  # type: ignore
     assert all(uri.endswith("/artifacts") for uri in uris)  # type: ignore
     assert all("mlruns" in uri for uri in uris)  # type: ignore

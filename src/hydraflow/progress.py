@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 # https://github.com/jonghwanhyeon/joblib-progress/blob/main/joblib_progress/__init__.py
 @contextmanager
-def JoblibProgress(
+def JoblibProgress(  # noqa: N802
     *columns: ProgressColumn | str,
     description: str | None = None,
     total: int | None = None,
@@ -68,7 +68,7 @@ def JoblibProgress(
     task_id = progress.add_task(description, total=total)
     print_progress = joblib.parallel.Parallel.print_progress
 
-    def update_progress(self: joblib.parallel.Parallel):
+    def update_progress(self: joblib.parallel.Parallel) -> None:
         progress.update(task_id, completed=self.n_completed_tasks, refresh=True)
         return print_progress(self)
 

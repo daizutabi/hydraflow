@@ -38,6 +38,7 @@ dev-dependencies = [
   "pytest-cov",
   "pytest-randomly",
   "pytest-xdist",
+  "ruff",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -61,7 +62,21 @@ exclude_lines = ["no cov", "raise NotImplementedError", "if TYPE_CHECKING:"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py310"
 
 [tool.ruff.lint]
-unfixable = ["F401", "RUF100"]
+select = ["ALL"]
+ignore = [
+  "ANN003",
+  "ANN401",
+  "ARG002",
+  "B904",
+  "D",
+  "EM101",
+  "PGH003",
+  "TRY003",
+]
+exclude = ["tests/scripts/*.py"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["A001", "ANN", "ARG", "FBT", "PLR", "PT", "S", "SIM117", "SLF"]

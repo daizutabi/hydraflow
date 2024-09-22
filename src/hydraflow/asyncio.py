@@ -42,7 +42,10 @@ async def execute_command(
     """
     try:
         process = await asyncio.create_subprocess_exec(
-            program, *args, stdout=PIPE, stderr=PIPE
+            program,
+            *args,
+            stdout=PIPE,
+            stderr=PIPE,
         )
         await asyncio.gather(
             process_stream(process.stdout, stdout),
@@ -51,7 +54,8 @@ async def execute_command(
         returncode = await process.wait()
 
     except Exception as e:
-        logger.error(f"Error running command: {e}")
+        msg = f"Error running command: {e}"
+        logger.exception(msg)
         returncode = 1
 
     finally:
@@ -103,11 +107,15 @@ async def monitor_file_changes(
     str_paths = [str(path) for path in paths]
     try:
         async for changes in watchfiles.awatch(
-            *str_paths, stop_event=stop_event, **awatch_kwargs
+            *str_paths,
+            stop_event=stop_event,
+            **awatch_kwargs,
         ):
             callback(changes)
     except Exception as e:
-        logger.error(f"Error watching files: {e}")
+        msg = f"Error watching files: {e}"
+        logger.exception(msg)
+        raise
 
 
 async def run_and_monitor(
@@ -134,13 +142,16 @@ async def run_and_monitor(
     stop_event = asyncio.Event()
     run_task = asyncio.create_task(
         execute_command(
-            program, *args, stop_event=stop_event, stdout=stdout, stderr=stderr
-        )
+            program,
+            *args,
+            stop_event=stop_event,
+            stdout=stdout,
+            stderr=stderr,
+        ),
     )
     if watch and paths:
-        monitor_task = asyncio.create_task(
-            monitor_file_changes(paths, watch, stop_event, **awatch_kwargs)
-        )
+        coro = monitor_file_changes(paths, watch, stop_event, **awatch_kwargs)
+        monitor_task = asyncio.create_task(coro)
     else:
         monitor_task = None
 
@@ -151,7 +162,10 @@ async def run_and_monitor(
             await run_task
 
     except Exception as e:
-        logger.error(f"Error in run_and_monitor: {e}")
+        msg = f"Error in run_and_monitor: {e}"
+        logger.exception(msg)
+        raise
+
     finally:
         stop_event.set()
         await run_task
@@ -173,18 +187,24 @@ def run(
     """
     Run a command synchronously and optionally watch for file changes.
 
-    This function is a synchronous wrapper around the asynchronous `run_and_monitor` function.
-    It runs a specified command and optionally monitors specified paths for file changes,
-    invoking the provided callbacks for standard output, standard error, and file changes.
+    This function is a synchronous wrapper around the asynchronous
+    `run_and_monitor` function. It runs a specified command and optionally
+    monitors specified paths for file changes, invoking the provided callbacks for
+    standard output, standard error, and file changes.
 
     Args:
         program (str): The program to run.
         *args (str): Arguments for the program.
-        stdout (Callable[[str], None] | None): Callback for handling standard output lines.
-        stderr (Callable[[str], None] | None): Callback for handling standard error lines.
-        watch (Callable[[set[tuple[Change, str]]], None] | None): Callback for handling file changes.
-        paths (list[str | Path] | None): List of paths to monitor for file changes.
-        **awatch_kwargs: Additional keyword arguments to pass to `watchfiles.awatch`.
+        stdout (Callable[[str], None] | None): Callback for handling standard
+            output lines.
+        stderr (Callable[[str], None] | None): Callback for handling standard
+            error lines.
+        watch (Callable[[set[tuple[Change, str]]], None] | None): Callback for
+            handling file changes.
+        paths (list[str | Path] | None): List of paths to monitor for file
+            changes.
+        **awatch_kwargs: Additional keyword arguments to pass to
+            `watchfiles.awatch`.
 
     Returns:
         int: The return code of the process.
@@ -201,5 +221,5 @@ def run(
             watch=watch,
             paths=paths,
             **awatch_kwargs,
-        )
+        ),
     )

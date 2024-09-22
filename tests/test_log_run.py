@@ -46,8 +46,7 @@ def test_output(run_id: str):
 
 def read_log(run_id: str, path: str) -> str:
     path = download_artifacts(run_id=run_id, artifact_path=path)
-    text = Path(path).read_text()
-    return text
+    return Path(path).read_text()
 
 
 def test_load_config(run: Run):

@@ -81,7 +81,8 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         mlflow.log_param(key, value, synchronous=synchronous)
 
 
-def search_runs(
+def search_runs(  # noqa: PLR0913
+    *,
     experiment_ids: list[str] | None = None,
     filter_string: str = "",
     run_view_type: int = ViewType.ACTIVE_ONLY,
@@ -148,7 +149,8 @@ def search_runs(
 
 
 def list_runs(
-    experiment_names: str | list[str] | None = None, n_jobs: int = 0
+    experiment_names: str | list[str] | None = None,
+    n_jobs: int = 0,
 ) -> RunCollection:
     """
     List all runs for the specified experiments.

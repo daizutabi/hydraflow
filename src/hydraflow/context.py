@@ -75,7 +75,8 @@ def log_run(
             yield
 
     except Exception as e:
-        log.error(f"Error during log_run: {e}")
+        msg = f"Error during log_run: {e}"
+        log.exception(msg)
         raise
 
     finally:
@@ -84,7 +85,7 @@ def log_run(
 
 
 @contextmanager
-def start_run(
+def start_run(  # noqa: PLR0913
     config: object,
     *,
     run_id: str | None = None,
@@ -112,8 +113,10 @@ def start_run(
         parent_run_id (str | None): The parent run ID. Defaults to None.
         tags (dict[str, str] | None): Tags to associate with the run. Defaults to None.
         description (str | None): A description of the run. Defaults to None.
-        log_system_metrics (bool | None): Whether to log system metrics. Defaults to None.
-        synchronous (bool | None): Whether to log parameters synchronously. Defaults to None.
+        log_system_metrics (bool | None): Whether to log system metrics.
+            Defaults to None.
+        synchronous (bool | None): Whether to log parameters synchronously.
+            Defaults to None.
 
     Yields:
         Run: An MLflow Run object representing the started run.
@@ -128,24 +131,27 @@ def start_run(
         - `log_run`: A context manager to log parameters and manage the MLflow
            run context.
     """
-    with mlflow.start_run(
-        run_id=run_id,
-        experiment_id=experiment_id,
-        run_name=run_name,
-        nested=nested,
-        parent_run_id=parent_run_id,
-        tags=tags,
-        description=description,
-        log_system_metrics=log_system_metrics,
-    ) as run:
-        with log_run(config, synchronous=synchronous):
-            yield run
+    with (
+        mlflow.start_run(
+            run_id=run_id,
+            experiment_id=experiment_id,
+            run_name=run_name,
+            nested=nested,
+            parent_run_id=parent_run_id,
+            tags=tags,
+            description=description,
+            log_system_metrics=log_system_metrics,
+        ) as run,
+        log_run(config, synchronous=synchronous),
+    ):
+        yield run
 
 
 @contextmanager
 def watch(
     callback: Callable[[Path], None],
-    dir: Path | str = "",
+    dir: Path | str = "",  # noqa: A002
+    *,
     timeout: int = 60,
     ignore_patterns: list[str] | None = None,
     ignore_log: bool = True,
@@ -178,9 +184,9 @@ def watch(
             pass
         ```
     """
-    dir = dir or get_artifact_dir()
+    dir = dir or get_artifact_dir()  # noqa: A001
     if isinstance(dir, Path):
-        dir = dir.as_posix()
+        dir = dir.as_posix()  # noqa: A001
 
     handler = Handler(callback, ignore_patterns=ignore_patterns, ignore_log=ignore_log)
     observer = Observer()
@@ -191,7 +197,8 @@ def watch(
         yield
 
     except Exception as e:
-        log.error(f"Error during watch: {e}")
+        msg = f"Error during watch: {e}"
+        log.exception(msg)
         raise
 
     finally:
@@ -210,6 +217,7 @@ class Handler(PatternMatchingEventHandler):
     def __init__(
         self,
         func: Callable[[Path], None],
+        *,
         ignore_patterns: list[str] | None = None,
         ignore_log: bool = True,
     ) -> None:
