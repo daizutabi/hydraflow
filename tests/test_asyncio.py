@@ -5,10 +5,14 @@ import sys
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import pytest
-from watchfiles import Change
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from watchfiles import Change
 
 
 def sleep_write(path: Path):
@@ -72,7 +76,9 @@ async def test_monitor_file_changes(tmp_path: Path, write_soon: Callable[[Path],
         changes_detected.extend(changes)
 
     write_soon(tmp_path / "test.txt")
-    monitor_task = asyncio.create_task(monitor_file_changes([tmp_path], callback, stop_event))
+    monitor_task = asyncio.create_task(
+        monitor_file_changes([tmp_path], callback, stop_event),
+    )
 
     await asyncio.sleep(1)
     stop_event.set()

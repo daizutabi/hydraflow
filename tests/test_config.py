@@ -135,7 +135,11 @@ def test_iter_params_from_config(cfg):
 def test_iter_params_with_empty_config():
     from hydraflow.config import iter_params
 
-    empty_cfg = Config(size=Size(x=0, y=0), db=Db(name="", port=0), store=Store(items=[]))
+    empty_cfg = Config(
+        size=Size(x=0, y=0),
+        db=Db(name="", port=0),
+        store=Store(items=[]),
+    )
     it = iter_params(empty_cfg)
     assert next(it) == ("size.x", 0)
     assert next(it) == ("size.y", 0)

@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.mark.parametrize("dir", [".", Path])
-def test_watch(dir, monkeypatch, tmp_path):
+def test_watch(dir, monkeypatch, tmp_path):  # noqa: A002
     from hydraflow.context import watch
 
     file = Path("tests/scripts/watch.py").absolute()

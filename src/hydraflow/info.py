@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class RunCollectionInfo:
-    def __init__(self, runs: RunCollection):
+    def __init__(self, runs: RunCollection) -> None:
         self._runs = runs
 
     @property

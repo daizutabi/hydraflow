@@ -172,8 +172,6 @@ def test_runs_filter(runs: RunCollection):
 
 
 def test_runs_get(runs: RunCollection):
-    from hydraflow.run_collection import Run
-
     run = runs.get({"p": 4})
     assert isinstance(run, Run)
     run = runs.get(p=2)
@@ -205,8 +203,6 @@ def test_runs_get_params_dict(runs: RunCollection):
 
 
 def test_runs_find(runs: RunCollection):
-    from hydraflow.run_collection import Run
-
     run = runs.find({"r": 0})
     assert isinstance(run, Run)
     assert run.data.params["p"] == "0"
@@ -226,8 +222,6 @@ def test_runs_try_find_none(runs: RunCollection):
 
 
 def test_runs_find_last(runs: RunCollection):
-    from hydraflow.run_collection import Run
-
     run = runs.find_last({"r": 0})
     assert isinstance(run, Run)
     assert run.data.params["p"] == "3"
@@ -313,7 +307,7 @@ def test_run_collection_map_run_id_kwargs(runs: RunCollection):
 def test_run_collection_map_uri(runs: RunCollection):
     results = list(runs.map_uri(lambda uri: uri))
     assert len(results) == len(runs._runs)
-    assert all(isinstance(uri, (str, type(None))) for uri in results)
+    assert all(isinstance(uri, str | type(None)) for uri in results)
 
 
 def test_run_collection_map_dir(runs: RunCollection):

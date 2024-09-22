@@ -33,7 +33,7 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if config is None:
         return
 
-    if not isinstance(config, (DictConfig, ListConfig)):
+    if not isinstance(config, DictConfig | ListConfig):
         config = OmegaConf.create(config)  # type: ignore
 
     yield from _iter_params(config, prefix)
@@ -62,8 +62,8 @@ def _is_param(value: object) -> bool:
     if isinstance(value, DictConfig):
         return False
 
-    if isinstance(value, ListConfig):
-        if any(isinstance(v, (DictConfig, ListConfig)) for v in value):
+    if isinstance(value, ListConfig):  # noqa: SIM102
+        if any(isinstance(v, DictConfig | ListConfig) for v in value):
             return False
 
     return True

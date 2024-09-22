@@ -23,8 +23,6 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
-from mlflow.entities.run import Run
-
 from hydraflow.config import iter_params
 from hydraflow.info import RunCollectionInfo
 
@@ -33,6 +31,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from typing import Any
 
+    from mlflow.entities.run import Run
     from omegaconf import DictConfig
 
 
@@ -60,7 +59,7 @@ class RunCollection:
     _info: RunCollectionInfo = field(init=False)
     """An instance of `RunCollectionInfo`."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._info = RunCollectionInfo(self)
 
     def __repr__(self) -> str:
@@ -89,7 +88,7 @@ class RunCollection:
 
     @classmethod
     def from_list(cls, runs: list[Run]) -> RunCollection:
-        """Create a new `RunCollection` instance from a list of MLflow `Run` instances."""
+        """Create a `RunCollection` instance from a list of MLflow `Run` instances."""
 
         return cls(runs)
 
@@ -120,6 +119,7 @@ class RunCollection:
     def sort(
         self,
         key: Callable[[Run], Any] | None = None,
+        *,
         reverse: bool = False,
     ) -> None:
         self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
@@ -393,7 +393,7 @@ class RunCollection:
         param_names = set()
 
         for run in self:
-            for param in run.data.params.keys():
+            for param in run.data.params:
                 param_names.add(param)
 
         return list(param_names)
@@ -537,10 +537,11 @@ class RunCollection:
             Results obtained by applying the function to each artifact directory
             in the collection.
         """
-        return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)
+        return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)  # noqa: A001
 
     def group_by(
-        self, *names: str | list[str]
+        self,
+        *names: str | list[str],
     ) -> dict[tuple[str | None, ...], RunCollection]:
         """
         Group runs by specified parameter names.
@@ -595,7 +596,7 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
     if isinstance(value, list) and value:
         return type(value[0])(param) in value
 
-    if isinstance(value, tuple) and len(value) == 2:
+    if isinstance(value, tuple) and len(value) == 2:  # noqa: PLR2004
         return value[0] <= type(value[0])(param) < value[1]
 
     return type(value)(param) == value
