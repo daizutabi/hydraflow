@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import hydra
@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 class MySQLConfig:
     host: str = "localhost"
     port: int = 3306
+    values: list[int] = field(default_factory=lambda: [1, 2, 3])
 
 
 cs = ConfigStore.instance()
