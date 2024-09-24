@@ -1,7 +1,8 @@
+import json
 from dataclasses import dataclass, field
 
 import pytest
-from omegaconf import OmegaConf
+from omegaconf import ListConfig, OmegaConf
 
 
 def test_is_param_with_simple_values():
@@ -176,3 +177,23 @@ def test_iter_params_with_mixed_types_in_list():
     assert next(it) == ("items.0", "a")
     assert next(it) == ("items.1", 1)
     assert next(it) == ("items.2.key", "value")
+
+
+@pytest.mark.parametrize("type_", [int, float])
+@pytest.mark.parametrize("s", ["[1, 2, 3]", "[1.0, 2.0, 3.0]"])
+def test_list_config(type_, s):
+    a = [type_(x) for x in [1, 2, 3]]
+    b = OmegaConf.create(a)
+    assert isinstance(b, ListConfig)
+    t = OmegaConf.create(json.loads(s))
+    assert b == t
+    assert a == t
+
+
+@pytest.mark.parametrize("s", ['["a", "b", "c"]'])
+def test_list_config_str(s):
+    a = ["a", "b", "c"]
+    b = OmegaConf.create(a)
+    assert isinstance(b, ListConfig)
+    t = OmegaConf.create(json.loads(s))
+    assert b == t

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
+from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -77,10 +78,10 @@ def test_app_info_run_id(rc: RunCollection):
 
 def test_app_info_params(rc: RunCollection):
     params = rc.info.params
-    assert params[0] == {"port": "1", "host": "x"}
-    assert params[1] == {"port": "2", "host": "x"}
-    assert params[2] == {"port": "1", "host": "y"}
-    assert params[3] == {"port": "2", "host": "y"}
+    assert params[0] == {"port": "1", "host": "x", "values": "[1, 2, 3]"}
+    assert params[1] == {"port": "2", "host": "x", "values": "[1, 2, 3]"}
+    assert params[2] == {"port": "1", "host": "y", "values": "[1, 2, 3]"}
+    assert params[3] == {"port": "2", "host": "y", "values": "[1, 2, 3]"}
 
 
 def test_app_info_metrics(rc: RunCollection):
@@ -138,7 +139,20 @@ def test_app_map_config(rc: RunCollection):
 def test_app_group_by(rc: RunCollection):
     grouped = rc.group_by("host")
     assert len(grouped) == 2
-    assert grouped[("x",)].info.params[0] == {"port": "1", "host": "x"}
-    assert grouped[("x",)].info.params[1] == {"port": "2", "host": "x"}
-    assert grouped[("y",)].info.params[0] == {"port": "1", "host": "y"}
-    assert grouped[("y",)].info.params[1] == {"port": "2", "host": "y"}
+    x = {"port": "1", "host": "x", "values": "[1, 2, 3]"}
+    assert grouped[("x",)].info.params[0] == x
+    x = {"port": "2", "host": "x", "values": "[1, 2, 3]"}
+    assert grouped[("x",)].info.params[1] == x
+    x = {"port": "1", "host": "y", "values": "[1, 2, 3]"}
+    assert grouped[("y",)].info.params[0] == x
+    x = {"port": "2", "host": "y", "values": "[1, 2, 3]"}
+    assert grouped[("y",)].info.params[1] == x
+
+
+def test_app_filter_list(rc: RunCollection):
+    filtered = rc.filter(values=[1, 2, 3])
+    assert len(filtered) == 4
+    filtered = rc.filter(values=OmegaConf.create([1, 2, 3]))
+    assert len(filtered) == 4
+    filtered = rc.filter(values=[1])
+    assert not filtered

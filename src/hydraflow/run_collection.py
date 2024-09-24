@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
+import hydraflow.param
 from hydraflow.config import iter_params
 from hydraflow.info import RunCollectionInfo
 
@@ -572,37 +573,15 @@ class RunCollection:
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
-    """
-    Check if the run's parameter matches the specified key-value pair.
+    params = run.data.params
+    if key not in params:
+        return True
 
-    Check if the run's parameters contain the specified
-    key-value pair. It handles different types of values, including lists
-    and tuples.
-
-    Args:
-        run (Run): The run object to check.
-        key (str): The parameter key to check.
-        value (Any): The parameter value to check.
-
-    Returns:
-        True if the run's parameter matches the specified key-value pair,
-        False otherwise.
-    """
-    param = run.data.params.get(key, value)
-
-    if param is None:
-        return False
-
+    param = params[key]
     if param == "None":
-        return value is None
+        return value is None or value == "None"
 
-    if isinstance(value, list) and value:
-        return type(value[0])(param) in value
-
-    if isinstance(value, tuple) and len(value) == 2:  # noqa: PLR2004
-        return value[0] <= type(value[0])(param) < value[1]
-
-    return type(value)(param) == value
+    return hydraflow.param.match(param, value)
 
 
 def filter_runs(
