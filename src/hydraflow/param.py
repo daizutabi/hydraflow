@@ -1,3 +1,13 @@
+"""Provide utility functions for parameter matching.
+
+The main function `match` checks if a given parameter matches a specified value.
+It supports various types of values including None, boolean, list, tuple, int,
+float, and str.
+
+Helper functions `_match_list` and `_match_tuple` are used internally to handle
+matching for list and tuple types respectively.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,6 +23,7 @@ def match(param: str, value: Any) -> bool:
     Returns:
         True if the parameter matches the specified value,
         False otherwise.
+
     """
     if value in [None, True, False]:
         return param == str(value)

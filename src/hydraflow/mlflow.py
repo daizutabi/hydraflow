@@ -1,20 +1,17 @@
-"""
-This module provides functionality to log parameters from Hydra configuration objects
-and set up experiments using MLflow. It includes methods for managing experiments,
-searching for runs, and logging parameters and artifacts.
+"""Provide functionality to log parameters from Hydra configuration objects.
+
+This module provides functions to log parameters from Hydra configuration objects
+to MLflow, set experiments, and manage tracking URIs. It integrates Hydra's
+configuration management with MLflow's experiment tracking capabilities.
 
 Key Features:
-- **Experiment Management**: Set and manage MLflow experiments with customizable names
-  based on Hydra configuration.
-- **Run Logging**: Log parameters and metrics from Hydra configuration objects to
-  MLflow, ensuring that all relevant information is captured during experiments.
-- **Run Search**: Search for runs based on various criteria, allowing for flexible
-  retrieval of experiment results.
-- **Artifact Management**: Retrieve and log artifacts associated with runs, facilitating
-  easy access to outputs generated during experiments.
-
-This module is designed to integrate seamlessly with Hydra, providing a robust
-solution for tracking machine learning experiments and their associated metadata.
+- **Experiment Management**: Set experiment names and tracking URIs using Hydra
+  configuration details.
+- **Parameter Logging**: Log parameters from Hydra configuration objects to MLflow,
+  supporting both synchronous and asynchronous logging.
+- **Run Collection**: Utilize the `RunCollection` class to manage and interact with
+  multiple MLflow runs, providing methods to filter and retrieve runs based on
+  various criteria.
 """
 
 from __future__ import annotations
@@ -40,8 +37,7 @@ def set_experiment(
     suffix: str = "",
     uri: str | Path | None = None,
 ) -> Experiment:
-    """
-    Sets the experiment name and tracking URI optionally.
+    """Set the experiment name and tracking URI optionally.
 
     This function sets the experiment name by combining the given prefix,
     the job name from HydraConfig, and the given suffix. Optionally, it can
@@ -55,6 +51,7 @@ def set_experiment(
     Returns:
         Experiment: An instance of `mlflow.entities.Experiment` representing
         the new active experiment.
+
     """
     if uri is not None:
         mlflow.set_tracking_uri(uri)
@@ -65,8 +62,7 @@ def set_experiment(
 
 
 def log_params(config: object, *, synchronous: bool | None = None) -> None:
-    """
-    Log the parameters from the given configuration object.
+    """Log the parameters from the given configuration object.
 
     This method logs the parameters from the provided configuration object
     using MLflow. It iterates over the parameters and logs them using the
@@ -76,6 +72,7 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         config (object): The configuration object to log the parameters from.
         synchronous (bool | None): Whether to log the parameters synchronously.
             Defaults to None.
+
     """
     for key, value in iter_params(config):
         mlflow.log_param(key, value, synchronous=synchronous)
@@ -91,8 +88,7 @@ def search_runs(  # noqa: PLR0913
     search_all_experiments: bool = False,
     experiment_names: list[str] | None = None,
 ) -> RunCollection:
-    """
-    Search for Runs that fit the specified criteria.
+    """Search for Runs that fit the specified criteria.
 
     This function wraps the `mlflow.search_runs` function and returns the
     results as a `RunCollection` object. It allows for flexible searching of
@@ -133,6 +129,7 @@ def search_runs(  # noqa: PLR0913
 
     Returns:
         A `RunCollection` object containing the search results.
+
     """
     runs = mlflow.search_runs(
         experiment_ids=experiment_ids,
@@ -151,9 +148,9 @@ def search_runs(  # noqa: PLR0913
 def list_runs(
     experiment_names: str | list[str] | None = None,
     n_jobs: int = 0,
+    status: str | list[str] | int | list[int] | None = None,
 ) -> RunCollection:
-    """
-    List all runs for the specified experiments.
+    """List all runs for the specified experiments.
 
     This function retrieves all runs for the given list of experiment names.
     If no experiment names are provided (None), it defaults to searching all runs
@@ -169,11 +166,27 @@ def list_runs(
             for runs. If None or an empty list is provided, the function will
             search the currently active experiment or all experiments except
             the "Default" experiment.
+        n_jobs (int): The number of jobs to run in parallel. If 0, the function
+            will search runs sequentially.
+        status (str | list[str] | int | list[int] | None): The status of the runs
+            to filter.
 
     Returns:
         RunCollection: A `RunCollection` instance containing the runs for the
         specified experiments.
+
     """
+    rc = _list_runs(experiment_names, n_jobs)
+    if status is None:
+        return rc
+
+    return rc.filter(status=status)
+
+
+def _list_runs(
+    experiment_names: str | list[str] | None = None,
+    n_jobs: int = 0,
+) -> RunCollection:
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 

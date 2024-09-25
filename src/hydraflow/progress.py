@@ -1,18 +1,7 @@
-"""
-Module for managing progress tracking in parallel processing using Joblib
-and Rich's Progress bar.
+"""Context managers and functions for parallel task execution with progress.
 
 Provide context managers and functions to facilitate the execution
 of tasks in parallel while displaying progress updates.
-
-The following key components are provided:
-
-- JoblibProgress: A context manager for tracking progress with Rich's progress
-    bar.
-- parallel_progress: A function to execute a given function in parallel over
-    an iterable with progress tracking.
-- multi_tasks_progress: A function to render auto-updating progress bars for
-    multiple tasks concurrently.
 """
 
 from __future__ import annotations
@@ -37,8 +26,7 @@ def JoblibProgress(  # noqa: N802
     total: int | None = None,
     **kwargs,
 ) -> Iterator[Progress]:
-    """
-    Context manager for tracking progress using Joblib with Rich's Progress bar.
+    """Context manager for tracking progress using Joblib with Rich's Progress bar.
 
     Args:
         *columns (ProgressColumn | str): Columns to display in the progress bar.
@@ -56,6 +44,7 @@ def JoblibProgress(  # noqa: N802
         with JoblibProgress("task", total=100) as progress:
             # Your parallel processing code here
         ```
+
     """
     if not columns:
         columns = Progress.get_default_columns()
@@ -94,8 +83,7 @@ def parallel_progress(
     description: str | None = None,
     **kwargs,
 ) -> list[U]:
-    """
-    Execute a function in parallel over an iterable with progress tracking.
+    """Execute a function in parallel over an iterable with progress tracking.
 
     Args:
         func (Callable[[T], U]): The function to execute on each item in the
@@ -112,6 +100,7 @@ def parallel_progress(
     Returns:
         list[U]: A list of results from applying the function to each item in
         the iterable.
+
     """
     iterable = list(iterable)
     total = len(iterable)
@@ -130,8 +119,7 @@ def multi_tasks_progress(
     transient: bool | None = None,
     **kwargs,
 ) -> None:
-    """
-    Render auto-updating progress bars for multiple tasks concurrently.
+    """Render auto-updating progress bars for multiple tasks concurrently.
 
     Args:
         iterables (Iterable[Iterable[int | tuple[int, int]]]): A collection of
@@ -151,6 +139,7 @@ def multi_tasks_progress(
 
     Returns:
         None
+
     """
     if not columns:
         columns = Progress.get_default_columns()

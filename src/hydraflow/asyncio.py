@@ -1,3 +1,5 @@
+"""Provide functionality for running commands and monitoring file changes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -27,8 +29,7 @@ async def execute_command(
     stderr: Callable[[str], None] | None = None,
     stop_event: asyncio.Event,
 ) -> int:
-    """
-    Runs a command asynchronously and pass the output to callback functions.
+    """Run a command asynchronously and pass the output to callback functions.
 
     Args:
         program (str): The program to run.
@@ -39,6 +40,7 @@ async def execute_command(
 
     Returns:
         int: The return code of the process.
+
     """
     try:
         process = await asyncio.create_subprocess_exec(
@@ -68,13 +70,13 @@ async def process_stream(
     stream: StreamReader | None,
     callback: Callable[[str], None] | None,
 ) -> None:
-    """
-    Reads a stream asynchronously and pass each line to a callback function.
+    """Read a stream asynchronously and pass each line to a callback function.
 
     Args:
         stream (StreamReader | None): The stream to read from.
         callback (Callable[[str], None] | None): The callback function to handle
         each line.
+
     """
     if stream is None or callback is None:
         return
@@ -93,9 +95,7 @@ async def monitor_file_changes(
     stop_event: asyncio.Event,
     **awatch_kwargs,
 ) -> None:
-    """
-    Watches for file changes in specified paths and pass the changes to a
-    callback function.
+    """Watch file changes in specified paths and pass the changes to a callback.
 
     Args:
         paths (list[str | Path]): List of paths to monitor for changes.
@@ -103,6 +103,7 @@ async def monitor_file_changes(
         function to handle file changes.
         stop_event (asyncio.Event): Event to signal when to stop watching.
         **awatch_kwargs: Additional keyword arguments to pass to watchfiles.awatch.
+
     """
     str_paths = [str(path) for path in paths]
     try:
@@ -127,8 +128,7 @@ async def run_and_monitor(
     paths: list[str | Path] | None = None,
     **awatch_kwargs,
 ) -> int:
-    """
-    Runs a command and optionally watch for file changes concurrently.
+    """Run a command and optionally watch for file changes concurrently.
 
     Args:
         program (str): The program to run.
@@ -138,6 +138,8 @@ async def run_and_monitor(
         watch (Callable[[set[tuple[Change, str]]], None] | None): Callback for
         file changes.
         paths (list[str | Path] | None): List of paths to monitor for changes.
+        **awatch_kwargs: Additional keyword arguments to pass to `watchfiles.awatch`.
+
     """
     stop_event = asyncio.Event()
     run_task = asyncio.create_task(
@@ -184,8 +186,7 @@ def run(
     paths: list[str | Path] | None = None,
     **awatch_kwargs,
 ) -> int:
-    """
-    Run a command synchronously and optionally watch for file changes.
+    """Run a command synchronously and optionally watch for file changes.
 
     This function is a synchronous wrapper around the asynchronous
     `run_and_monitor` function. It runs a specified command and optionally
@@ -208,6 +209,7 @@ def run(
 
     Returns:
         int: The return code of the process.
+
     """
     if watch and not paths:
         paths = [Path.cwd()]
