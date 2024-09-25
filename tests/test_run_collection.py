@@ -4,7 +4,7 @@ from pathlib import Path
 
 import mlflow
 import pytest
-from mlflow.entities import Run
+from mlflow.entities import Run, RunStatus
 
 from hydraflow.run_collection import RunCollection
 
@@ -108,6 +108,15 @@ def test_filter_status(run_list: list[Run]):
     assert filter_runs(run_list, status=["finished", "running"]) == run_list
     assert filter_runs(run_list, status="!RUNNING") == run_list
     assert not filter_runs(run_list, status="!finished")
+
+
+def test_filter_status_enum(run_list: list[Run]):
+    from hydraflow.run_collection import filter_runs
+
+    assert not filter_runs(run_list, status=RunStatus.RUNNING)
+    assert filter_runs(run_list, status=RunStatus.FINISHED) == run_list
+    s = [RunStatus.FINISHED, RunStatus.RUNNING]
+    assert filter_runs(run_list, status=s) == run_list
 
 
 def test_get_params(run_list: list[Run]):

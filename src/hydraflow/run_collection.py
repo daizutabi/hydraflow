@@ -23,6 +23,8 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
+from mlflow.entities import RunStatus
+
 import hydraflow.param
 from hydraflow.config import iter_params
 from hydraflow.info import RunCollectionInfo
@@ -593,7 +595,7 @@ def filter_runs(
     runs: list[Run],
     config: object | None = None,
     *,
-    status: str | list[str] | None = None,
+    status: str | list[str] | int | list[int] | None = None,
     **kwargs,
 ) -> list[Run]:
     """Filter the runs based on the provided configuration.
@@ -616,7 +618,8 @@ def filter_runs(
         config (object | None): The configuration object to filter the runs.
             This can be any object that provides key-value pairs through the
             `iter_params` function.
-        status (str | list[str] | None): The status of the runs to filter.
+        status (str | list[str] | RunStatus | list[RunStatus] | None): The status of
+            the runs to filter.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
@@ -626,19 +629,46 @@ def filter_runs(
     for key, value in chain(iter_params(config), kwargs.items()):
         runs = [run for run in runs if _param_matches(run, key, value)]
 
-        if len(runs) == 0:
-            return []
+    if len(runs) == 0 or status is None:
+        return runs
 
-    if isinstance(status, str) and status.startswith("!"):
-        status = status[1:].lower()
-        return [run for run in runs if run.info.status.lower() != status]
+    return filter_runs_by_status(runs, status)
 
-    if status:
-        status = [status] if isinstance(status, str) else status
-        status = [s.lower() for s in status]
-        return [run for run in runs if run.info.status.lower() in status]
 
-    return runs
+def filter_runs_by_status(
+    runs: list[Run],
+    status: str | list[str] | int | list[int],
+) -> list[Run]:
+    """Filter the runs based on the provided status.
+
+    Args:
+        runs (list[Run]): The list of runs to filter.
+        status (str | list[str] | int | list[int]): The status of the runs
+            to filter.
+
+    Returns:
+        A list of runs that match the specified status.
+
+    """
+    if isinstance(status, str):
+        if status.startswith("!"):
+            status = status[1:].lower()
+            return [run for run in runs if run.info.status.lower() != status]
+
+        status = [status]
+
+    elif isinstance(status, int):
+        status = [RunStatus.to_string(status)]
+
+    status = [_to_lower(s) for s in status]
+    return [run for run in runs if run.info.status.lower() in status]
+
+
+def _to_lower(status: str | int) -> str:
+    if isinstance(status, str):
+        return status.lower()
+
+    return RunStatus.to_string(status).lower()
 
 
 def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:

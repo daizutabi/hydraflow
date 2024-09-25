@@ -148,6 +148,7 @@ def search_runs(  # noqa: PLR0913
 def list_runs(
     experiment_names: str | list[str] | None = None,
     n_jobs: int = 0,
+    status: str | list[str] | int | list[int] | None = None,
 ) -> RunCollection:
     """List all runs for the specified experiments.
 
@@ -167,12 +168,25 @@ def list_runs(
             the "Default" experiment.
         n_jobs (int): The number of jobs to run in parallel. If 0, the function
             will search runs sequentially.
+        status (str | list[str] | int | list[int] | None): The status of the runs
+            to filter.
 
     Returns:
         RunCollection: A `RunCollection` instance containing the runs for the
         specified experiments.
 
     """
+    rc = _list_runs(experiment_names, n_jobs)
+    if status is None:
+        return rc
+
+    return rc.filter(status=status)
+
+
+def _list_runs(
+    experiment_names: str | list[str] | None = None,
+    n_jobs: int = 0,
+) -> RunCollection:
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 

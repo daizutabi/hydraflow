@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
+from mlflow.entities import RunStatus
 from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
@@ -41,6 +42,19 @@ def test_list_runs_all(rc: RunCollection):
         assert a.info.start_time == b.info.start_time
         assert a.info.status == b.info.status
         assert a.info.artifact_uri == b.info.artifact_uri
+
+
+def test_list_runs_status(rc: RunCollection):
+    from hydraflow.mlflow import list_runs
+
+    rc_ = list_runs("_info_", status="finished")
+    assert len(rc) == len(rc_)
+    rc_ = list_runs("_info_", status=RunStatus.FINISHED)
+    assert len(rc) == len(rc_)
+    assert not list_runs("_info_", status=RunStatus.RUNNING)
+    rc_ = list_runs("_info_", status="!RUNNING")
+    assert len(rc) == len(rc_)
+    assert not list_runs("_info_", status="!FINISHED")
 
 
 @pytest.mark.parametrize("n_jobs", [0, 1, 2, 4, -1])
