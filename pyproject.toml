@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hydraflow"
-version = "0.2.17"
+version = "0.2.18"
 description = "Hydraflow integrates Hydra and MLflow to manage and track machine learning experiments."
 readme = "README.md"
 license = "MIT"
