@@ -72,12 +72,26 @@ ignore = [
   "ANN401",
   "ARG002",
   "B904",
-  "D",
+  "D105",
+  "D107",
+  "D203",
+  "D213",
   "EM101",
   "PGH003",
   "TRY003",
 ]
-exclude = ["tests/scripts/*.py"]
+exclude = ["tests/scripts/*.py", "src/hydraflow/__init__.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["A001", "ANN", "ARG", "FBT", "PLR", "PT", "S", "SIM117", "SLF"]
+"tests/*" = [
+  "A001",
+  "ANN",
+  "ARG",
+  "D",
+  "FBT",
+  "PLR",
+  "PT",
+  "S",
+  "SIM117",
+  "SLF",
+]

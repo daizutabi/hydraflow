@@ -1,6 +1,6 @@
-"""
-Provide functionality for managing and interacting with MLflow runs.
-It includes the `RunCollection` class, which serves as a container
+"""Provide a collection of MLflow runs.
+
+This module includes the `RunCollection` class, which serves as a container
 for multiple MLflow `Run` instances, and various methods to filter and
 retrieve these runs.
 
@@ -42,8 +42,7 @@ P = ParamSpec("P")
 
 @dataclass
 class RunCollection:
-    """
-    Represent a collection of MLflow runs.
+    """Represent a collection of MLflow runs.
 
     Provide methods to interact with the runs, such as filtering,
     retrieving specific runs, and accessing run information.
@@ -93,7 +92,6 @@ class RunCollection:
     @classmethod
     def from_list(cls, runs: list[Run]) -> RunCollection:
         """Create a `RunCollection` instance from a list of MLflow `Run` instances."""
-
         return cls(runs)
 
     @property
@@ -114,6 +112,7 @@ class RunCollection:
         Returns:
             A new `RunCollection` instance containing the first n runs if n is
             positive, or the last n runs if n is negative.
+
         """
         if n < 0:
             return self.__class__(self._runs[n:])
@@ -126,17 +125,28 @@ class RunCollection:
         *,
         reverse: bool = False,
     ) -> None:
+        """Sort the runs in the collection.
+
+        Sort the runs in the collection according to the provided key function
+        and optional reverse flag.
+
+        Args:
+            key (Callable[[Run], Any] | None): A function that takes a run and returns
+                a value to sort by.
+            reverse (bool): If True, sort in descending order.
+
+        """
         self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
 
     def one(self) -> Run:
-        """
-        Get the only `Run` instance in the collection.
+        """Get the only `Run` instance in the collection.
 
         Returns:
             The only `Run` instance in the collection.
 
         Raises:
             ValueError: If the collection does not contain exactly one run.
+
         """
         if len(self._runs) != 1:
             raise ValueError("The collection does not contain exactly one run.")
@@ -144,24 +154,24 @@ class RunCollection:
         return self._runs[0]
 
     def try_one(self) -> Run | None:
-        """
-        Try to get the only `Run` instance in the collection.
+        """Try to get the only `Run` instance in the collection.
 
         Returns:
             The only `Run` instance in the collection, or None if the collection
             does not contain exactly one run.
+
         """
         return self._runs[0] if len(self._runs) == 1 else None
 
     def first(self) -> Run:
-        """
-        Get the first `Run` instance in the collection.
+        """Get the first `Run` instance in the collection.
 
         Returns:
             The first `Run` instance in the collection.
 
         Raises:
             ValueError: If the collection is empty.
+
         """
         if not self._runs:
             raise ValueError("The collection is empty.")
@@ -169,24 +179,24 @@ class RunCollection:
         return self._runs[0]
 
     def try_first(self) -> Run | None:
-        """
-        Try to get the first `Run` instance in the collection.
+        """Try to get the first `Run` instance in the collection.
 
         Returns:
             The first `Run` instance in the collection, or None if the collection
             is empty.
+
         """
         return self._runs[0] if self._runs else None
 
     def last(self) -> Run:
-        """
-        Get the last `Run` instance in the collection.
+        """Get the last `Run` instance in the collection.
 
         Returns:
             The last `Run` instance in the collection.
 
         Raises:
             ValueError: If the collection is empty.
+
         """
         if not self._runs:
             raise ValueError("The collection is empty.")
@@ -194,18 +204,17 @@ class RunCollection:
         return self._runs[-1]
 
     def try_last(self) -> Run | None:
-        """
-        Try to get the last `Run` instance in the collection.
+        """Try to get the last `Run` instance in the collection.
 
         Returns:
             The last `Run` instance in the collection, or None if the collection
             is empty.
+
         """
         return self._runs[-1] if self._runs else None
 
     def filter(self, config: object | None = None, **kwargs) -> RunCollection:
-        """
-        Filter the `Run` instances based on the provided configuration.
+        """Filter the `Run` instances based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and additional key-value pairs. The
@@ -228,12 +237,12 @@ class RunCollection:
 
         Returns:
             A new `RunCollection` object containing the filtered runs.
+
         """
         return RunCollection(filter_runs(self._runs, config, **kwargs))
 
     def find(self, config: object | None = None, **kwargs) -> Run:
-        """
-        Find the first `Run` instance based on the provided configuration.
+        """Find the first `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the first run that matches
@@ -252,6 +261,7 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         try:
             return self.filter(config, **kwargs).first()
@@ -259,8 +269,7 @@ class RunCollection:
             raise ValueError("No run matches the provided configuration.")
 
     def try_find(self, config: object | None = None, **kwargs) -> Run | None:
-        """
-        Try to find the first `Run` instance based on the provided configuration.
+        """Try to find the first `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the first run that matches
@@ -277,12 +286,12 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         return self.filter(config, **kwargs).try_first()
 
     def find_last(self, config: object | None = None, **kwargs) -> Run:
-        """
-        Find the last `Run` instance based on the provided configuration.
+        """Find the last `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the last run that matches
@@ -301,6 +310,7 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         try:
             return self.filter(config, **kwargs).last()
@@ -308,8 +318,7 @@ class RunCollection:
             raise ValueError("No run matches the provided configuration.")
 
     def try_find_last(self, config: object | None = None, **kwargs) -> Run | None:
-        """
-        Try to find the last `Run` instance based on the provided configuration.
+        """Try to find the last `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the last run that matches
@@ -326,12 +335,12 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         return self.filter(config, **kwargs).try_last()
 
     def get(self, config: object | None = None, **kwargs) -> Run:
-        """
-        Retrieve a specific `Run` instance based on the provided configuration.
+        """Retrieve a specific `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the run that matches the
@@ -351,6 +360,7 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         try:
             return self.filter(config, **kwargs).one()
@@ -359,8 +369,7 @@ class RunCollection:
             raise ValueError(msg)
 
     def try_get(self, config: object | None = None, **kwargs) -> Run | None:
-        """
-        Try to retrieve a specific `Run` instance based on the provided configuration.
+        """Try to retrieve a specific `Run` instance based on the provided config.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the run that matches the
@@ -380,12 +389,12 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
+
         """
         return self.filter(config, **kwargs).try_one()
 
     def get_param_names(self) -> list[str]:
-        """
-        Get the parameter names from the runs.
+        """Get the parameter names from the runs.
 
         This method extracts the unique parameter names from the provided list
         of runs. It iterates through each run and collects the parameter names
@@ -393,6 +402,7 @@ class RunCollection:
 
         Returns:
             A list of unique parameter names.
+
         """
         param_names = set()
 
@@ -403,8 +413,7 @@ class RunCollection:
         return list(param_names)
 
     def get_param_dict(self) -> dict[str, list[str]]:
-        """
-        Get the parameter dictionary from the list of runs.
+        """Get the parameter dictionary from the list of runs.
 
         This method extracts the parameter names and their corresponding values
         from the provided list of runs. It iterates through each run and
@@ -414,6 +423,7 @@ class RunCollection:
         Returns:
             A dictionary where the keys are parameter names and the values are
             lists of parameter values.
+
         """
         params = {}
 
@@ -429,9 +439,7 @@ class RunCollection:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Iterator[T]:
-        """
-        Apply a function to each run in the collection and return an iterator of
-        results.
+        """Return an iterator of results by applying a function to each run.
 
         This method iterates over each run in the collection and applies the
         provided function to it, along with any additional arguments and
@@ -445,6 +453,7 @@ class RunCollection:
 
         Yields:
             Results obtained by applying the function to each run in the collection.
+
         """
         return (func(run, *args, **kwargs) for run in self)
 
@@ -454,9 +463,7 @@ class RunCollection:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Iterator[T]:
-        """
-        Apply a function to each run id in the collection and return an iterator
-        of results.
+        """Return an iterator of results by applying a function to each run id.
 
         Args:
             func (Callable[[str, P], T]): A function that takes a run id and returns a
@@ -467,6 +474,7 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each run id in the
             collection.
+
         """
         return (func(run_id, *args, **kwargs) for run_id in self.info.run_id)
 
@@ -476,9 +484,7 @@ class RunCollection:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Iterator[T]:
-        """
-        Apply a function to each run configuration in the collection and return
-        an iterator of results.
+        """Return an iterator of results by applying a function to each run config.
 
         Args:
             func (Callable[[DictConfig, P], T]): A function that takes a run
@@ -489,6 +495,7 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each run configuration
             in the collection.
+
         """
         return (func(config, *args, **kwargs) for config in self.info.config)
 
@@ -498,9 +505,7 @@ class RunCollection:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Iterator[T]:
-        """
-        Apply a function to each artifact URI in the collection and return an
-        iterator of results.
+        """Return an iterator of results by applying a function to each artifact URI.
 
         Iterate over each run in the collection, retrieves the artifact URI, and
         apply the provided function to it. If a run does not have an artifact
@@ -515,6 +520,7 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each artifact URI in the
             collection.
+
         """
         return (func(uri, *args, **kwargs) for uri in self.info.artifact_uri)
 
@@ -524,9 +530,7 @@ class RunCollection:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Iterator[T]:
-        """
-        Apply a function to each artifact directory in the collection and return
-        an iterator of results.
+        """Return an iterator of results by applying a function to each artifact dir.
 
         Iterate over each run in the collection, downloads the artifact
         directory, and apply the provided function to the directory path.
@@ -540,6 +544,7 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each artifact directory
             in the collection.
+
         """
         return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)  # noqa: A001
 
@@ -547,8 +552,7 @@ class RunCollection:
         self,
         *names: str | list[str],
     ) -> dict[tuple[str | None, ...], RunCollection]:
-        """
-        Group runs by specified parameter names.
+        """Group runs by specified parameter names.
 
         Group the runs in the collection based on the values of the
         specified parameters. Each unique combination of parameter values will
@@ -563,6 +567,7 @@ class RunCollection:
             dict[tuple[str | None, ...], RunCollection]: A dictionary where the keys
             are tuples of parameter values and the values are RunCollection objects
             containing the runs that match those parameter values.
+
         """
         grouped_runs: dict[tuple[str | None, ...], list[Run]] = {}
         for run in self._runs:
@@ -591,8 +596,7 @@ def filter_runs(
     status: str | list[str] | None = None,
     **kwargs,
 ) -> list[Run]:
-    """
-    Filter the runs based on the provided configuration.
+    """Filter the runs based on the provided configuration.
 
     Filter the runs in the collection according to the
     specified configuration object and additional key-value pairs.
@@ -617,6 +621,7 @@ def filter_runs(
 
     Returns:
         A list of runs that match the specified configuration and key-value pairs.
+
     """
     for key, value in chain(iter_params(config), kwargs.items()):
         runs = [run for run in runs if _param_matches(run, key, value)]
@@ -637,8 +642,7 @@ def filter_runs(
 
 
 def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
-    """
-    Retrieve the values of specified parameters from the given run.
+    """Retrieve the values of specified parameters from the given run.
 
     This function extracts the values of the parameters identified by the
     provided names from the specified run. It can accept both individual
@@ -653,6 +657,7 @@ def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
     Returns:
         tuple[str | None, ...]: A tuple containing the values of the specified
         parameters in the order they were provided.
+
     """
     names_ = []
     for name in names:

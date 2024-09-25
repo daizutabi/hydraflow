@@ -1,7 +1,4 @@
-"""
-This module provides context managers to log parameters and manage the MLflow
-run context.
-"""
+"""Provide context managers to log parameters and manage the MLflow run context."""
 
 from __future__ import annotations
 
@@ -34,9 +31,7 @@ def log_run(
     *,
     synchronous: bool | None = None,
 ) -> Iterator[None]:
-    """
-    Log the parameters from the given configuration object and manage the MLflow
-    run context.
+    """Log the parameters from the given configuration object.
 
     This context manager logs the parameters from the provided configuration object
     using MLflow. It also manages the MLflow run context, ensuring that artifacts
@@ -56,6 +51,7 @@ def log_run(
             # Perform operations within the MLflow run context
             pass
         ```
+
     """
     log_params(config, synchronous=synchronous)
 
@@ -98,8 +94,7 @@ def start_run(  # noqa: PLR0913
     log_system_metrics: bool | None = None,
     synchronous: bool | None = None,
 ) -> Iterator[Run]:
-    """
-    Start an MLflow run and log parameters using the provided configuration object.
+    """Start an MLflow run and log parameters using the provided configuration object.
 
     This context manager starts an MLflow run and logs parameters using the specified
     configuration object. It ensures that the run is properly closed after completion.
@@ -130,6 +125,7 @@ def start_run(  # noqa: PLR0913
         - `mlflow.start_run`: The MLflow function to start a run directly.
         - `log_run`: A context manager to log parameters and manage the MLflow
            run context.
+
     """
     with (
         mlflow.start_run(
@@ -156,9 +152,7 @@ def watch(
     ignore_patterns: list[str] | None = None,
     ignore_log: bool = True,
 ) -> Iterator[None]:
-    """
-    Watch the given directory for changes and call the provided function
-    when a change is detected.
+    """Watch the given directory for changes.
 
     This context manager sets up a file system watcher on the specified directory.
     When a file modification is detected, the provided function is called with
@@ -173,6 +167,9 @@ def watch(
             the current MLflow artifact URI is used. Defaults to "".
         timeout (int): The timeout period in seconds for the watcher
             to run after the context is exited. Defaults to 60.
+        ignore_patterns (list[str] | None): A list of glob patterns to ignore.
+            Defaults to None.
+        ignore_log (bool): Whether to ignore log files. Defaults to True.
 
     Yields:
         None
@@ -183,6 +180,7 @@ def watch(
             # Perform operations while watching the directory for changes
             pass
         ```
+
     """
     dir = dir or get_artifact_dir()  # noqa: A001
     if isinstance(dir, Path):
@@ -214,6 +212,8 @@ def watch(
 
 
 class Handler(PatternMatchingEventHandler):
+    """Monitor file changes and call the given function when a change is detected."""
+
     def __init__(
         self,
         func: Callable[[Path], None],
@@ -232,6 +232,7 @@ class Handler(PatternMatchingEventHandler):
         super().__init__(ignore_patterns=ignore_patterns)
 
     def on_modified(self, event: FileModifiedEvent) -> None:
+        """Modify when a file is modified."""
         file = Path(str(event.src_path))
         if file.is_file():
             self.func(file)
@@ -242,9 +243,7 @@ def chdir_artifact(
     run: Run,
     artifact_path: str | None = None,
 ) -> Iterator[Path]:
-    """
-    Change the current working directory to the artifact directory of the
-    given run.
+    """Change the current working directory to the artifact directory of the given run.
 
     This context manager changes the current working directory to the artifact
     directory of the given run. It ensures that the directory is changed back
@@ -253,6 +252,7 @@ def chdir_artifact(
     Args:
         run (Run): The run to get the artifact directory from.
         artifact_path (str | None): The artifact path.
+
     """
     curdir = Path.cwd()
     path = mlflow.artifacts.download_artifacts(

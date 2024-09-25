@@ -1,7 +1,4 @@
-"""
-This module provides functionality for working with configuration
-objects using the OmegaConf library.
-"""
+"""Provide functionality for working with configuration objects using the OmegaConf."""
 
 from __future__ import annotations
 
@@ -15,8 +12,7 @@ if TYPE_CHECKING:
 
 
 def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
-    """
-    Recursively iterate over the parameters in the given configuration object.
+    """Recursively iterate over the parameters in the given configuration object.
 
     This function traverses the configuration object and yields key-value pairs
     representing the parameters. The keys are prefixed with the provided prefix.
@@ -29,6 +25,7 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
 
     Yields:
         Key-value pairs representing the parameters in the configuration object.
+
     """
     if config is None:
         return
