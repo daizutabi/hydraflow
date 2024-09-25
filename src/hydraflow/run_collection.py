@@ -371,7 +371,7 @@ class RunCollection:
             raise ValueError(msg)
 
     def try_get(self, config: object | None = None, **kwargs) -> Run | None:
-        """Try to retrieve a specific `Run` instance based on the provided config.
+        """Try to get a specific `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
         specified configuration object and returns the run that matches the
