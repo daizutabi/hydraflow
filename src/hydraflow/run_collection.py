@@ -414,13 +414,17 @@ class RunCollection:
 
         return list(param_names)
 
-    def get_param_dict(self) -> dict[str, list[str]]:
+    def get_param_dict(self, *, drop_const: bool = False) -> dict[str, list[str]]:
         """Get the parameter dictionary from the list of runs.
 
         This method extracts the parameter names and their corresponding values
         from the provided list of runs. It iterates through each run and
         collects the parameter values into a dictionary where the keys are
         parameter names and the values are lists of parameter values.
+
+        Args:
+            drop_const (bool): If True, drop the parameter values that are constant
+                across all runs.
 
         Returns:
             A dictionary where the keys are parameter names and the values are
@@ -431,7 +435,9 @@ class RunCollection:
 
         for name in self.get_param_names():
             it = (run.data.params[name] for run in self if name in run.data.params)
-            params[name] = sorted(set(it))
+            unique_values = sorted(set(it))
+            if not drop_const or len(unique_values) > 1:
+                params[name] = unique_values
 
         return params
 

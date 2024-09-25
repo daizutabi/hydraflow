@@ -223,6 +223,15 @@ def test_runs_get_params_dict(rc: RunCollection):
     assert params["r"] == ["0", "1", "2"]
 
 
+def test_runs_get_params_dict_drop_const(rc: RunCollection):
+    rc_ = rc.filter(q=0)
+    params = rc_.get_param_dict(drop_const=True)
+    assert len(params) == 2
+    assert "p" in params
+    assert "q" not in params
+    assert "r" in params
+
+
 def test_runs_find(rc: RunCollection):
     run = rc.find({"r": 0})
     assert isinstance(run, Run)
