@@ -634,8 +634,10 @@ def filter_runs(
     """
     for key, value in chain(iter_params(config), kwargs.items()):
         runs = [run for run in runs if _param_matches(run, key, value)]
+        if not runs:
+            return []
 
-    if len(runs) == 0 or status is None:
+    if status is None:
         return runs
 
     return filter_runs_by_status(runs, status)
