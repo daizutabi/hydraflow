@@ -87,6 +87,14 @@ def test_iter_params():
     assert next(it) == ("l.1.3", "c")
 
 
+def test_collect_params():
+    from hydraflow.config import collect_params
+
+    conf = OmegaConf.create({"k": "v", "l": [1, {"a": "1", "b": "2", 3: "c"}]})
+    params = collect_params(conf)
+    assert params == {"k": "v", "l.0": 1, "l.1.a": "1", "l.1.b": "2", "l.1.3": "c"}
+
+
 @dataclass
 class Size:
     x: int = 1

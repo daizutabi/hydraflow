@@ -24,10 +24,12 @@ from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
 from mlflow.entities import RunStatus
+from polars.dataframe import DataFrame
 
 import hydraflow.param
-from hydraflow.config import iter_params
-from hydraflow.info import RunCollectionInfo
+from hydraflow.config import collect_params, iter_params
+from hydraflow.run_data import RunCollectionData
+from hydraflow.run_info import RunCollectionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -61,8 +63,12 @@ class RunCollection:
     _info: RunCollectionInfo = field(init=False)
     """An instance of `RunCollectionInfo`."""
 
+    _data: RunCollectionData = field(init=False)
+    """An instance of `RunCollectionData`."""
+
     def __post_init__(self) -> None:
         self._info = RunCollectionInfo(self)
+        self._data = RunCollectionData(self)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({len(self)})"
@@ -100,6 +106,11 @@ class RunCollection:
     def info(self) -> RunCollectionInfo:
         """An instance of `RunCollectionInfo`."""
         return self._info
+
+    @property
+    def data(self) -> RunCollectionData:
+        """An instance of `RunCollectionData`."""
+        return self._data
 
     def take(self, n: int) -> RunCollection:
         """Take the first n runs from the collection.
@@ -505,7 +516,7 @@ class RunCollection:
             in the collection.
 
         """
-        return (func(config, *args, **kwargs) for config in self.info.config)
+        return (func(config, *args, **kwargs) for config in self.data.config)
 
     def map_uri(
         self,
@@ -583,6 +594,16 @@ class RunCollection:
             grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
+
+    @property
+    def config(self) -> DataFrame:
+        """Get the runs' configurations as a polars DataFrame.
+
+        Returns:
+            A polars DataFrame containing the runs' configurations.
+
+        """
+        return DataFrame(self.map_config(collect_params))
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:

@@ -1,5 +1,6 @@
+"""Provide a collection of MLflow runs."""
+
 from .context import chdir_artifact, log_run, start_run, watch
-from .info import get_artifact_dir, get_hydra_output_dir, load_config
 from .mlflow import (
     list_runs,
     search_runs,
@@ -7,6 +8,8 @@ from .mlflow import (
 )
 from .progress import multi_tasks_progress, parallel_progress
 from .run_collection import RunCollection
+from .run_data import load_config
+from .run_info import get_artifact_dir, get_hydra_output_dir
 
 __all__ = [
     "RunCollection",

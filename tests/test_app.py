@@ -90,24 +90,24 @@ def test_app_info_run_id(rc: RunCollection):
     assert len(rc.info.run_id) == 4
 
 
-def test_app_info_params(rc: RunCollection):
-    params = rc.info.params
+def test_app_data_params(rc: RunCollection):
+    params = rc.data.params
     assert params[0] == {"port": "1", "host": "x", "values": "[1, 2, 3]"}
     assert params[1] == {"port": "2", "host": "x", "values": "[1, 2, 3]"}
     assert params[2] == {"port": "1", "host": "y", "values": "[1, 2, 3]"}
     assert params[3] == {"port": "2", "host": "y", "values": "[1, 2, 3]"}
 
 
-def test_app_info_metrics(rc: RunCollection):
-    metrics = rc.info.metrics
+def test_app_data_metrics(rc: RunCollection):
+    metrics = rc.data.metrics
     assert metrics[0] == {"m": 11, "watch": 3}
     assert metrics[1] == {"m": 12, "watch": 3}
     assert metrics[2] == {"m": 2, "watch": 3}
     assert metrics[3] == {"m": 3, "watch": 3}
 
 
-def test_app_info_config(rc: RunCollection):
-    config = rc.info.config
+def test_app_data_config(rc: RunCollection):
+    config = rc.data.config
     assert config[0].port == 1
     assert config[1].port == 2
     assert config[2].host == "y"
@@ -122,14 +122,14 @@ def test_app_info_artifact_uri(rc: RunCollection):
 
 
 def test_app_info_artifact_dir(rc: RunCollection):
-    from hydraflow.info import get_artifact_dir
+    from hydraflow.run_info import get_artifact_dir
 
     dirs = list(rc.map(get_artifact_dir))
     assert rc.info.artifact_dir == dirs
 
 
 def test_app_hydra_output_dir(rc: RunCollection):
-    from hydraflow.info import get_hydra_output_dir
+    from hydraflow.run_info import get_hydra_output_dir
 
     dirs = list(rc.map(get_hydra_output_dir))
     assert dirs[0].stem == "0"
@@ -154,13 +154,13 @@ def test_app_group_by(rc: RunCollection):
     grouped = rc.group_by("host")
     assert len(grouped) == 2
     x = {"port": "1", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped[("x",)].info.params[0] == x
+    assert grouped[("x",)].data.params[0] == x
     x = {"port": "2", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped[("x",)].info.params[1] == x
+    assert grouped[("x",)].data.params[1] == x
     x = {"port": "1", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped[("y",)].info.params[0] == x
+    assert grouped[("y",)].data.params[0] == x
     x = {"port": "2", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped[("y",)].info.params[1] == x
+    assert grouped[("y",)].data.params[1] == x
 
 
 def test_app_filter_list(rc: RunCollection):
@@ -170,3 +170,11 @@ def test_app_filter_list(rc: RunCollection):
     assert len(filtered) == 4
     filtered = rc.filter(values=[1])
     assert not filtered
+
+
+def test_config(rc: RunCollection):
+    df = rc.config
+    assert df.columns == ["host", "port", "values"]
+    assert df.shape == (4, 3)
+    assert df.select("host").to_series().to_list() == ["x", "x", "y", "y"]
+    assert df.select("port").to_series().to_list() == [1, 2, 1, 2]
