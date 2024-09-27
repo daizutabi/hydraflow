@@ -54,7 +54,7 @@ def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if isinstance(config, DictConfig):
         for key, value in config.items():
             if _is_param(value):
-                yield f"{prefix}{key}", value
+                yield f"{prefix}{key}", _convert(value)
 
             else:
                 yield from _iter_params(value, f"{prefix}{key}.")
@@ -62,7 +62,7 @@ def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     elif isinstance(config, ListConfig):
         for index, value in enumerate(config):
             if _is_param(value):
-                yield f"{prefix}{index}", value
+                yield f"{prefix}{index}", _convert(value)
 
             else:
                 yield from _iter_params(value, f"{prefix}{index}.")
@@ -78,3 +78,11 @@ def _is_param(value: object) -> bool:
             return False
 
     return True
+
+
+def _convert(value: Any) -> Any:
+    """Convert the given value to a Python object."""
+    if isinstance(value, ListConfig):
+        return list(value)
+
+    return value
