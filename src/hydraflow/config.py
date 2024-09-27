@@ -11,6 +11,20 @@ if TYPE_CHECKING:
     from typing import Any
 
 
+def collect_params(config: object) -> dict[str, Any]:
+    """Iterate over parameters and collect them into a dictionary.
+
+    Args:
+        config (object): The configuration object to iterate over.
+        prefix (str): The prefix to prepend to the parameter keys.
+
+    Returns:
+        dict[str, Any]: A dictionary of collected parameters.
+
+    """
+    return dict(iter_params(config))
+
+
 def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     """Recursively iterate over the parameters in the given configuration object.
 

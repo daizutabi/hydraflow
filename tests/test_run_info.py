@@ -18,9 +18,7 @@ def runs(monkeypatch, tmp_path):
 
     for x in range(3):
         with mlflow.start_run(run_name=f"{x}"):
-            mlflow.log_param("p", x)
-            mlflow.log_metric("metric1", x + 1)
-            mlflow.log_metric("metric2", x + 2)
+            pass
 
     x = search_runs()
     assert isinstance(x, RunCollection)
@@ -29,17 +27,6 @@ def runs(monkeypatch, tmp_path):
 
 def test_info_run_id(runs: RunCollection):
     assert len(runs.info.run_id) == 3
-
-
-def test_info_params(runs: RunCollection):
-    assert runs.info.params == [{"p": "0"}, {"p": "1"}, {"p": "2"}]
-
-
-def test_info_metrics(runs: RunCollection):
-    m = runs.info.metrics
-    assert m[0] == {"metric1": 1, "metric2": 2}
-    assert m[1] == {"metric1": 2, "metric2": 3}
-    assert m[2] == {"metric1": 3, "metric2": 4}
 
 
 def test_info_artifact_uri(runs: RunCollection):
@@ -57,8 +44,5 @@ def test_info_artifact_dir(runs: RunCollection):
 def test_info_empty_run_collection():
     rc = RunCollection([])
     assert rc.info.run_id == []
-    assert rc.info.params == []
-    assert rc.info.metrics == []
     assert rc.info.artifact_uri == []
     assert rc.info.artifact_dir == []
-    assert rc.info.config == []

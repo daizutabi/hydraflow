@@ -21,6 +21,7 @@ dependencies = [
   "hydra-core>=1.3",
   "joblib",
   "mlflow>=2.15",
+  "polars",
   "rich",
   "watchdog",
   "watchfiles",
@@ -80,7 +81,7 @@ ignore = [
   "PGH003",
   "TRY003",
 ]
-exclude = ["tests/scripts/*.py", "src/hydraflow/__init__.py"]
+exclude = ["tests/scripts/*.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
@@ -89,6 +90,7 @@ exclude = ["tests/scripts/*.py", "src/hydraflow/__init__.py"]
   "ARG",
   "D",
   "FBT",
+  "PD",
   "PLR",
   "PT",
   "S",
