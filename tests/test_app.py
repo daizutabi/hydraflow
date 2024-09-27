@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import mlflow
 import pytest
 from mlflow.entities import RunStatus
-from omegaconf import OmegaConf
+from omegaconf import ListConfig, OmegaConf
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -114,6 +114,13 @@ def test_app_data_config(rc: RunCollection):
     assert config[3].host == "y"
 
 
+def test_app_data_config_list(rc: RunCollection):
+    config = rc.data.config
+    assert isinstance(config[0]["values"], ListConfig)
+    assert not isinstance(config[0]["values"], list)
+    assert config[0]["values"] == [1, 2, 3]
+
+
 def test_app_info_artifact_uri(rc: RunCollection):
     uris = rc.info.artifact_uri
     assert all(uri.startswith("file://") for uri in uris)  # type: ignore
@@ -178,3 +185,10 @@ def test_config(rc: RunCollection):
     assert df.shape == (4, 3)
     assert df.select("host").to_series().to_list() == ["x", "x", "y", "y"]
     assert df.select("port").to_series().to_list() == [1, 2, 1, 2]
+    assert str(df.select("values").dtypes) == "[List(Int64)]"
+    assert df.select("values").to_series().to_list() == [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3],
+    ]
