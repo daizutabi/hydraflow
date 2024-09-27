@@ -129,14 +129,14 @@ def test_app_info_artifact_uri(rc: RunCollection):
 
 
 def test_app_info_artifact_dir(rc: RunCollection):
-    from hydraflow.run_info import get_artifact_dir
+    from hydraflow.utils import get_artifact_dir
 
     dirs = list(rc.map(get_artifact_dir))
     assert rc.info.artifact_dir == dirs
 
 
 def test_app_hydra_output_dir(rc: RunCollection):
-    from hydraflow.run_info import get_hydra_output_dir
+    from hydraflow.utils import get_hydra_output_dir
 
     dirs = list(rc.map(get_hydra_output_dir))
     assert dirs[0].stem == "0"

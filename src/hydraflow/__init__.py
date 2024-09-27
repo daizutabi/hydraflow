@@ -1,15 +1,10 @@
-"""Provide a collection of MLflow runs."""
+"""Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
 from .context import chdir_artifact, log_run, start_run, watch
-from .mlflow import (
-    list_runs,
-    search_runs,
-    set_experiment,
-)
+from .mlflow import list_runs, search_runs, set_experiment
 from .progress import multi_tasks_progress, parallel_progress
 from .run_collection import RunCollection
-from .run_data import load_config
-from .run_info import get_artifact_dir, get_hydra_output_dir
+from .utils import get_artifact_dir, get_hydra_output_dir, load_config
 
 __all__ = [
     "RunCollection",
