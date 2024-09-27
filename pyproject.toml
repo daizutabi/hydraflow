@@ -101,4 +101,4 @@ exclude = ["tests/scripts/*.py"]
   "SIM117",
   "SLF",
 ]
-"apps/*.py" = ["INP", "D", "T"]
+"apps/*.py" = ["INP", "D", "G", "T"]
