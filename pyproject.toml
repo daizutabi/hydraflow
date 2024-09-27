@@ -34,6 +34,10 @@ Issues = "https://github.com/daizutabi/hydraflow/issues"
 
 [tool.uv]
 dev-dependencies = [
+  "markdown-exec[ansi]",
+  "mkapi",
+  "mkdocs-material",
+  "mkdocs>=1.6",
   "pytest-asyncio",
   "pytest-clarity",
   "pytest-cov",
@@ -97,3 +101,4 @@ exclude = ["tests/scripts/*.py"]
   "SIM117",
   "SLF",
 ]
+"apps/*.py" = ["INP", "D", "T"]

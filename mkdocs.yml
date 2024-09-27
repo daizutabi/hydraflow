@@ -38,6 +38,7 @@ theme:
     - navigation.tracking
 plugins:
   - search
+  - markdown-exec
   - mkapi
 markdown_extensions:
   - pymdownx.magiclink
@@ -50,4 +51,6 @@ markdown_extensions:
       alternate_style: true
 nav:
   - Home: index.md
+  - Usage:
+      - Hydra application: usage/hydra.md
   - Reference: $api/hydraflow.**
