@@ -207,8 +207,14 @@ def _list_runs(
         if experiment := mlflow.get_experiment_by_name(name):
             loc = experiment.artifact_location
 
-            if isinstance(loc, str) and loc.startswith("file://"):
-                path = Path(mlflow.artifacts.download_artifacts(loc))
+            if isinstance(loc, str):
+                if loc.startswith("file://"):
+                    path = Path(mlflow.artifacts.download_artifacts(loc))
+                elif Path(loc).is_dir():
+                    path = Path(loc)
+                else:
+                    continue
+
                 run_ids.extend(file.stem for file in path.iterdir() if file.is_dir())
 
     it = (joblib.delayed(mlflow.get_run)(run_id) for run_id in run_ids)
