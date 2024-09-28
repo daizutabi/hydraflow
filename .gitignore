@@ -1,7 +1,11 @@
+*.db
 .coverage
 .env
 .venv/
 __pycache__/
 dist/
 lcov.info
+mlruns/
+multirun/
+outputs/
 uv.lock

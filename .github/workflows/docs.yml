@@ -20,6 +20,6 @@ jobs:
         with:
           python-version: 3.11
       - name: Install package
-        run: pip install -e . mkapi
+        run: pip install -e . mkapi markdown-exec[ansi]
       - name: Deploy documentation
         run: mkdocs gh-deploy --force

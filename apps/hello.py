@@ -11,7 +11,6 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Config:
-    title: str = "My app"
     width: int = 1024
     height: int = 768
 
@@ -22,10 +21,10 @@ cs.store(name="config", node=Config)
 
 @hydra.main(version_base=None, config_name="config")
 def app(cfg: Config) -> None:
-    hydraflow.set_experiment(uri="sqlite:///hydraflow.db")
+    hydraflow.set_experiment()
 
     with hydraflow.start_run(cfg):
-        log.info(f"{cfg.title=}, {cfg.width=}, {cfg.height=}")
+        log.info(f"{cfg.width=}, {cfg.height=}")
 
 
 if __name__ == "__main__":
