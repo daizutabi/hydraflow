@@ -239,6 +239,25 @@ class Handler(PatternMatchingEventHandler):
 
 
 @contextmanager
+def chdir_hydra() -> Iterator[Path]:
+    """Change the current working directory to the hydra output directory.
+
+    This context manager changes the current working directory to the hydra output
+    directory. It ensures that the directory is changed back to the original
+    directory after the context is exited.
+    """
+    curdir = Path.cwd()
+    path = HydraConfig.get().runtime.output_dir
+
+    os.chdir(path)
+    try:
+        yield Path(path)
+
+    finally:
+        os.chdir(curdir)
+
+
+@contextmanager
 def chdir_artifact(
     run: Run,
     artifact_path: str | None = None,

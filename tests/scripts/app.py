@@ -27,12 +27,17 @@ cs.store(name="config", node=MySQLConfig)
 
 @hydra.main(version_base=None, config_name="config")
 def app(cfg: MySQLConfig):
+    with hydraflow.chdir_hydra() as path:
+        Path("chdir_hydra.txt").write_text(path.as_posix())
+
     hydraflow.set_experiment(prefix="_", suffix="_")
     with hydraflow.start_run(cfg):
         log.info(f"START, {cfg.host}, {cfg.port} ")
 
         artifact_dir = hydraflow.get_artifact_dir()
         output_dir = hydraflow.get_hydra_output_dir()
+
+        assert (output_dir / "chdir_hydra.txt").exists()
 
         mlflow.log_text("A " + artifact_dir.as_posix(), "artifact_dir.txt")
         mlflow.log_text("B " + output_dir.as_posix(), "output_dir.txt")
