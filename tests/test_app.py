@@ -161,13 +161,20 @@ def test_app_group_by(rc: RunCollection):
     grouped = rc.group_by("host")
     assert len(grouped) == 2
     x = {"port": "1", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped[("x",)].data.params[0] == x
+    assert grouped["x"].data.params[0] == x
     x = {"port": "2", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped[("x",)].data.params[1] == x
+    assert grouped["x"].data.params[1] == x
     x = {"port": "1", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped[("y",)].data.params[0] == x
+    assert grouped["y"].data.params[0] == x
     x = {"port": "2", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped[("y",)].data.params[1] == x
+    assert grouped["y"].data.params[1] == x
+
+
+def test_app_group_by_list(rc: RunCollection):
+    grouped = rc.group_by(["host"])
+    assert len(grouped) == 2
+    assert ("x",) in grouped
+    assert ("y",) in grouped
 
 
 def test_app_filter_list(rc: RunCollection):

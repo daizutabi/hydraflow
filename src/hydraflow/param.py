@@ -72,4 +72,4 @@ def _match_tuple(param: str, value: tuple) -> bool | None:
     if type(value[0]) is not type(value[1]):
         return None
 
-    return value[0] <= type(value[0])(param) < value[1]  # type: ignore
+    return value[0] <= type(value[0])(param) <= value[1]  # type: ignore
