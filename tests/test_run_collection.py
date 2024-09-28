@@ -28,12 +28,12 @@ def rc(monkeypatch, tmp_path):
     return x
 
 
-def test_run_collection_bool_false():
+def test_bool_false():
     assert not RunCollection([])
     assert bool(RunCollection.from_list([])) is False
 
 
-def test_run_collection_bool_true(rc: RunCollection):
+def test_bool_true(rc: RunCollection):
     assert rc
     assert bool(rc) is True
 
@@ -90,7 +90,7 @@ def test_filter_tuple(run_list: list[Run]):
     from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, p=(1, 3))
-    assert len(x) == 2
+    assert len(x) == 3
 
 
 def test_filter_invalid_param(run_list: list[Run]):
@@ -139,45 +139,45 @@ def test_chdir_artifact_list(i: int, run_list: list[Run]):
     assert not Path("abc.txt").exists()
 
 
-def test_runs_repr(rc: RunCollection):
+def test_repr(rc: RunCollection):
     assert repr(rc) == "RunCollection(6)"
 
 
-def test_runs_first(rc: RunCollection):
+def test_first(rc: RunCollection):
     run = rc.first()
     assert isinstance(run, Run)
     assert run.data.params["p"] == "0"
 
 
-def test_runs_first_empty(rc: RunCollection):
+def test_first_empty(rc: RunCollection):
     rc._runs = []
     with pytest.raises(ValueError):
         rc.first()
 
 
-def test_runs_try_first_none(rc: RunCollection):
+def test_try_first_none(rc: RunCollection):
     rc._runs = []
     assert rc.try_first() is None
 
 
-def test_runs_last(rc: RunCollection):
+def test_last(rc: RunCollection):
     run = rc.last()
     assert isinstance(run, Run)
     assert run.data.params["p"] == "5"
 
 
-def test_runs_last_empty(rc: RunCollection):
+def test_last_empty(rc: RunCollection):
     rc._runs = []
     with pytest.raises(ValueError):
         rc.last()
 
 
-def test_runs_try_last_none(rc: RunCollection):
+def test_try_last_none(rc: RunCollection):
     rc._runs = []
     assert rc.try_last() is None
 
 
-def test_runs_filter(rc: RunCollection):
+def test_filter(rc: RunCollection):
     assert len(rc.filter()) == 6
     assert len(rc.filter({})) == 6
     assert len(rc.filter({"p": 1})) == 1
@@ -192,14 +192,14 @@ def test_runs_filter(rc: RunCollection):
     assert len(rc.filter(r=0)) == 2
 
 
-def test_runs_get(rc: RunCollection):
+def test_get(rc: RunCollection):
     run = rc.get({"p": 4})
     assert isinstance(run, Run)
     run = rc.get(p=2)
     assert isinstance(run, Run)
 
 
-def test_runs_try_get(rc: RunCollection):
+def test_try_get(rc: RunCollection):
     run = rc.try_get({"p": 5})
     assert isinstance(run, Run)
     run = rc.try_get(p=1)
@@ -208,7 +208,7 @@ def test_runs_try_get(rc: RunCollection):
     assert run is None
 
 
-def test_runs_get_params_names(rc: RunCollection):
+def test_get_param_names(rc: RunCollection):
     names = rc.get_param_names()
     assert len(names) == 3
     assert "p" in names
@@ -216,14 +216,14 @@ def test_runs_get_params_names(rc: RunCollection):
     assert "r" in names
 
 
-def test_runs_get_params_dict(rc: RunCollection):
+def test_get_param_dict(rc: RunCollection):
     params = rc.get_param_dict()
     assert params["p"] == ["0", "1", "2", "3", "4", "5"]
     assert params["q"] == ["0", "None"]
     assert params["r"] == ["0", "1", "2"]
 
 
-def test_runs_get_params_dict_drop_const(rc: RunCollection):
+def test_get_param_dict_drop_const(rc: RunCollection):
     rc_ = rc.filter(q=0)
     params = rc_.get_param_dict(drop_const=True)
     assert len(params) == 2
@@ -232,7 +232,7 @@ def test_runs_get_params_dict_drop_const(rc: RunCollection):
     assert "r" in params
 
 
-def test_runs_find(rc: RunCollection):
+def test_find(rc: RunCollection):
     run = rc.find({"r": 0})
     assert isinstance(run, Run)
     assert run.data.params["p"] == "0"
@@ -241,17 +241,17 @@ def test_runs_find(rc: RunCollection):
     assert run.data.params["p"] == "2"
 
 
-def test_runs_find_none(rc: RunCollection):
+def test_find_none(rc: RunCollection):
     with pytest.raises(ValueError):
         rc.find({"r": 10})
 
 
-def test_runs_try_find_none(rc: RunCollection):
+def test_try_find_none(rc: RunCollection):
     run = rc.try_find({"r": 10})
     assert run is None
 
 
-def test_runs_find_last(rc: RunCollection):
+def test_find_last(rc: RunCollection):
     run = rc.find_last({"r": 0})
     assert isinstance(run, Run)
     assert run.data.params["p"] == "3"
@@ -260,12 +260,12 @@ def test_runs_find_last(rc: RunCollection):
     assert run.data.params["p"] == "5"
 
 
-def test_runs_find_last_none(rc: RunCollection):
+def test_find_last_none(rc: RunCollection):
     with pytest.raises(ValueError):
         rc.find_last({"p": 10})
 
 
-def test_runs_try_find_last_none(rc: RunCollection):
+def test_try_find_last_none(rc: RunCollection):
     run = rc.try_find_last({"p": 10})
     assert run is None
 
@@ -313,42 +313,42 @@ def test_list_runs_none(rc, runs2):
     assert not no_runs
 
 
-def test_run_collection_map(rc: RunCollection):
+def test_map(rc: RunCollection):
     results = list(rc.map(lambda run: run.info.run_id))
     assert len(results) == len(rc._runs)
     assert all(isinstance(run_id, str) for run_id in results)
 
 
-def test_run_collection_map_args(rc: RunCollection):
+def test_map_args(rc: RunCollection):
     results = list(rc.map(lambda run, x: run.info.run_id + x, "test"))
     assert all(x.endswith("test") for x in results)
 
 
-def test_run_collection_map_run_id(rc: RunCollection):
-    results = list(rc.map_run_id(lambda run_id: run_id))
+def test_map_id(rc: RunCollection):
+    results = list(rc.map_id(lambda run_id: run_id))
     assert len(results) == len(rc._runs)
     assert all(isinstance(run_id, str) for run_id in results)
 
 
-def test_run_collection_map_run_id_kwargs(rc: RunCollection):
-    results = list(rc.map_run_id(lambda run_id, x: x + run_id, x="test"))
+def test_map_id_kwargs(rc: RunCollection):
+    results = list(rc.map_id(lambda run_id, x: x + run_id, x="test"))
     assert all(x.startswith("test") for x in results)
 
 
-def test_run_collection_map_uri(rc: RunCollection):
+def test_map_uri(rc: RunCollection):
     results = list(rc.map_uri(lambda uri: uri))
     assert len(results) == len(rc._runs)
     assert all(isinstance(uri, str | type(None)) for uri in results)
 
 
-def test_run_collection_map_dir(rc: RunCollection):
+def test_map_dir(rc: RunCollection):
     results = list(rc.map_dir(lambda dir_path, x: dir_path / x, "a.csv"))
     assert len(results) == len(rc._runs)
     assert all(isinstance(dir_path, Path) for dir_path in results)
     assert all(dir_path.stem == "a" for dir_path in results)
 
 
-def test_run_collection_sort(rc: RunCollection):
+def test_sort(rc: RunCollection):
     rc.sort(key=lambda x: x.data.params["p"])
     assert [run.data.params["p"] for run in rc] == ["0", "1", "2", "3", "4", "5"]
 
@@ -356,7 +356,7 @@ def test_run_collection_sort(rc: RunCollection):
     assert [run.data.params["p"] for run in rc] == ["5", "4", "3", "2", "1", "0"]
 
 
-def test_run_collection_iter(rc: RunCollection):
+def test_iter(rc: RunCollection):
     assert list(rc) == rc._runs
 
 
@@ -366,39 +366,39 @@ def test_run_collection_getitem(rc: RunCollection, i: int):
 
 
 @pytest.mark.parametrize("i", range(6))
-def test_run_collection_getitem_slice(rc: RunCollection, i: int):
+def test_getitem_slice(rc: RunCollection, i: int):
     assert rc[i : i + 2]._runs == rc._runs[i : i + 2]
 
 
 @pytest.mark.parametrize("i", range(6))
-def test_run_collection_getitem_slice_step(rc: RunCollection, i: int):
+def test_getitem_slice_step(rc: RunCollection, i: int):
     assert rc[i::2]._runs == rc._runs[i::2]
 
 
 @pytest.mark.parametrize("i", range(6))
-def test_run_collection_getitem_slice_step_neg(rc: RunCollection, i: int):
+def test_getitem_slice_step_neg(rc: RunCollection, i: int):
     assert rc[i::-2]._runs == rc._runs[i::-2]
 
 
-def test_run_collection_take(rc: RunCollection):
+def test_take(rc: RunCollection):
     assert rc.take(3)._runs == rc._runs[:3]
     assert len(rc.take(4)) == 4
     assert rc.take(10)._runs == rc._runs
 
 
-def test_run_collection_take_neg(rc: RunCollection):
+def test_take_neg(rc: RunCollection):
     assert rc.take(-3)._runs == rc._runs[-3:]
     assert len(rc.take(-4)) == 4
     assert rc.take(-10)._runs == rc._runs
 
 
 @pytest.mark.parametrize("i", range(6))
-def test_run_collection_contains(rc: RunCollection, i: int):
+def test_contains(rc: RunCollection, i: int):
     assert rc[i] in rc
     assert rc._runs[i] in rc
 
 
-def test_run_collection_group_by(rc: RunCollection):
+def test_group_by(rc: RunCollection):
     grouped = rc.group_by(["p"])
     assert len(grouped) == 6
     assert all(isinstance(group, RunCollection) for group in grouped.values())

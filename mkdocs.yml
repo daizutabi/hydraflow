@@ -52,5 +52,5 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Usage:
-      - Hydra application: usage/hydra.md
+      - usage/quickstart.md
   - Reference: $api/hydraflow.**

@@ -239,8 +239,8 @@ class RunCollection:
         The filtering supports:
         - Exact matches for single values.
         - Membership checks for lists of values.
-        - Range checks for tuples of two values (inclusive of the lower bound
-          and exclusive of the upper bound).
+        - Range checks for tuples of two values (inclusive of both the lower
+          and upper bound).
 
         Args:
             config (object | None): The configuration object to filter the runs.
@@ -476,7 +476,7 @@ class RunCollection:
         """
         return (func(run, *args, **kwargs) for run in self)
 
-    def map_run_id(
+    def map_id(
         self,
         func: Callable[Concatenate[str, P], T],
         *args: P.args,
@@ -569,8 +569,8 @@ class RunCollection:
 
     def group_by(
         self,
-        *names: str | list[str],
-    ) -> dict[tuple[str | None, ...], RunCollection]:
+        names: str | list[str],
+    ) -> dict[str | None | tuple[str | None, ...], RunCollection]:
         """Group runs by specified parameter names.
 
         Group the runs in the collection based on the values of the
@@ -578,19 +578,23 @@ class RunCollection:
         form a key in the returned dictionary.
 
         Args:
-            *names (str | list[str]): The names of the parameters to group by.
+            names (str | list[str]): The names of the parameters to group by.
                 This can be a single parameter name or multiple names provided
                 as separate arguments or as a list.
 
         Returns:
-            dict[tuple[str | None, ...], RunCollection]: A dictionary where the keys
-            are tuples of parameter values and the values are RunCollection objects
-            containing the runs that match those parameter values.
+            dict[str | None | tuple[str | None, ...], RunCollection]: A
+            dictionary where the keys are tuples of parameter values and the
+            values are `RunCollection` objects containing the runs that match
+            those parameter values.
 
         """
-        grouped_runs: dict[tuple[str | None, ...], list[Run]] = {}
+        grouped_runs: dict[str | None | tuple[str | None, ...], list[Run]] = {}
+        is_list = isinstance(names, list)
         for run in self._runs:
-            key = get_params(run, *names)
+            key = get_params(run, names)
+            if not is_list:
+                key = key[0]
             grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
@@ -637,8 +641,8 @@ def filter_runs(
     The filtering supports:
     - Exact matches for single values.
     - Membership checks for lists of values.
-    - Range checks for tuples of two values (inclusive of the lower bound and
-      exclusive of the upper bound).
+    - Range checks for tuples of two values (inclusive of both the lower and
+      upper bound).
 
     Args:
         runs (list[Run]): The list of runs to filter.
