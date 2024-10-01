@@ -63,6 +63,18 @@ def test_load_config(run: Run):
     assert cfg.port == int(port)
 
 
+def test_load_overrides(run: Run):
+    from hydraflow.utils import load_overrides
+
+    log = read_log(run.info.run_id, "log_run.log")
+    assert "START" in log
+    assert "END" in log
+
+    host, port = log.splitlines()[0].split("START,")[-1].split(",")
+
+    assert load_overrides(run) == [f"host={host.strip()}", f"port={port.strip()}"]
+
+
 def test_info(run: Run):
     log = read_log(run.info.run_id, "artifact_dir.txt")
     a, b = log.split(" ")
