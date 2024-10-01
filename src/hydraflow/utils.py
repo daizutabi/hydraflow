@@ -68,6 +68,11 @@ def get_hydra_output_dir(run: Run | None = None) -> Path:
     raise FileNotFoundError
 
 
+def get_overrides() -> list[str]:
+    """Retrieve the overrides for the current run."""
+    return HydraConfig.get().overrides.task
+
+
 def load_config(run: Run) -> DictConfig:
     """Load the configuration for a given run.
 
@@ -86,3 +91,23 @@ def load_config(run: Run) -> DictConfig:
     """
     path = get_artifact_dir(run) / ".hydra/config.yaml"
     return OmegaConf.load(path)  # type: ignore
+
+
+def load_overrides(run: Run) -> list[str]:
+    """Load the overrides for a given run.
+
+    This function loads the overrides for the provided Run instance
+    by downloading the overrides file from the MLflow artifacts and
+    loading it using OmegaConf. It returns an empty config if
+    `.hydra/overrides.yaml` is not found in the run's artifact directory.
+
+    Args:
+        run (Run): The Run instance for which to load the overrides.
+
+    Returns:
+        The loaded overrides as a list of strings. Returns an empty list
+        if the overrides file is not found.
+
+    """
+    path = get_artifact_dir(run) / ".hydra/overrides.yaml"
+    return [str(x) for x in OmegaConf.load(path)]

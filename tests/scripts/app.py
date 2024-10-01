@@ -31,7 +31,7 @@ def app(cfg: MySQLConfig):
         Path("chdir_hydra.txt").write_text(path.as_posix())
 
     hydraflow.set_experiment(prefix="_", suffix="_")
-    with hydraflow.start_run(cfg):
+    with hydraflow.start_run(cfg) as run:
         log.info(f"START, {cfg.host}, {cfg.port} ")
 
         artifact_dir = hydraflow.get_artifact_dir()
@@ -49,6 +49,8 @@ def app(cfg: MySQLConfig):
         mlflow.log_metric("m", cfg.port + 1, 1)
         if cfg.host == "x":
             mlflow.log_metric("m", cfg.port + 10, 2)
+
+        assert hydraflow.get_overrides() == hydraflow.load_overrides(run)
 
         log.info("END")
 
