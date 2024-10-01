@@ -24,12 +24,12 @@ from itertools import chain
 from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
 from mlflow.entities import RunStatus
-from polars.dataframe import DataFrame
 
 import hydraflow.param
-from hydraflow.config import collect_params, iter_params
+from hydraflow.config import iter_params
 from hydraflow.run_data import RunCollectionData
 from hydraflow.run_info import RunCollectionInfo
+from hydraflow.utils import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -516,7 +516,7 @@ class RunCollection:
             in the collection.
 
         """
-        return (func(config, *args, **kwargs) for config in self.data.config)
+        return (func(load_config(run), *args, **kwargs) for run in self)
 
     def map_uri(
         self,
@@ -598,16 +598,6 @@ class RunCollection:
             grouped_runs.setdefault(key, []).append(run)
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
-
-    @property
-    def config(self) -> DataFrame:
-        """Get the runs' configurations as a polars DataFrame.
-
-        Returns:
-            A polars DataFrame containing the runs' configurations.
-
-        """
-        return DataFrame(self.map_config(collect_params))
 
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:

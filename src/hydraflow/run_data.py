@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from hydraflow.utils import load_config
+from polars.dataframe import DataFrame
+
+from hydraflow.config import collect_params
 
 if TYPE_CHECKING:
-    from omegaconf import DictConfig
+    from collections.abc import Iterable
+    from typing import Any
 
     from hydraflow.run_collection import RunCollection
 
@@ -19,16 +22,36 @@ class RunCollectionData:
         self._runs = runs
 
     @property
-    def params(self) -> list[dict[str, str]]:
+    def params(self) -> dict[str, list[str]]:
         """Get the parameters for each run in the collection."""
-        return [run.data.params for run in self._runs]
+        return _to_dict(run.data.params for run in self._runs)
 
     @property
-    def metrics(self) -> list[dict[str, float]]:
+    def metrics(self) -> dict[str, list[float]]:
         """Get the metrics for each run in the collection."""
-        return [run.data.metrics for run in self._runs]
+        return _to_dict(run.data.metrics for run in self._runs)
 
     @property
-    def config(self) -> list[DictConfig]:
-        """Get the configuration for each run in the collection."""
-        return [load_config(run) for run in self._runs]
+    def config(self) -> DataFrame:
+        """Get the runs' configurations as a polars DataFrame.
+
+        Returns:
+            A polars DataFrame containing the runs' configurations.
+
+        """
+        return DataFrame(self._runs.map_config(collect_params))
+
+
+def _to_dict(it: Iterable[dict[str, Any]]) -> dict[str, list[Any]]:
+    """Convert an iterable of dictionaries to a dictionary of lists."""
+    data = list(it)
+    if not data:
+        return {}
+
+    keys = []
+    for d in data:
+        for key in d:
+            if key not in keys:
+                keys.append(key)
+
+    return {key: [x.get(key) for x in data] for key in keys}

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import mlflow
 import pytest
 from mlflow.entities import RunStatus
-from omegaconf import ListConfig, OmegaConf
+from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -92,33 +92,30 @@ def test_app_info_run_id(rc: RunCollection):
 
 def test_app_data_params(rc: RunCollection):
     params = rc.data.params
-    assert params[0] == {"port": "1", "host": "x", "values": "[1, 2, 3]"}
-    assert params[1] == {"port": "2", "host": "x", "values": "[1, 2, 3]"}
-    assert params[2] == {"port": "1", "host": "y", "values": "[1, 2, 3]"}
-    assert params[3] == {"port": "2", "host": "y", "values": "[1, 2, 3]"}
+    assert params["port"] == ["1", "2", "1", "2"]
+    assert params["host"] == ["x", "x", "y", "y"]
+    assert params["values"] == ["[1, 2, 3]", "[1, 2, 3]", "[1, 2, 3]", "[1, 2, 3]"]
 
 
 def test_app_data_metrics(rc: RunCollection):
     metrics = rc.data.metrics
-    assert metrics[0] == {"m": 11, "watch": 3}
-    assert metrics[1] == {"m": 12, "watch": 3}
-    assert metrics[2] == {"m": 2, "watch": 3}
-    assert metrics[3] == {"m": 3, "watch": 3}
+    assert metrics["m"] == [11, 12, 2, 3]
+    assert metrics["watch"] == [3, 3, 3, 3]
 
 
 def test_app_data_config(rc: RunCollection):
     config = rc.data.config
-    assert config[0].port == 1
-    assert config[1].port == 2
-    assert config[2].host == "y"
-    assert config[3].host == "y"
+    assert config["port"].to_list() == [1, 2, 1, 2]
+    assert config["host"].to_list() == ["x", "x", "y", "y"]
 
 
 def test_app_data_config_list(rc: RunCollection):
     config = rc.data.config
-    assert isinstance(config[0]["values"], ListConfig)
-    assert not isinstance(config[0]["values"], list)
-    assert config[0]["values"] == [1, 2, 3]
+    values = config["values"].to_list()
+    assert str(config.select("values").dtypes) == "[List(Int64)]"
+    for x in values:
+        assert isinstance(x, list)
+        assert x == [1, 2, 3]
 
 
 def test_app_info_artifact_uri(rc: RunCollection):
@@ -160,14 +157,12 @@ def test_app_map_config(rc: RunCollection):
 def test_app_group_by(rc: RunCollection):
     grouped = rc.group_by("host")
     assert len(grouped) == 2
-    x = {"port": "1", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped["x"].data.params[0] == x
-    x = {"port": "2", "host": "x", "values": "[1, 2, 3]"}
-    assert grouped["x"].data.params[1] == x
-    x = {"port": "1", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped["y"].data.params[0] == x
-    x = {"port": "2", "host": "y", "values": "[1, 2, 3]"}
-    assert grouped["y"].data.params[1] == x
+    assert grouped["x"].data.params["port"] == ["1", "2"]
+    assert grouped["x"].data.params["host"] == ["x", "x"]
+    assert grouped["x"].data.params["values"] == ["[1, 2, 3]", "[1, 2, 3]"]
+    assert grouped["y"].data.params["port"] == ["1", "2"]
+    assert grouped["y"].data.params["host"] == ["y", "y"]
+    assert grouped["y"].data.params["values"] == ["[1, 2, 3]", "[1, 2, 3]"]
 
 
 def test_app_group_by_list(rc: RunCollection):
@@ -184,18 +179,3 @@ def test_app_filter_list(rc: RunCollection):
     assert len(filtered) == 4
     filtered = rc.filter(values=[1])
     assert not filtered
-
-
-def test_config(rc: RunCollection):
-    df = rc.config
-    assert df.columns == ["host", "port", "values"]
-    assert df.shape == (4, 3)
-    assert df.select("host").to_series().to_list() == ["x", "x", "y", "y"]
-    assert df.select("port").to_series().to_list() == [1, 2, 1, 2]
-    assert str(df.select("values").dtypes) == "[List(Int64)]"
-    assert df.select("values").to_series().to_list() == [
-        [1, 2, 3],
-        [1, 2, 3],
-        [1, 2, 3],
-        [1, 2, 3],
-    ]
