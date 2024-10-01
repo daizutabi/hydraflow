@@ -146,5 +146,5 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 ### Config dataframe
 
 ```pycon exec="1" source="console" session="quickstart"
->>> print(rc.config)
+>>> print(rc.data.config)
 ```
