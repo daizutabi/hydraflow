@@ -90,7 +90,7 @@ def load_config(run: Run) -> DictConfig:
 
 def get_overrides() -> list[str]:
     """Retrieve the overrides for the current run."""
-    return sorted(HydraConfig.get().overrides.task)
+    return HydraConfig.get().overrides.task
 
 
 def load_overrides(run: Run) -> list[str]:
@@ -110,4 +110,4 @@ def load_overrides(run: Run) -> list[str]:
 
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
-    return sorted(str(x) for x in OmegaConf.load(path))
+    return [str(x) for x in OmegaConf.load(path)]
