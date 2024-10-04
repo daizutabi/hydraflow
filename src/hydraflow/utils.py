@@ -68,11 +68,6 @@ def get_hydra_output_dir(run: Run | None = None) -> Path:
     raise FileNotFoundError
 
 
-def get_overrides() -> list[str]:
-    """Retrieve the overrides for the current run."""
-    return HydraConfig.get().overrides.task
-
-
 def load_config(run: Run) -> DictConfig:
     """Load the configuration for a given run.
 
@@ -93,6 +88,11 @@ def load_config(run: Run) -> DictConfig:
     return OmegaConf.load(path)  # type: ignore
 
 
+def get_overrides() -> list[str]:
+    """Retrieve the overrides for the current run."""
+    return sorted(HydraConfig.get().overrides.task)
+
+
 def load_overrides(run: Run) -> list[str]:
     """Load the overrides for a given run.
 
@@ -110,4 +110,4 @@ def load_overrides(run: Run) -> list[str]:
 
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
-    return [str(x) for x in OmegaConf.load(path)]
+    return sorted(str(x) for x in OmegaConf.load(path))

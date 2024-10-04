@@ -34,7 +34,10 @@ def match(param: str, value: Any) -> bool:
     if isinstance(value, tuple) and (m := _match_tuple(param, value)) is not None:
         return m
 
-    if isinstance(value, int | float | str):
+    if isinstance(value, str):
+        return param == value
+
+    if isinstance(value, int | float):
         return type(value)(param) == value
 
     return param == str(value)

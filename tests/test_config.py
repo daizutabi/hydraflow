@@ -205,3 +205,24 @@ def test_list_config_str(s):
     assert isinstance(b, ListConfig)
     t = OmegaConf.create(json.loads(s))
     assert b == t
+
+
+@pytest.mark.parametrize("x", [{"a": 1}, {"a": [1, 2, 3]}])
+def test_collect_params_dict(x):
+    from hydraflow.config import collect_params
+
+    assert collect_params(x) == x
+
+
+def test_collect_params_dict_dot():
+    from hydraflow.config import collect_params
+
+    assert collect_params({"a": {"b": 1}}) == {"a.b": 1}
+    assert collect_params({"a.b": 1}) == {"a.b": 1}
+
+
+def test_collect_params_list_dot():
+    from hydraflow.config import collect_params
+
+    assert collect_params(["a=1"]) == {"a": "1"}
+    assert collect_params(["a.b=2", "c"]) == {"a.b": "2"}
