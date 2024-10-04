@@ -44,10 +44,23 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if config is None:
         return
 
+    if isinstance(config, list) and all(isinstance(x, str) for x in config):
+        config = _from_dotlist(config)
+
     if not isinstance(config, DictConfig | ListConfig):
         config = OmegaConf.create(config)  # type: ignore
 
     yield from _iter_params(config, prefix)
+
+
+def _from_dotlist(config: list[str]) -> dict[str, str]:
+    result = {}
+    for item in config:
+        if "=" in item:
+            key, value = item.split("=", 1)
+            result[key.strip()] = value.strip()
+
+    return result
 
 
 def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:

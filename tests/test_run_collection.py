@@ -67,6 +67,8 @@ def test_filter_one(run_list: list[Run]):
     assert len(x) == 1
     x = filter_runs(run_list, p=1)
     assert len(x) == 1
+    x = filter_runs(run_list, ["p=1"])
+    assert len(x) == 1
 
 
 def test_filter_all(run_list: list[Run]):
@@ -76,6 +78,8 @@ def test_filter_all(run_list: list[Run]):
     x = filter_runs(run_list, {"q": 0})
     assert len(x) == 5
     x = filter_runs(run_list, q=0)
+    assert len(x) == 5
+    x = filter_runs(run_list, ["q=0"])
     assert len(x) == 5
 
 
@@ -97,6 +101,8 @@ def test_filter_invalid_param(run_list: list[Run]):
     from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, {"invalid": 0})
+    assert len(x) == 6
+    x = filter_runs(run_list, ["invalid=0"])
     assert len(x) == 6
 
 
@@ -181,15 +187,20 @@ def test_filter(rc: RunCollection):
     assert len(rc.filter()) == 6
     assert len(rc.filter({})) == 6
     assert len(rc.filter({"p": 1})) == 1
+    assert len(rc.filter(["p=1"])) == 1
     assert len(rc.filter({"q": 0})) == 5
+    assert len(rc.filter(["q=0"])) == 5
     assert len(rc.filter({"q": -1})) == 0
+    assert len(rc.filter(["q=-1"])) == 0
     assert not rc.filter({"q": -1})
     assert len(rc.filter(p=5)) == 1
     assert len(rc.filter(q=0)) == 5
     assert len(rc.filter(q=-1)) == 0
     assert not rc.filter(q=-1)
     assert len(rc.filter({"r": 2})) == 2
+    assert len(rc.filter(["r=2"])) == 2
     assert len(rc.filter(r=0)) == 2
+    assert len(rc.filter(["r=0"])) == 2
 
 
 def test_get(rc: RunCollection):
@@ -197,14 +208,20 @@ def test_get(rc: RunCollection):
     assert isinstance(run, Run)
     run = rc.get(p=2)
     assert isinstance(run, Run)
+    run = rc.get(["p=3"])
+    assert isinstance(run, Run)
 
 
 def test_try_get(rc: RunCollection):
     run = rc.try_get({"p": 5})
     assert isinstance(run, Run)
+    run = rc.try_get(["p=2"])
+    assert isinstance(run, Run)
     run = rc.try_get(p=1)
     assert isinstance(run, Run)
     run = rc.try_get(p=-1)
+    assert run is None
+    run = rc.try_get(["p=-2"])
     assert run is None
 
 

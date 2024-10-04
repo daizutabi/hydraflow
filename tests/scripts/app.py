@@ -27,7 +27,7 @@ cs.store(name="config", node=MySQLConfig)
 
 @hydra.main(version_base=None, config_name="config")
 def app(cfg: MySQLConfig):
-    with hydraflow.chdir_hydra() as path:
+    with hydraflow.chdir_hydra_output() as path:
         Path("chdir_hydra.txt").write_text(path.as_posix())
 
     hydraflow.set_experiment(prefix="_", suffix="_")
