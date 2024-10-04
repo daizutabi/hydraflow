@@ -239,7 +239,7 @@ class Handler(PatternMatchingEventHandler):
 
 
 @contextmanager
-def chdir_hydra() -> Iterator[Path]:
+def chdir_hydra_output() -> Iterator[Path]:
     """Change the current working directory to the hydra output directory.
 
     This context manager changes the current working directory to the hydra output
