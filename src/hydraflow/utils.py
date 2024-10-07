@@ -90,7 +90,7 @@ def load_config(run: Run) -> DictConfig:
 
 def get_overrides() -> list[str]:
     """Retrieve the overrides for the current run."""
-    return list(HydraConfig.get().overrides.task)
+    return list(HydraConfig.get().overrides.task)  # ListConifg -> list
 
 
 def load_overrides(run: Run) -> list[str]:
