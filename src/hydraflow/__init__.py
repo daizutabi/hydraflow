@@ -1,5 +1,6 @@
 """Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
+from .config import select
 from .context import chdir_artifact, chdir_hydra_output, log_run, start_run, watch
 from .mlflow import list_runs, search_runs, set_experiment
 from .progress import multi_tasks_progress, parallel_progress
@@ -26,6 +27,7 @@ __all__ = [
     "multi_tasks_progress",
     "parallel_progress",
     "search_runs",
+    "select",
     "set_experiment",
     "start_run",
     "watch",

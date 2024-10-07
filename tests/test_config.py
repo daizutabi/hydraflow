@@ -226,3 +226,29 @@ def test_collect_params_list_dot():
 
     assert collect_params(["a=1"]) == {"a": "1"}
     assert collect_params(["a.b=2", "c"]) == {"a.b": "2"}
+
+
+@dataclass
+class C:
+    z: int = 3
+
+
+@dataclass
+class B:
+    y: int = 2
+    c: C = field(default_factory=C)
+
+
+@dataclass
+class A:
+    x: int = 1
+    b: B = field(default_factory=B)
+
+
+def test_select():
+    from hydraflow.config import select
+
+    a = A()
+    assert select(a, ["x"]) == {"x": 1}
+    assert select(a, ["b.y"]) == {"b.y": 2}
+    assert select(a, ["b.c.z"]) == {"b.c.z": 3}
