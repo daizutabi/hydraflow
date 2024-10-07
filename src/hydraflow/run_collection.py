@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 from mlflow.entities import RunStatus
 
 import hydraflow.param
-from hydraflow.config import iter_params
+from hydraflow.config import iter_params, select_config, select_overrides
 from hydraflow.run_data import RunCollectionData
 from hydraflow.run_info import RunCollectionInfo
 from hydraflow.utils import load_config
@@ -616,6 +616,8 @@ def filter_runs(
     runs: list[Run],
     config: object | None = None,
     *,
+    override: bool = False,
+    select: list[str] | None = None,
     status: str | list[str] | int | list[int] | None = None,
     **kwargs,
 ) -> list[Run]:
@@ -636,17 +638,26 @@ def filter_runs(
 
     Args:
         runs (list[Run]): The list of runs to filter.
-        config (object | None): The configuration object to filter the runs.
-            This can be any object that provides key-value pairs through the
-            `iter_params` function.
-        status (str | list[str] | RunStatus | list[RunStatus] | None): The status of
-            the runs to filter.
+        config (object | None, optional): The configuration object to filter the
+            runs. This can be any object that provides key-value pairs through
+            the `iter_params` function. Defaults to None.
+        override (bool, optional): If True, filter the runs based on
+            the overrides. Defaults to False.
+        select (list[str] | None, optional): The list of parameters to select.
+            Defaults to None.
+        status (str | list[str] | RunStatus | list[RunStatus] | None, optional): The
+            status of the runs to filter. Defaults to None.
         **kwargs: Additional key-value pairs to filter the runs.
 
     Returns:
         A list of runs that match the specified configuration and key-value pairs.
 
     """
+    if override:
+        config = select_overrides(config)
+    elif select:
+        config = select_config(config, select)
+
     for key, value in chain(iter_params(config), kwargs.items()):
         runs = [run for run in runs if _param_matches(run, key, value)]
         if not runs:
