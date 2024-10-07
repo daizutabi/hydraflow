@@ -99,3 +99,32 @@ def _convert(value: Any) -> Any:
         return list(value)
 
     return value
+
+
+def select_config(config: object, names: list[str]) -> dict[str, Any]:
+    """Select the given parameters from the configuration object.
+
+    This function selects the given parameters from the configuration object
+    and returns a new configuration object containing only the selected parameters.
+
+    Args:
+        config (object): The configuration object to select parameters from.
+        names (list[str]): The names of the parameters to select.
+
+    Returns:
+        DictConfig: A new configuration object containing only the selected parameters.
+
+    """
+    if not isinstance(config, DictConfig):
+        cfg = OmegaConf.structured(config)
+
+    return {name: _get(cfg, name) for name in names}
+
+
+def _get(config: DictConfig, name: str) -> Any:
+    """Get the value of the given parameter from the configuration object."""
+    if "." not in name:
+        return config.get(name)
+
+    prefix, name = name.split(".", 1)
+    return _get(config.get(prefix), name)
