@@ -101,7 +101,7 @@ def _convert(value: Any) -> Any:
     return value
 
 
-def select(config: object, names: list[str]) -> dict[str, Any]:
+def select_config(config: object, names: list[str]) -> dict[str, Any]:
     """Select the given parameters from the configuration object.
 
     This function selects the given parameters from the configuration object
