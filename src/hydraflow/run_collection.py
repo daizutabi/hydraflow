@@ -603,7 +603,7 @@ class RunCollection:
 def _param_matches(run: Run, key: str, value: Any) -> bool:
     params = run.data.params
     if key not in params:
-        return True
+        return False
 
     param = params[key]
     if param == "None":

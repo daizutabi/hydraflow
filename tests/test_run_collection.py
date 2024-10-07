@@ -101,9 +101,9 @@ def test_filter_invalid_param(run_list: list[Run]):
     from hydraflow.run_collection import filter_runs
 
     x = filter_runs(run_list, {"invalid": 0})
-    assert len(x) == 6
+    assert len(x) == 0
     x = filter_runs(run_list, ["invalid=0"])
-    assert len(x) == 6
+    assert len(x) == 0
 
 
 def test_filter_status(run_list: list[Run]):
