@@ -41,7 +41,7 @@ def app(cfg: Config):
     log.info(hydraflow.select_overrides(cfg))
     log.info(rc.filter(cfg, override=True))
     log.info(rc.filter(cfg, select=["x"]))
-    log.info(rc.try_find_last(cfg, overrides=True))
+    log.info(rc.try_find_last(cfg, override=True))
     log.info(rc.try_find_last(cfg, select=["x"]))
     log.info(rc.filter(cfg))
 
