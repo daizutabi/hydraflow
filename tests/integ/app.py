@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from enum import Enum, auto
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -9,6 +10,11 @@ from hydra.core.config_store import ConfigStore
 import hydraflow
 
 log = logging.getLogger(__name__)
+
+
+class E(Enum):
+    A = auto()
+    B = auto()
 
 
 @dataclass
@@ -20,6 +26,7 @@ class B:
 class A:
     y: str = "y"
     b: B = field(default_factory=B)
+    e: E = E.A
 
 
 @dataclass
@@ -38,12 +45,13 @@ def app(cfg: Config):
     hydraflow.set_experiment()
     rc = hydraflow.list_runs()
     log.info(rc)
+    log.info(cfg)
+    log.info(hydraflow.get_overrides())
     log.info(hydraflow.select_overrides(cfg))
     log.info(rc.filter(cfg, override=True))
-    log.info(rc.filter(cfg, select=["x"]))
-    log.info(rc.try_find_last(cfg, override=True))
-    log.info(rc.try_find_last(cfg, select=["x"]))
-    log.info(rc.filter(cfg))
+    for r in rc:
+        log.info(r.data.params)
+        log.info(hydraflow.load_config(r))
 
     cfg.y = 2 * cfg.x
     with hydraflow.start_run(cfg):
