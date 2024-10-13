@@ -76,3 +76,26 @@ def test_match_tuple():
     assert _match_tuple("1", (True, False)) is None
     assert _match_tuple("1", (None, None)) is None
     assert _match_tuple("1", (1, 3.2)) is None
+
+
+def test_to_value():
+    from hydraflow.param import to_value
+
+    assert to_value("1", int) == 1
+    assert to_value("1", float) == 1.0
+    assert to_value("1.0", float) == 1.0
+    assert to_value("True", bool) is True
+    assert to_value("False", bool) is False
+    assert to_value("None", int) is None
+    assert to_value("a", str) == "a"
+
+
+def test_to_value_list():
+    from hydraflow.param import to_value
+
+    x = "[1, 2, 3]"
+    assert to_value(x, list) == [1, 2, 3]
+    x = "[1.2, 2.3, 3.4]"
+    assert to_value(x, list) == [1.2, 2.3, 3.4]
+    x = "[a, b, c]"
+    assert to_value(x, list) == ["a", "b", "c"]

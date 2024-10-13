@@ -126,13 +126,19 @@ def test_filter_status_enum(run_list: list[Run]):
 
 
 def test_get_params(run_list: list[Run]):
-    from hydraflow.run_collection import get_params
+    from hydraflow.param import get_params
 
     assert get_params(run_list[1], "p") == ("1",)
     assert get_params(run_list[2], "p", "q") == ("2", "0")
     assert get_params(run_list[3], ["p", "q"]) == ("3", "0")
     assert get_params(run_list[4], "p", ["q", "r"]) == ("4", "0", "1")
     assert get_params(run_list[5], ["a", "q"], "r") == (None, "None", "2")
+
+
+def test_get_values(run_list: list[Run]):
+    from hydraflow.param import get_values
+
+    assert get_values(run_list[3], ["p", "q"], [int, int]) == (3, 0)
 
 
 @pytest.mark.parametrize("i", range(6))

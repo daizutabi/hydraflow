@@ -27,6 +27,7 @@ from mlflow.entities import RunStatus
 
 import hydraflow.param
 from hydraflow.config import iter_params, select_config, select_overrides
+from hydraflow.param import get_params, get_values
 from hydraflow.run_data import RunCollectionData
 from hydraflow.run_info import RunCollectionInfo
 from hydraflow.utils import load_config
@@ -131,25 +132,6 @@ class RunCollection:
             return self.__class__(self._runs[n:])
 
         return self.__class__(self._runs[:n])
-
-    def sort(
-        self,
-        key: Callable[[Run], Any] | None = None,
-        *,
-        reverse: bool = False,
-    ) -> None:
-        """Sort the runs in the collection.
-
-        Sort the runs in the collection according to the provided key function
-        and optional reverse flag.
-
-        Args:
-            key (Callable[[Run], Any] | None): A function that takes a run and returns
-                a value to sort by.
-            reverse (bool): If True, sort in descending order.
-
-        """
-        self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
 
     def one(self) -> Run:
         """Get the only `Run` instance in the collection.
@@ -599,6 +581,73 @@ class RunCollection:
 
         return {key: RunCollection(runs) for key, runs in grouped_runs.items()}
 
+    def sort(
+        self,
+        key: Callable[[Run], Any] | None = None,
+        *,
+        reverse: bool = False,
+    ) -> None:
+        """Sort the runs in the collection.
+
+        Sort the runs in the collection according to the provided key function
+        and optional reverse flag.
+
+        Args:
+            key (Callable[[Run], Any] | None): A function that takes a run and returns
+                a value to sort by.
+            reverse (bool): If True, sort in descending order.
+
+        """
+        self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
+
+    def values(self, names: str | list[str]) -> list[Any]:
+        """Get the values of specified parameters from the runs.
+
+        Args:
+            names (str | list[str]): The names of the parameters to get the values.
+                This can be a single parameter name or multiple names provided
+                as separate arguments or as a list.
+
+        Returns:
+            A list of values for the specified parameters.
+
+        """
+        is_list = isinstance(names, list)
+
+        if isinstance(names, str):
+            names = [names]
+
+        config = load_config(self.first())
+        types = [type(v) for v in select_config(config, names).values()]
+        values = [get_values(run, names, types) for run in self]
+
+        if is_list:
+            return values
+
+        return [v[0] for v in values]
+
+    def sort_by(
+        self,
+        names: str | list[str],
+        *,
+        reverse: bool = False,
+    ) -> RunCollection:
+        """Sort the runs in the collection by specified parameter names.
+
+        Sort the runs in the collection based on the values of the specified
+        parameters.
+
+        Args:
+            names (str | list[str]): The names of the parameters to sort by.
+                This can be a single parameter name or multiple names provided
+                as separate arguments or as a list.
+            reverse (bool): If True, sort in descending order.
+
+        """
+        values = self.values(names)
+        index = sorted(range(len(self)), key=lambda i: values[i], reverse=reverse)
+        return RunCollection([self[i] for i in index])
+
 
 def _param_matches(run: Run, key: str, value: Any) -> bool:
     params = run.data.params
@@ -703,31 +752,3 @@ def _to_lower(status: str | int) -> str:
         return status.lower()
 
     return RunStatus.to_string(status).lower()
-
-
-def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
-    """Retrieve the values of specified parameters from the given run.
-
-    This function extracts the values of the parameters identified by the
-    provided names from the specified run. It can accept both individual
-    parameter names and lists of parameter names.
-
-    Args:
-        run (Run): The run object from which to extract parameter values.
-        *names (str | list[str]): The names of the parameters to retrieve.
-            This can be a single parameter name or multiple names provided
-            as separate arguments or as a list.
-
-    Returns:
-        tuple[str | None, ...]: A tuple containing the values of the specified
-        parameters in the order they were provided.
-
-    """
-    names_ = []
-    for name in names:
-        if isinstance(name, list):
-            names_.extend(name)
-        else:
-            names_.append(name)
-
-    return tuple(run.data.params.get(name) for name in names_)
