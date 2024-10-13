@@ -179,3 +179,18 @@ def test_app_filter_list(rc: RunCollection):
     assert len(filtered) == 4
     filtered = rc.filter(values=[1])
     assert not filtered
+
+
+def test_values(rc: RunCollection):
+    values = rc.values("host")
+    assert values == ["x", "x", "y", "y"]
+    values = rc.values(["host", "port"])
+    assert values == [("x", 1), ("x", 2), ("y", 1), ("y", 2)]
+
+
+def test_sort_by(rc: RunCollection):
+    sorted = rc.sort_by("host", reverse=True)
+    assert sorted.values(["host", "port"]) == [("y", 1), ("y", 2), ("x", 1), ("x", 2)]
+
+    sorted = rc.sort_by(["host", "port"], reverse=True)
+    assert sorted.values(["host", "port"]) == [("y", 2), ("y", 1), ("x", 2), ("x", 1)]

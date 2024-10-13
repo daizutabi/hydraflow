@@ -10,7 +10,12 @@ matching for list and tuple types respectively.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from omegaconf import ListConfig, OmegaConf
+
+if TYPE_CHECKING:
+    from mlflow.entities import Run
 
 
 def match(param: str, value: Any) -> bool:
@@ -76,3 +81,82 @@ def _match_tuple(param: str, value: tuple) -> bool | None:
         return None
 
     return value[0] <= type(value[0])(param) <= value[1]  # type: ignore
+
+
+def to_value(param: str | None, type_: type) -> Any:
+    """Convert the parameter to the specified type.
+
+    Args:
+        param (str | None): The parameter to convert.
+        type_ (type): The type to convert to.
+
+    Returns:
+        The converted value.
+
+    """
+    if param is None or param == "None":
+        return None
+
+    if type_ is int:
+        return int(param)
+
+    if type_ is float:
+        return float(param)
+
+    if type_ is bool:
+        return param == "True"
+
+    if type_ is list or type_ is ListConfig:
+        return list(OmegaConf.create(param))
+
+    return param
+
+
+def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
+    """Retrieve the values of specified parameters from the given run.
+
+    This function extracts the values of the parameters identified by the
+    provided names from the specified run. It can accept both individual
+    parameter names and lists of parameter names.
+
+    Args:
+        run (Run): The run object from which to extract parameter values.
+        *names (str | list[str]): The names of the parameters to retrieve.
+            This can be a single parameter name or multiple names provided
+            as separate arguments or as a list.
+
+    Returns:
+        tuple[str | None, ...]: A tuple containing the values of the specified
+        parameters in the order they were provided.
+
+    """
+    names_ = []
+    for name in names:
+        if isinstance(name, list):
+            names_.extend(name)
+        else:
+            names_.append(name)
+
+    params = run.data.params
+    return tuple(params.get(name) for name in names_)
+
+
+def get_values(run: Run, names: list[str], types: list[type]) -> tuple[Any, ...]:
+    """Retrieve the values of specified parameters from the given run.
+
+    This function extracts the values of the parameters identified by the
+    provided names from the specified run.
+
+    Args:
+        run (Run): The run object from which to extract parameter values.
+        names (list[str]): The names of the parameters to retrieve.
+        types (list[type]): The types to convert to.
+
+    Returns:
+        tuple[Any, ...]: A tuple containing the values of the specified
+        parameters in the order they were provided.
+
+    """
+    params = get_params(run, names)
+    it = zip(params, types, strict=True)
+    return tuple(to_value(param, type_) for param, type_ in it)
