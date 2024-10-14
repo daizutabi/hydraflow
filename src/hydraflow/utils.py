@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import mlflow
+import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import Run
 from mlflow.tracking import artifact_utils

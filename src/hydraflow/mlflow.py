@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 import joblib
 import mlflow
+import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import ViewType
 from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS, _get_experiment_id
