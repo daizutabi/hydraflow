@@ -30,6 +30,16 @@ def app(cfg: MySQLConfig):
     with hydraflow.chdir_hydra_output() as path:
         Path("chdir_hydra.txt").write_text(path.as_posix())
 
+    o = hydraflow.select_overrides(cfg)
+    if "host" in o:
+        assert o["host"] == cfg.host
+
+    if "port" not in o:
+        assert cfg.port == 3306
+
+    if "values" not in o:
+        assert cfg.get("values") == [1, 2, 3]  # type: ignore
+
     hydraflow.set_experiment(prefix="_", suffix="_")
     with hydraflow.start_run(cfg) as run:
         log.info(f"START, {cfg.host}, {cfg.port} ")
@@ -51,6 +61,9 @@ def app(cfg: MySQLConfig):
             mlflow.log_metric("m", cfg.port + 10, 2)
 
         assert hydraflow.get_overrides() == hydraflow.load_overrides(run)
+
+        if cfg.host == "error":
+            raise Exception("error")
 
         log.info("END")
 

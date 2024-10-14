@@ -164,3 +164,58 @@ def test_run(tmp_path: Path):
     assert stderr_lines == ["world"]
     assert Path(path).read_text() == "hello world"
     assert len(changes_detected) >= 2
+
+
+@pytest.mark.asyncio
+async def test_execute_command_nonexistent():
+    from hydraflow.asyncio import execute_command
+
+    stop_event = asyncio.Event()
+
+    rc = await execute_command("nonexistent_command", stop_event=stop_event)
+    assert rc == 1
+    assert stop_event.is_set()
+
+
+@pytest.mark.asyncio
+async def test_process_stream_none():
+    from hydraflow.asyncio import process_stream
+
+    assert await process_stream(None, None) is None
+
+
+@pytest.mark.asyncio
+async def test_monitor_file_changes_error():
+    from hydraflow.asyncio import monitor_file_changes
+
+    stop_event = asyncio.Event()
+
+    with pytest.raises(FileNotFoundError):
+        await monitor_file_changes(["nonexistent_path"], lambda _: None, stop_event)
+
+
+@pytest.mark.asyncio
+async def test_run_and_monitor_none():
+    from hydraflow.asyncio import run_and_monitor
+
+    assert await run_and_monitor("echo", "hello") == 0
+
+
+@pytest.mark.asyncio
+async def test_run_and_monitor_error():
+    from hydraflow.asyncio import run_and_monitor
+
+    with pytest.raises(FileNotFoundError):
+        await run_and_monitor(
+            "nonexistent_command",
+            watch=lambda _: None,
+            paths=["nonexistent_path"],
+        )
+
+
+def test_run_cwd():
+    from hydraflow.asyncio import run
+
+    return_code = run(sys.executable, "--version", watch=lambda _: None)
+
+    assert return_code == 0

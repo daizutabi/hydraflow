@@ -194,3 +194,22 @@ def test_sort_by(rc: RunCollection):
 
     sorted = rc.sort_by(["host", "port"], reverse=True)
     assert sorted.values(["host", "port"]) == [("y", 2), ("y", 1), ("x", 2), ("x", 1)]
+
+
+def test_log_run_error(monkeypatch, tmp_path):
+    file = Path("tests/scripts/app.py").absolute()
+    monkeypatch.chdir(tmp_path)
+
+    args = [sys.executable, file.as_posix()]
+    args += ["host=error", "hydra.job.name=error"]
+    cp = subprocess.run(args, check=False, capture_output=True)
+    assert cp.returncode == 1
+    assert b"Error during log_run: error" in cp.stdout
+
+
+def test_chdir_artifact(rc: RunCollection):
+    from hydraflow.context import chdir_artifact
+
+    with chdir_artifact(rc[0]):
+        assert Path.cwd().stem == "artifacts"
+        assert Path.cwd().parent.stem == rc[0].info.run_id
