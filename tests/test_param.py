@@ -49,6 +49,22 @@ def test_param(param, x, y):
     assert match(p, x)
 
 
+def test_param_float():
+    from hydraflow.param import match
+
+    assert match("1.0", 1.0)
+    assert match("1.0", 1)
+    assert match("0.0", 0)
+    assert match("0.0", 0.0)
+
+
+def test_param_bool():
+    from hydraflow.param import match
+
+    assert not match("1", True)
+    assert not match("0", False)
+
+
 def test_match_list():
     from hydraflow.param import _match_list
 

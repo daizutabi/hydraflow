@@ -30,7 +30,7 @@ def match(param: str, value: Any) -> bool:
         False otherwise.
 
     """
-    if value in [None, True, False]:
+    if any(value is x for x in [None, True, False]):
         return param == str(value)
 
     if isinstance(value, list) and (m := _match_list(param, value)) is not None:
@@ -39,11 +39,11 @@ def match(param: str, value: Any) -> bool:
     if isinstance(value, tuple) and (m := _match_tuple(param, value)) is not None:
         return m
 
+    if isinstance(value, int | float):
+        return float(param) == value
+
     if isinstance(value, str):
         return param == value
-
-    if isinstance(value, int | float):
-        return type(value)(param) == value
 
     return param == str(value)
 
