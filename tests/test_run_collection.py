@@ -49,6 +49,20 @@ def test_from_list(run_list: list[Run]):
     assert all(run in rc for run in run_list)
 
 
+def test_add(run_list: list[Run]):
+    rc1 = RunCollection.from_list(run_list[:3])
+    rc2 = RunCollection.from_list(run_list[3:])
+    rc = rc1 + rc2
+    assert rc._runs == run_list
+
+
+def test_sub(run_list: list[Run]):
+    rc1 = RunCollection.from_list(run_list)
+    rc2 = RunCollection.from_list(run_list[3:])
+    rc = rc1 - rc2
+    assert rc._runs == run_list[:3]
+
+
 def test_search_runs_sorted(run_list: list[Run]):
     assert [run.data.params["p"] for run in run_list] == ["0", "1", "2", "3", "4", "5"]
 

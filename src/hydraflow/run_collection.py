@@ -98,6 +98,32 @@ class RunCollection:
     def __bool__(self) -> bool:
         return bool(self._runs)
 
+    def __add__(self, other: RunCollection) -> RunCollection:
+        """Add another `RunCollection` to this one.
+
+        Args:
+            other (RunCollection): The `RunCollection` to add.
+
+        Returns:
+            A new `RunCollection` instance with the runs from both collections.
+
+        """
+        return self.__class__(self._runs + other._runs)
+
+    def __sub__(self, other: RunCollection) -> RunCollection:
+        """Subtract another `RunCollection` from this one.
+
+        Args:
+            other (RunCollection): The `RunCollection` to subtract.
+
+        Returns:
+            A new `RunCollection` instance with the runs that are in this collection
+            but not in the other.
+
+        """
+        runs = [run for run in self._runs if run not in other._runs]  # noqa: SLF001
+        return self.__class__(runs)
+
     @classmethod
     def from_list(cls, runs: list[Run]) -> RunCollection:
         """Create a `RunCollection` instance from a list of MLflow `Run` instances."""
