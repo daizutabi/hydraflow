@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def log_run(
-    config: object,
+    config: object | None,
     *,
     synchronous: bool | None = None,
 ) -> Iterator[None]:
@@ -54,7 +54,8 @@ def log_run(
         ```
 
     """
-    log_params(config, synchronous=synchronous)
+    if config:
+        log_params(config, synchronous=synchronous)
 
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
@@ -139,7 +140,7 @@ def start_run(  # noqa: PLR0913
             description=description,
             log_system_metrics=log_system_metrics,
         ) as run,
-        log_run(config, synchronous=synchronous),
+        log_run(config if run_id is None else None, synchronous=synchronous),
     ):
         yield run
 
