@@ -7,7 +7,7 @@ name = "hydraflow"
 version = "0.4.4"
 description = "Hydraflow integrates Hydra and MLflow to manage and track machine learning experiments."
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [{ name = "daizutabi", email = "daizutabi@gmail.com" }]
 classifiers = [
   "Development Status :: 4 - Beta",
