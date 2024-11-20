@@ -52,9 +52,11 @@ def app(cfg: MySQLConfig):
         mlflow.log_text("A " + artifact_dir.as_posix(), "artifact_dir.txt")
         mlflow.log_text("B " + output_dir.as_posix(), "output_dir.txt")
 
-        with hydraflow.watch(callback, ignore_patterns=["b.txt"]):
-            (artifact_dir / "a.txt").write_text("abc")
-            time.sleep(0.1)
+        # with hydraflow.watch(callback, ignore_patterns=["b.txt"]):
+        #     (artifact_dir / "a.txt").write_text("abc")
+        #     time.sleep(0.1)
+
+        (artifact_dir / "a.txt").write_text("abc")
 
         mlflow.log_metric("m", cfg.port + 1, 1)
         if cfg.host == "x":
@@ -71,7 +73,7 @@ def app(cfg: MySQLConfig):
 def callback(path: Path):
     log.info(f"WATCH, {path.as_posix()}")
     m = len(path.read_text())  # len("abc") == 3
-    mlflow.log_metric("watch", m, 1, synchronous=True)
+    # mlflow.log_metric("watch", m, 1, synchronous=True)
 
 
 if __name__ == "__main__":

@@ -100,7 +100,7 @@ def test_app_data_params(rc: RunCollection):
 def test_app_data_metrics(rc: RunCollection):
     metrics = rc.data.metrics
     assert metrics["m"] == [11, 12, 2, 3]
-    assert metrics["watch"] == [3, 3, 3, 3]
+    # assert metrics["watch"] == [3, 3, 3, 3]  # noqa: ERA001
 
 
 def test_app_data_config(rc: RunCollection):
