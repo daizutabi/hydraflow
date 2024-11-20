@@ -69,8 +69,9 @@ def log_run(
         mlflow.log_artifact(local_path)
 
     try:
-        with watch(log_artifact, output_dir, ignore_log=False):
-            yield
+        yield
+        # with watch(log_artifact, output_dir, ignore_log=False):
+        #     yield
 
     except Exception as e:
         msg = f"Error during log_run: {e}"
