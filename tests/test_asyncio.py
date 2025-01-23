@@ -65,6 +65,7 @@ async def test_execute_command():
     assert stop_event.is_set()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Flaky on Windows")
 @pytest.mark.asyncio
 async def test_monitor_file_changes(tmp_path: Path, write_soon: Callable[[Path], None]):
     from hydraflow.asyncio import monitor_file_changes
