@@ -60,7 +60,11 @@ addopts = [
   "--cov-report=lcov:lcov.info",
 ]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL"]
-filterwarnings = ['ignore:pkg_resources is deprecated:DeprecationWarning']
+filterwarnings = [
+  "ignore:pkg_resources is deprecated:DeprecationWarning",
+  "ignore:Support for class-based `config` is deprecated",
+  "ignore:Pydantic V1 style",
+]
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.report]

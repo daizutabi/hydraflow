@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,10 +11,12 @@ from mlflow.artifacts import download_artifacts
 from mlflow.entities.run import Run
 
 
-@pytest.fixture
-def runs(monkeypatch, tmp_path):
+@pytest.fixture(scope="module")
+def runs(tmp_path_factory: pytest.TempPathFactory):
     file = Path("tests/scripts/app.py").absolute()
-    monkeypatch.chdir(tmp_path)
+
+    cwd = Path.cwd()
+    os.chdir(tmp_path_factory.mktemp("test_log_run"))
 
     args = [sys.executable, file.as_posix(), "-m"]
     args += ["host=x,y", "port=1,2", "hydra.job.name=log_run"]
@@ -21,9 +24,12 @@ def runs(monkeypatch, tmp_path):
 
     mlflow.set_experiment("_log_run_")
     runs = mlflow.search_runs(output_format="list")
+
     assert len(runs) == 4
     assert isinstance(runs, list)
     yield runs
+
+    os.chdir(cwd)
 
 
 @pytest.fixture(params=range(4))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -9,11 +10,10 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import Run
-from mlflow.tracking import artifact_utils
 from omegaconf import DictConfig, OmegaConf
 
 if TYPE_CHECKING:
-    from mlflow.entities import Run
+    from collections.abc import Iterable
 
 
 def get_artifact_dir(run: Run | None = None) -> Path:
@@ -28,10 +28,10 @@ def get_artifact_dir(run: Run | None = None) -> Path:
         The local path to the directory where the artifacts are downloaded.
 
     """
-    if run is None:
-        uri = mlflow.get_artifact_uri()
-    else:
-        uri = artifact_utils.get_artifact_uri(run.info.run_id)
+    uri = mlflow.get_artifact_uri() if run is None else run.info.artifact_uri
+
+    if not (isinstance(uri, str) and uri.startswith("file://")):
+        raise NotImplementedError
 
     return Path(mlflow.artifacts.download_artifacts(uri))
 
@@ -112,3 +112,13 @@ def load_overrides(run: Run) -> list[str]:
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
     return [str(x) for x in OmegaConf.load(path)]
+
+
+def remove_run(run: Run | Iterable[Run]) -> None:
+    """Remove the given run from the MLflow tracking server."""
+    if not isinstance(run, Run):
+        for r in run:
+            remove_run(r)
+        return
+
+    shutil.rmtree(get_artifact_dir(run).parent)
