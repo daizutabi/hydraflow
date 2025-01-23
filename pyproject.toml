@@ -69,6 +69,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "raise NotImplementedError", "if TYPE_CHECKING:"]
+skip_covered = true
 
 [tool.ruff]
 line-length = 88
