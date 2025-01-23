@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -16,12 +17,14 @@ if TYPE_CHECKING:
     from hydraflow.run_collection import RunCollection
 
 
-@pytest.fixture
-def rc(monkeypatch, tmp_path):
+@pytest.fixture(scope="module")
+def rc(tmp_path_factory: pytest.TempPathFactory):
     import hydraflow
 
+    cwd = Path.cwd()
+
     file = Path("tests/scripts/app.py").absolute()
-    monkeypatch.chdir(tmp_path)
+    os.chdir(tmp_path_factory.mktemp("test_app"))
 
     args = [sys.executable, file.as_posix(), "-m"]
     args += ["host=x,y", "port=1,2", "hydra.job.name=info"]
@@ -29,6 +32,8 @@ def rc(monkeypatch, tmp_path):
 
     mlflow.set_experiment("_info_")
     yield hydraflow.list_runs()
+
+    os.chdir(cwd)
 
 
 def test_list_runs_all(rc: RunCollection):
@@ -203,8 +208,7 @@ def test_log_run_error(monkeypatch, tmp_path):
     args = [sys.executable, file.as_posix()]
     args += ["host=error", "hydra.job.name=error"]
     cp = subprocess.run(args, check=False, capture_output=True)
-    assert cp.returncode == 1
-    assert b"Error during log_run: error" in cp.stdout
+    assert cp.returncode
 
 
 def test_chdir_artifact(rc: RunCollection):

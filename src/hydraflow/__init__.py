@@ -11,6 +11,7 @@ from .utils import (
     get_overrides,
     load_config,
     load_overrides,
+    remove_run,
 )
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "log_run",
     "multi_tasks_progress",
     "parallel_progress",
+    "remove_run",
     "search_runs",
     "select_config",
     "select_overrides",
