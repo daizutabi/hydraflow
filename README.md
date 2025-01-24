@@ -72,16 +72,6 @@ def my_app(cfg: MySQLConfig) -> None:
     with hydraflow.start_run():
         # Your app code below.
 
-        with hydraflow.watch(callback):
-            # Watch files in the MLflow artifact directory.
-            # You can update metrics or log other artifacts
-            # according to the watched files in your callback
-            # function.
-            pass
-
-# Your callback function here.
-def callback(file: Path) -> None:
-    pass
 
 if __name__ == "__main__":
     my_app()
