@@ -5,13 +5,13 @@ import pytest
 from hydraflow.run_collection import RunCollection
 
 if TYPE_CHECKING:
-    from ..apps.run_collection import Config
+    from .run_collection import Config
 
 
 @pytest.fixture(scope="module")
 def rc(collect):
     args = ["-m", "port=2,1"]
-    return collect("apps/run_collection.py", args)
+    return collect("run_collection/run_collection.py", args)
 
 
 def test_rc_len(rc: RunCollection):
@@ -46,7 +46,7 @@ def test_filter_dict(rc: RunCollection, port, n):
 
 
 def test_config(get_config):
-    cfg: Config = get_config("apps/run_collection.py")
+    cfg: Config = get_config("run_collection/run_collection.py")
     assert cfg.host == "localhost"
     assert cfg.port == 3306
     assert cfg.data.x == [1, 2, 3]

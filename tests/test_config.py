@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 import pytest
 from omegaconf import ListConfig, OmegaConf
 
+from hydraflow.config import _is_param, collect_params, iter_params
+
 
 def test_is_param_with_simple_values():
-    from hydraflow.config import _is_param
-
     assert _is_param(1) is True
     assert _is_param("string") is True
     assert _is_param(3.14) is True
@@ -15,69 +15,49 @@ def test_is_param_with_simple_values():
 
 
 def test_is_param_with_dictconfig_containing_simple_values():
-    from hydraflow.config import _is_param
-
     dict_conf = OmegaConf.create({"a": 1, "b": "string", "c": 3.14, "d": True})
     assert _is_param(dict_conf) is False
 
 
 def test_is_param_with_listconfig_containing_simple_values():
-    from hydraflow.config import _is_param
-
     list_conf = OmegaConf.create([1, "string", 3.14, True])
     assert _is_param(list_conf) is True
 
 
 def test_is_param_with_listconfig_containing_nested_dictconfig():
-    from hydraflow.config import _is_param
-
     nested_list_conf = OmegaConf.create([1, {"a": 1}, 3.14])
     assert _is_param(nested_list_conf) is False
 
 
 def test_is_param_with_listconfig_containing_nested_listconfig():
-    from hydraflow.config import _is_param
-
     nested_list_conf_2 = OmegaConf.create([1, [2, 3], 3.14])
     assert _is_param(nested_list_conf_2) is False
 
 
 def test_is_param_with_empty_dictconfig():
-    from hydraflow.config import _is_param
-
     empty_dict_conf = OmegaConf.create({})
     assert _is_param(empty_dict_conf) is False
 
 
 def test_is_param_with_empty_listconfig():
-    from hydraflow.config import _is_param
-
     empty_list_conf = OmegaConf.create([])
     assert _is_param(empty_list_conf) is True
 
 
 def test_is_param_with_none():
-    from hydraflow.config import _is_param
-
     assert _is_param(None) is True
 
 
 def test_is_param_with_complex_nested_structure():
-    from hydraflow.config import _is_param
-
     complex_conf = OmegaConf.create({"a": [1, {"b": 2}], "c": {"d": 3}})
     assert _is_param(complex_conf) is False
 
 
 def test_iter_params_with_none():
-    from hydraflow.config import iter_params
-
     assert not list(iter_params(None))
 
 
 def test_iter_params():
-    from hydraflow.config import iter_params
-
     conf = OmegaConf.create({"k": "v", "l": [1, {"a": "1", "b": "2", 3: "c"}]})
     it = iter_params(conf)
     assert next(it) == ("k", "v")
@@ -88,8 +68,6 @@ def test_iter_params():
 
 
 def test_collect_params():
-    from hydraflow.config import collect_params
-
     conf = OmegaConf.create({"k": "v", "l": [1, {"a": "1", "b": "2", 3: "c"}]})
     params = collect_params(conf)
     assert params == {"k": "v", "l.0": 1, "l.1.a": "1", "l.1.b": "2", "l.1.3": "c"}
@@ -131,8 +109,6 @@ def test_config(cfg: Config):
 
 
 def test_iter_params_from_config(cfg):
-    from hydraflow.config import iter_params
-
     it = iter_params(cfg)
     assert next(it) == ("size.x", 1)
     assert next(it) == ("size.y", 2)
@@ -142,8 +118,6 @@ def test_iter_params_from_config(cfg):
 
 
 def test_iter_params_with_empty_config():
-    from hydraflow.config import iter_params
-
     empty_cfg = Config(
         size=Size(x=0, y=0),
         db=Db(name="", port=0),
@@ -158,8 +132,6 @@ def test_iter_params_with_empty_config():
 
 
 def test_iter_params_with_nested_config():
-    from hydraflow.config import iter_params
-
     @dataclass
     class Nested:
         level1: Config = field(default_factory=Config)
@@ -174,8 +146,6 @@ def test_iter_params_with_nested_config():
 
 
 def test_iter_params_with_mixed_types_in_list():
-    from hydraflow.config import iter_params
-
     @dataclass
     class MixedStore:
         items: list = field(default_factory=lambda: ["a", 1, {"key": "value"}])
@@ -209,21 +179,15 @@ def test_list_config_str(s):
 
 @pytest.mark.parametrize("x", [{"a": 1}, {"a": [1, 2, 3]}])
 def test_collect_params_dict(x):
-    from hydraflow.config import collect_params
-
     assert collect_params(x) == x
 
 
 def test_collect_params_dict_dot():
-    from hydraflow.config import collect_params
-
     assert collect_params({"a": {"b": 1}}) == {"a.b": 1}
     assert collect_params({"a.b": 1}) == {"a.b": 1}
 
 
 def test_collect_params_list_dot():
-    from hydraflow.config import collect_params
-
     assert collect_params(["a=1"]) == {"a": "1"}
     assert collect_params(["a.b=2", "c"]) == {"a.b": "2"}
 

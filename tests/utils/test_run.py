@@ -1,6 +1,6 @@
 import mlflow
 import pytest
-from mlflow.entities import Experiment
+from mlflow.entities import Experiment, Run
 
 from hydraflow.run_collection import RunCollection
 
@@ -16,11 +16,23 @@ def experiment(experiment_name: str):
     return experiment
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def rc(experiment: Experiment):
     from hydraflow.mlflow import search_runs
 
     return search_runs(experiment_names=[experiment.name])
+
+
+@pytest.fixture(scope="module")
+def run(rc: RunCollection):
+    return rc.first()
+
+
+def test_hydra_output_dir(run: Run):
+    from hydraflow.utils import get_hydra_output_dir
+
+    with pytest.raises(FileNotFoundError):
+        get_hydra_output_dir(run)
 
 
 def test_remove_run(rc: RunCollection):
