@@ -2,14 +2,16 @@ from pathlib import Path
 
 import mlflow
 import pytest
-from mlflow.entities import Run, RunStatus
+from mlflow.entities import Experiment, Run, RunStatus
 
 from hydraflow.mlflow import list_runs
 from hydraflow.run_collection import RunCollection, filter_runs
 
 
 @pytest.fixture(scope="module")
-def experiment_name(experiment_name: str):
+def experiment(experiment_name: str):
+    experiment = mlflow.set_experiment(experiment_name)
+
     for x in range(6):
         with mlflow.start_run(run_name=f"{x}"):
             mlflow.log_param("p", x)
@@ -17,19 +19,30 @@ def experiment_name(experiment_name: str):
             mlflow.log_param("r", x % 3)
             mlflow.log_text(f"{x}", "abc.txt")
 
-    yield experiment_name
+    return experiment
 
 
 @pytest.fixture
-def rc(experiment_name: str):
+def runs(experiment: Experiment):
+    runs = mlflow.search_runs([experiment.experiment_id], output_format="list")
+    return list(reversed(runs))
+
+
+def test_start_time(runs: list[Run]):
+    start_times = [run.info.start_time for run in runs]
+    assert start_times == sorted(start_times)
+
+
+def test_search_runs(experiment: Experiment, runs: list[Run]):
     from hydraflow.mlflow import search_runs
 
-    return search_runs(experiment_names=[experiment_name])
+    rc = search_runs(experiment_names=[experiment.name])
+    assert [r.info.run_id for r in rc] == [r.info.run_id for r in runs]
 
 
 @pytest.fixture
-def runs(rc: RunCollection):
-    return rc._runs
+def rc(runs: list[Run]):
+    return RunCollection(runs)
 
 
 def test_bool_false():

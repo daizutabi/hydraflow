@@ -1,23 +1,26 @@
 import mlflow
 import pytest
+from mlflow.entities import Experiment
 
 from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture(scope="module")
-def experiment_name(experiment_name: str):
+def experiment(experiment_name: str):
+    experiment = mlflow.set_experiment(experiment_name)
+
     for x in range(3):
         with mlflow.start_run(run_name=f"{x}"):
             pass
 
-    yield experiment_name
+    return experiment
 
 
 @pytest.fixture
-def rc(experiment_name: str):
+def rc(experiment: Experiment):
     from hydraflow.mlflow import search_runs
 
-    return search_runs(experiment_names=[experiment_name])
+    return search_runs(experiment_names=[experiment.name])
 
 
 def test_info_run_id(rc: RunCollection):

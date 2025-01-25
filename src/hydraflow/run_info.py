@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 class RunCollectionInfo:
     """Provide information about a `RunCollection` instance."""
 
+    _runs: RunCollection
+
     def __init__(self, runs: RunCollection) -> None:
         self._runs = runs
 
