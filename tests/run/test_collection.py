@@ -353,16 +353,19 @@ def test_try_find_last_none(rc: RunCollection):
     assert rc.try_find_last({"p": 10}) is None
 
 
-def test_list_runs(rc: RunCollection):
-    assert len(list_runs()) == 6
+@pytest.mark.parametrize("n_jobs", [0, 1, 2])
+def test_list_runs(rc: RunCollection, n_jobs: int):
+    assert len(list_runs(n_jobs=n_jobs)) == 6
 
 
-def test_list_runs_empty_list(rc: RunCollection):
-    assert len(list_runs([])) == 6
+@pytest.mark.parametrize("n_jobs", [0, 1, 2])
+def test_list_runs_empty_list(rc: RunCollection, n_jobs: int):
+    assert len(list_runs([], n_jobs=n_jobs)) == 6
 
 
-def test_list_runs_none(rc: RunCollection):
-    assert not list_runs(["non_existent_experiment"])
+@pytest.mark.parametrize("n_jobs", [0, 1, 2])
+def test_list_runs_none(rc: RunCollection, n_jobs: int):
+    assert not list_runs(["non_existent_experiment"], n_jobs=n_jobs)
 
 
 def test_map(rc: RunCollection):

@@ -30,10 +30,16 @@ def get_artifact_dir(run: Run | None = None) -> Path:
     """
     uri = mlflow.get_artifact_uri() if run is None else run.info.artifact_uri
 
-    if not (isinstance(uri, str) and uri.startswith("file://")):
+    if not isinstance(uri, str):
         raise NotImplementedError
 
-    return Path(mlflow.artifacts.download_artifacts(uri))
+    if uri.startswith("file://"):
+        return Path(mlflow.artifacts.download_artifacts(uri))
+
+    if Path(uri).is_dir():
+        return Path(uri)
+
+    raise NotImplementedError
 
 
 def get_artifact_path(run: Run | None, path: str) -> Path:

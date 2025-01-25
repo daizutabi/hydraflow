@@ -37,6 +37,7 @@ def set_experiment(
     prefix: str = "",
     suffix: str = "",
     uri: str | Path | None = None,
+    name: str | None = None,
 ) -> Experiment:
     """Set the experiment name and tracking URI optionally.
 
@@ -48,6 +49,7 @@ def set_experiment(
         prefix (str): The prefix to prepend to the experiment name.
         suffix (str): The suffix to append to the experiment name.
         uri (str | Path | None): The tracking URI to use. Defaults to None.
+        name (str | None): The name of the experiment. Defaults to None.
 
     Returns:
         Experiment: An instance of `mlflow.entities.Experiment` representing
@@ -56,6 +58,9 @@ def set_experiment(
     """
     if uri is not None:
         mlflow.set_tracking_uri(uri)
+
+    if name is not None:
+        return mlflow.set_experiment(name)
 
     hc = HydraConfig.get()
     name = f"{prefix}{hc.job.name}{suffix}"
@@ -214,7 +219,7 @@ def _list_runs(
                 elif Path(loc).is_dir():
                     path = Path(loc)
                 else:
-                    continue
+                    continue  # no cov
 
                 run_ids.extend(file.stem for file in path.iterdir() if file.is_dir())
 
