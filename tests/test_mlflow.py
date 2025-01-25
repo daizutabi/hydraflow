@@ -5,7 +5,7 @@ from hydra.core.hydra_config import HydraConfig
 
 
 @pytest.fixture
-def hydra_config(monkeypatch):
+def hydra_config(monkeypatch: pytest.MonkeyPatch):
     class MockJob:
         name = "test_job"
 

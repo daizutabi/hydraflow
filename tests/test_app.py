@@ -1,20 +1,14 @@
-from __future__ import annotations
-
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
 from mlflow.entities import RunStatus
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
-if TYPE_CHECKING:
-    from omegaconf import DictConfig
-
-    from hydraflow.run_collection import RunCollection
+from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture(scope="module")

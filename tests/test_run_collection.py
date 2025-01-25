@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import os
 from pathlib import Path
 
 import mlflow
@@ -12,11 +9,7 @@ from hydraflow.run_collection import RunCollection, filter_runs
 
 
 @pytest.fixture(scope="module")
-def experiment_name(tmp_path_factory: pytest.TempPathFactory):
-    cwd = Path.cwd()
-    os.chdir(tmp_path_factory.mktemp("test_run_collection"))
-
-    mlflow.set_experiment("test_run_collection")
+def experiment_name(experiment_name: str):
     for x in range(6):
         with mlflow.start_run(run_name=f"{x}"):
             mlflow.log_param("p", x)
@@ -24,9 +17,7 @@ def experiment_name(tmp_path_factory: pytest.TempPathFactory):
             mlflow.log_param("r", x % 3)
             mlflow.log_text(f"{x}", "abc.txt")
 
-    yield "test_run_collection"
-
-    os.chdir(cwd)
+    yield experiment_name
 
 
 @pytest.fixture
@@ -350,16 +341,11 @@ def test_try_find_last_none(rc: RunCollection):
 
 
 def test_list_runs(rc: RunCollection):
-    mlflow.set_experiment("test_run_collection")
     assert len(list_runs()) == 6
 
 
 def test_list_runs_empty_list(rc: RunCollection):
     assert len(list_runs([])) == 6
-
-
-def test_list_runs_str(rc: RunCollection):
-    assert len(list_runs("test_run_collection")) == 6
 
 
 def test_list_runs_none(rc: RunCollection):

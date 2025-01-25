@@ -1,25 +1,23 @@
-from __future__ import annotations
-
 import mlflow
 import pytest
 
 from hydraflow.run_collection import RunCollection
 
 
-@pytest.fixture
-def rc(monkeypatch, tmp_path):
-    from hydraflow.mlflow import search_runs
-
-    monkeypatch.chdir(tmp_path)
-
-    mlflow.set_experiment("test_run")
+@pytest.fixture(scope="module")
+def experiment_name(experiment_name: str):
     for x in range(4):
         with mlflow.start_run(run_name=f"{x}"):
             pass
 
-    x = search_runs()
-    assert isinstance(x, RunCollection)
-    yield x
+    yield experiment_name
+
+
+@pytest.fixture
+def rc(experiment_name: str):
+    from hydraflow.mlflow import search_runs
+
+    return search_runs(experiment_names=[experiment_name])
 
 
 def test_remove_run(rc: RunCollection):

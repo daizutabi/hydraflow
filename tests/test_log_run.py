@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 import subprocess
 import sys
@@ -32,11 +30,9 @@ def runs(tmp_path_factory: pytest.TempPathFactory):
     os.chdir(cwd)
 
 
-@pytest.fixture(params=range(4))
-def run(runs, request):
-    run = runs[request.param]  # type: ignore
-    assert isinstance(run, Run)
-    return run
+@pytest.fixture(scope="module", params=range(4))
+def run(runs: list[Run], request: pytest.FixtureRequest):
+    return runs[request.param]
 
 
 @pytest.fixture

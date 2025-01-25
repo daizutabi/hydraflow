@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import mlflow
 import pytest
 
 
 @pytest.fixture
-def param(monkeypatch, tmp_path):
+def param(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     def param(value):
         monkeypatch.chdir(tmp_path)
         mlflow.set_experiment("test_param")

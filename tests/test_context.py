@@ -9,7 +9,7 @@ from hydraflow.run_collection import RunCollection
 
 
 @pytest.fixture
-def runs(monkeypatch, tmp_path):
+def runs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     from hydraflow.mlflow import list_runs
 
     monkeypatch.chdir(tmp_path)
