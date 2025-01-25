@@ -1,8 +1,14 @@
+import sys
 from pathlib import Path
 
 import mlflow
 import pytest
 from mlflow.entities import Experiment, Run, RunStatus
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows is not supported",
+)
 
 
 @pytest.fixture(scope="module")
