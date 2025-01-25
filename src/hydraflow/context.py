@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,14 +11,11 @@ from typing import TYPE_CHECKING
 import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
-from watchdog.events import FileModifiedEvent, PatternMatchingEventHandler
-from watchdog.observers import Observer
 
 from hydraflow.mlflow import log_params
-from hydraflow.run_info import get_artifact_dir
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Iterator
 
     from mlflow.entities.run import Run
 
@@ -64,14 +60,8 @@ def log_run(
     output_subdir = output_dir / (hc.output_subdir or "")
     mlflow.log_artifacts(output_subdir.as_posix(), hc.output_subdir)
 
-    def log_artifact(path: Path) -> None:
-        local_path = (output_dir / path).as_posix()
-        mlflow.log_artifact(local_path)
-
     try:
         yield
-        # with watch(log_artifact, output_dir, ignore_log=False):
-        #     yield
 
     except Exception as e:
         msg = f"Error during log_run: {e}"
@@ -144,101 +134,6 @@ def start_run(  # noqa: PLR0913
         log_run(config if run_id is None else None, synchronous=synchronous),
     ):
         yield run
-
-
-@contextmanager
-def watch(
-    callback: Callable[[Path], None],
-    dir: Path | str = "",  # noqa: A002
-    *,
-    timeout: int = 60,
-    ignore_patterns: list[str] | None = None,
-    ignore_log: bool = True,
-) -> Iterator[None]:
-    """Watch the given directory for changes.
-
-    This context manager sets up a file system watcher on the specified directory.
-    When a file modification is detected, the provided function is called with
-    the path of the modified file. The watcher runs for the specified timeout
-    period or until the context is exited.
-
-    Args:
-        callback (Callable[[Path], None]): The function to call when a change is
-            detected. It should accept a single argument of type `Path`,
-            which is the path of the modified file.
-        dir (Path | str): The directory to watch. If not specified,
-            the current MLflow artifact URI is used. Defaults to "".
-        timeout (int): The timeout period in seconds for the watcher
-            to run after the context is exited. Defaults to 60.
-        ignore_patterns (list[str] | None): A list of glob patterns to ignore.
-            Defaults to None.
-        ignore_log (bool): Whether to ignore log files. Defaults to True.
-
-    Yields:
-        None
-
-    Example:
-        ```python
-        with watch(log_artifact, "/path/to/dir"):
-            # Perform operations while watching the directory for changes
-            pass
-        ```
-
-    """
-    dir = dir or get_artifact_dir()  # noqa: A001
-    if isinstance(dir, Path):
-        dir = dir.as_posix()  # noqa: A001
-
-    handler = Handler(callback, ignore_patterns=ignore_patterns, ignore_log=ignore_log)
-    observer = Observer()
-    observer.schedule(handler, dir, recursive=True)
-    observer.start()
-
-    try:
-        yield
-
-    except Exception as e:
-        msg = f"Error during watch: {e}"
-        log.exception(msg)
-        raise
-
-    finally:
-        elapsed = 0
-        while not observer.event_queue.empty():
-            time.sleep(0.2)
-            elapsed += 0.2
-            if elapsed > timeout:
-                break
-
-        observer.stop()
-        observer.join()
-
-
-class Handler(PatternMatchingEventHandler):
-    """Monitor file changes and call the given function when a change is detected."""
-
-    def __init__(
-        self,
-        func: Callable[[Path], None],
-        *,
-        ignore_patterns: list[str] | None = None,
-        ignore_log: bool = True,
-    ) -> None:
-        self.func = func
-
-        if ignore_log:
-            if ignore_patterns:
-                ignore_patterns.append("*.log")
-            else:
-                ignore_patterns = ["*.log"]
-
-        super().__init__(ignore_patterns=ignore_patterns)
-
-    def on_modified(self, event: FileModifiedEvent) -> None:
-        """Modify when a file is modified."""
-        file = Path(str(event.src_path))
-        if file.is_file():
-            self.func(file)
 
 
 @contextmanager

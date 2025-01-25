@@ -1,11 +1,10 @@
-import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import mlflow
 import pytest
 
-from hydraflow.context import log_run, start_run, watch
+from hydraflow.context import log_run, start_run
 from hydraflow.run_collection import RunCollection
 
 
@@ -67,22 +66,3 @@ def test_log_run_error_handling(tmp_path: Path):
         with pytest.raises(Exception, match="Test exception"):
             with log_run(config):
                 pass
-
-
-def test_watch_context_manager(tmp_path: Path):
-    test_dir = tmp_path / "test_watch"
-    test_dir.mkdir(parents=True, exist_ok=True)
-    test_file = test_dir / "test_file.txt"
-
-    called = []
-
-    def mock_func(path: Path):
-        assert path == test_file
-        called.append(path)
-
-    with watch(mock_func, test_dir):
-        test_file.write_text("new content")
-        time.sleep(1)
-
-    assert len(called) == 1
-    assert called[0] == test_file

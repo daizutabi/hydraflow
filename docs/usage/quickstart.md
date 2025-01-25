@@ -132,13 +132,13 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 ### Group runs
 
 ```pycon exec="1" source="console" session="quickstart"
->>> grouped = rc.group_by("width")
+>>> grouped = rc.groupby("width")
 >>> for key, group in grouped.items():
 ...     print(key, group)
 ```
 
 ```pycon exec="1" source="console" session="quickstart"
->>> grouped = rc.group_by(["height"])
+>>> grouped = rc.groupby(["height"])
 >>> for key, group in grouped.items():
 ...     print(key, group)
 ```

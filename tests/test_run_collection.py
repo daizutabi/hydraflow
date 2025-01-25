@@ -1,21 +1,22 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import mlflow
 import pytest
 from mlflow.entities import Run, RunStatus
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.mlflow import list_runs
+from hydraflow.run_collection import RunCollection, filter_runs
 
 
-@pytest.fixture
-def rc(monkeypatch, tmp_path):
-    from hydraflow.mlflow import search_runs
+@pytest.fixture(scope="module")
+def experiment_name(tmp_path_factory: pytest.TempPathFactory):
+    cwd = Path.cwd()
+    os.chdir(tmp_path_factory.mktemp("test_run_collection"))
 
-    monkeypatch.chdir(tmp_path)
-
-    mlflow.set_experiment("test_run")
+    mlflow.set_experiment("test_run_collection")
     for x in range(6):
         with mlflow.start_run(run_name=f"{x}"):
             mlflow.log_param("p", x)
@@ -23,9 +24,21 @@ def rc(monkeypatch, tmp_path):
             mlflow.log_param("r", x % 3)
             mlflow.log_text(f"{x}", "abc.txt")
 
-    x = search_runs()
-    assert isinstance(x, RunCollection)
-    return x
+    yield "test_run_collection"
+
+    os.chdir(cwd)
+
+
+@pytest.fixture
+def rc(experiment_name: str):
+    from hydraflow.mlflow import search_runs
+
+    return search_runs(experiment_names=[experiment_name])
+
+
+@pytest.fixture
+def runs(rc: RunCollection):
+    return rc._runs
 
 
 def test_bool_false():
@@ -38,128 +51,116 @@ def test_bool_true(rc: RunCollection):
     assert bool(rc) is True
 
 
-@pytest.fixture
-def run_list(rc: RunCollection):
-    return rc._runs
+def test_len(rc: RunCollection):
+    assert len(rc) == 6
 
 
-def test_from_list(run_list: list[Run]):
-    rc = RunCollection.from_list(run_list)
-    assert len(rc) == len(run_list)
-    assert all(run in rc for run in run_list)
+def test_from_list(runs: list[Run]):
+    rc = RunCollection.from_list(runs)
+    assert len(rc) == len(runs)
+    assert all(run in rc for run in runs)
 
 
-def test_add(run_list: list[Run]):
-    rc1 = RunCollection.from_list(run_list[:3])
-    rc2 = RunCollection.from_list(run_list[3:])
+def test_add(runs: list[Run]):
+    rc1 = RunCollection.from_list(runs[:3])
+    rc2 = RunCollection.from_list(runs[3:])
     rc = rc1 + rc2
-    assert rc._runs == run_list
+    assert rc._runs == runs
 
 
-def test_sub(run_list: list[Run]):
-    rc1 = RunCollection.from_list(run_list)
-    rc2 = RunCollection.from_list(run_list[3:])
+def test_sub(runs: list[Run]):
+    rc1 = RunCollection.from_list(runs)
+    rc2 = RunCollection.from_list(runs[3:])
     rc = rc1 - rc2
-    assert rc._runs == run_list[:3]
+    assert rc._runs == runs[:3]
 
 
-def test_search_runs_sorted(run_list: list[Run]):
-    assert [run.data.params["p"] for run in run_list] == ["0", "1", "2", "3", "4", "5"]
+def test_search_runs_sorted(runs: list[Run]):
+    assert [run.data.params["p"] for run in runs] == ["0", "1", "2", "3", "4", "5"]
 
 
-def test_filter_none(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    assert run_list == filter_runs(run_list)
+def test_filter_none(runs: list[Run]):
+    assert runs == filter_runs(runs)
 
 
-def test_filter_one(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    assert len(run_list) == 6
-    x = filter_runs(run_list, {"p": 1})
-    assert len(x) == 1
-    x = filter_runs(run_list, p=1)
-    assert len(x) == 1
-    x = filter_runs(run_list, ["p=1"])
-    assert len(x) == 1
+def test_filter_dict_one(runs: list[Run]):
+    assert len(filter_runs(runs, {"p": 1})) == 1
 
 
-def test_filter_all(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    assert len(run_list) == 6
-    x = filter_runs(run_list, {"q": 0})
-    assert len(x) == 5
-    x = filter_runs(run_list, q=0)
-    assert len(x) == 5
-    x = filter_runs(run_list, ["q=0"])
-    assert len(x) == 5
+def test_filter_kwarg_one(runs: list[Run]):
+    assert len(filter_runs(runs, p=1)) == 1
 
 
-def test_filter_list(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    x = filter_runs(run_list, p=[0, 4, 5])
-    assert len(x) == 3
+def test_filter_list_one(runs: list[Run]):
+    assert len(filter_runs(runs, ["p=1"])) == 1
 
 
-def test_filter_tuple(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    x = filter_runs(run_list, p=(1, 3))
-    assert len(x) == 3
+def test_filter_dict_rest(runs: list[Run]):
+    assert len(filter_runs(runs, {"q": 0})) == 5
 
 
-def test_filter_invalid_param(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    x = filter_runs(run_list, {"invalid": 0})
-    assert len(x) == 0
-    x = filter_runs(run_list, ["invalid=0"])
-    assert len(x) == 0
+def test_filter_kwarg_rest(runs: list[Run]):
+    assert len(filter_runs(runs, q=0)) == 5
 
 
-def test_filter_status(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    assert not filter_runs(run_list, status="RUNNING")
-    assert filter_runs(run_list, status="finished") == run_list
-    assert filter_runs(run_list, status=["finished", "running"]) == run_list
-    assert filter_runs(run_list, status="!RUNNING") == run_list
-    assert not filter_runs(run_list, status="!finished")
+def test_filter_list_rest(runs: list[Run]):
+    assert len(filter_runs(runs, ["q=0"])) == 5
 
 
-def test_filter_status_enum(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    assert not filter_runs(run_list, status=RunStatus.RUNNING)
-    assert filter_runs(run_list, status=RunStatus.FINISHED) == run_list
-    s = [RunStatus.FINISHED, RunStatus.RUNNING]
-    assert filter_runs(run_list, status=s) == run_list
+def test_filter_list(runs: list[Run]):
+    assert len(filter_runs(runs, p=[0, 4, 5])) == 3
 
 
-def test_get_params(run_list: list[Run]):
+def test_filter_tuple(runs: list[Run]):
+    assert len(filter_runs(runs, p=(1, 3))) == 3
+
+
+def test_filter_kwarg_none(runs: list[Run]):
+    assert not filter_runs(runs, {"invalid": 0})
+
+
+def test_filter_list_none(runs: list[Run]):
+    assert not filter_runs(runs, ["invalid=0"])
+
+
+@pytest.mark.parametrize(
+    ("status", "n"),
+    [
+        ("RUNNING", 0),
+        ("finished", 6),
+        (["finished", "running"], 6),
+        ("!RUNNING", 6),
+        ("!finished", 0),
+        (RunStatus.RUNNING, 0),
+        (RunStatus.FINISHED, 6),
+        ([RunStatus.FINISHED, RunStatus.RUNNING], 6),
+    ],
+)
+def test_filter_status(runs: list[Run], status, n):
+    assert len(filter_runs(runs, status=status)) == n
+
+
+def test_get_params(runs: list[Run]):
     from hydraflow.param import get_params
 
-    assert get_params(run_list[1], "p") == ("1",)
-    assert get_params(run_list[2], "p", "q") == ("2", "0")
-    assert get_params(run_list[3], ["p", "q"]) == ("3", "0")
-    assert get_params(run_list[4], "p", ["q", "r"]) == ("4", "0", "1")
-    assert get_params(run_list[5], ["a", "q"], "r") == (None, "None", "2")
+    assert get_params(runs[1], "p") == ("1",)
+    assert get_params(runs[2], "p", "q") == ("2", "0")
+    assert get_params(runs[3], ["p", "q"]) == ("3", "0")
+    assert get_params(runs[4], "p", ["q", "r"]) == ("4", "0", "1")
+    assert get_params(runs[5], ["a", "q"], "r") == (None, "None", "2")
 
 
-def test_get_values(run_list: list[Run]):
+def test_get_values(runs: list[Run]):
     from hydraflow.param import get_values
 
-    assert get_values(run_list[3], ["p", "q"], [int, int]) == (3, 0)
+    assert get_values(runs[3], ["p", "q"], [int, int]) == (3, 0)
 
 
 @pytest.mark.parametrize("i", range(6))
-def test_chdir_artifact_list(i: int, run_list: list[Run]):
+def test_chdir_artifact_list(runs: list[Run], i):
     from hydraflow.context import chdir_artifact
 
-    with chdir_artifact(run_list[i]):
+    with chdir_artifact(runs[i]):
         assert Path("abc.txt").read_text() == f"{i}"
 
     assert not Path("abc.txt").exists()
@@ -175,15 +176,13 @@ def test_first(rc: RunCollection):
     assert run.data.params["p"] == "0"
 
 
-def test_first_empty(rc: RunCollection):
-    rc._runs = []
+def test_first_empty():
     with pytest.raises(ValueError):
-        rc.first()
+        RunCollection([]).first()
 
 
-def test_try_first_none(rc: RunCollection):
-    rc._runs = []
-    assert rc.try_first() is None
+def test_try_first_empty():
+    assert RunCollection([]).try_first() is None
 
 
 def test_last(rc: RunCollection):
@@ -192,89 +191,133 @@ def test_last(rc: RunCollection):
     assert run.data.params["p"] == "5"
 
 
-def test_last_empty(rc: RunCollection):
-    rc._runs = []
+def test_last_empty():
     with pytest.raises(ValueError):
-        rc.last()
+        RunCollection([]).last()
 
 
-def test_try_last_none(rc: RunCollection):
-    rc._runs = []
-    assert rc.try_last() is None
+def test_try_last_empty():
+    assert RunCollection([]).try_last() is None
 
 
-def test_filter(rc: RunCollection):
+def test_rc_filter_empty(rc: RunCollection):
     assert len(rc.filter()) == 6
     assert len(rc.filter({})) == 6
+    assert len(rc.filter([])) == 6
+
+
+def test_rc_filter_one(rc: RunCollection):
     assert len(rc.filter({"p": 1})) == 1
     assert len(rc.filter(["p=1"])) == 1
+    assert len(rc.filter(p=5)) == 1
+
+
+def test_rc_filter_rest(rc: RunCollection):
     assert len(rc.filter({"q": 0})) == 5
     assert len(rc.filter(["q=0"])) == 5
-    assert len(rc.filter({"q": -1})) == 0
-    assert len(rc.filter(["q=-1"])) == 0
-    assert not rc.filter({"q": -1})
-    assert len(rc.filter(p=5)) == 1
     assert len(rc.filter(q=0)) == 5
-    assert len(rc.filter(q=-1)) == 0
+
+
+def test_rc_filter_none(rc: RunCollection):
+    assert not rc.filter({"q": -1})
+    assert not rc.filter(["q=-1"])
     assert not rc.filter(q=-1)
-    assert len(rc.filter({"r": 2})) == 2
-    assert len(rc.filter(["r=2"])) == 2
-    assert len(rc.filter(r=0)) == 2
-    assert len(rc.filter(["r=0"])) == 2
 
 
-def test_get(rc: RunCollection):
-    run = rc.get({"p": 4})
+@pytest.mark.parametrize("r", [0, 1, 2])
+def test_rc_filter_two(rc: RunCollection, r):
+    assert len(rc.filter({"r": r})) == 2
+    assert len(rc.filter([f"r={r}"])) == 2
+    assert len(rc.filter(r=r)) == 2
+
+
+def test_get_dict(rc: RunCollection):
+    assert isinstance(rc.get({"p": 4}), Run)
+
+
+def test_get_kwarg(rc: RunCollection):
+    assert isinstance(rc.get(p=2), Run)
+
+
+def test_get_list(rc: RunCollection):
+    assert isinstance(rc.get(["p=3"]), Run)
+
+
+def test_get_error(rc: RunCollection):
+    with pytest.raises(ValueError):
+        rc.get({"p": 10})
+
+
+def test_get_run_multiple_params(rc: RunCollection):
+    run = rc.get({"p": 4, "q": 0})
+    assert run.data.params["p"] == "4"
+    assert run.data.params["q"] == "0"
+
+
+def test_try_get_dict(rc: RunCollection):
+    assert isinstance(rc.try_get({"p": 5}), Run)
+
+
+def test_try_get_kwarg(rc: RunCollection):
+    assert isinstance(rc.try_get(p=1), Run)
+
+
+def test_try_get_list(rc: RunCollection):
+    assert isinstance(rc.try_get(["p=2"]), Run)
+
+
+def test_try_get_dict_none(rc: RunCollection):
+    assert rc.try_get({"p": -1}) is None
+
+
+def test_try_get_kwarg_none(rc: RunCollection):
+    assert rc.try_get(p=-1) is None
+
+
+def test_try_get_list_none(rc: RunCollection):
+    assert rc.try_get(["p=-2"]) is None
+
+
+def test_try_get_run_multiple_params(rc: RunCollection):
+    run = rc.try_get({"p": 4, "q": 0})
     assert isinstance(run, Run)
-    run = rc.get(p=2)
-    assert isinstance(run, Run)
-    run = rc.get(["p=3"])
-    assert isinstance(run, Run)
+    assert run.data.params["p"] == "4"
+    assert run.data.params["q"] == "0"
 
 
-def test_try_get(rc: RunCollection):
-    run = rc.try_get({"p": 5})
-    assert isinstance(run, Run)
-    run = rc.try_get(["p=2"])
-    assert isinstance(run, Run)
-    run = rc.try_get(p=1)
-    assert isinstance(run, Run)
-    run = rc.try_get(p=-1)
-    assert run is None
-    run = rc.try_get(["p=-2"])
-    assert run is None
+@pytest.mark.parametrize("name", ["p", "q", "r"])
+def test_get_param_names(rc: RunCollection, name: str):
+    assert name in rc.get_param_names()
 
 
-def test_get_param_names(rc: RunCollection):
-    names = rc.get_param_names()
-    assert len(names) == 3
-    assert "p" in names
-    assert "q" in names
-    assert "r" in names
-
-
-def test_get_param_dict(rc: RunCollection):
+@pytest.mark.parametrize(
+    ("name", "values"),
+    [
+        ("p", ["0", "1", "2", "3", "4", "5"]),
+        ("q", ["0", "None"]),
+        ("r", ["0", "1", "2"]),
+    ],
+)
+def test_get_param_dict(rc: RunCollection, name: str, values: list[str]):
     params = rc.get_param_dict()
-    assert params["p"] == ["0", "1", "2", "3", "4", "5"]
-    assert params["q"] == ["0", "None"]
-    assert params["r"] == ["0", "1", "2"]
+    assert params[name] == values
 
 
 def test_get_param_dict_drop_const(rc: RunCollection):
-    rc_ = rc.filter(q=0)
-    params = rc_.get_param_dict(drop_const=True)
+    params = rc.filter(q=0).get_param_dict(drop_const=True)
     assert len(params) == 2
     assert "p" in params
     assert "q" not in params
     assert "r" in params
 
 
-def test_find(rc: RunCollection):
+def test_find_dict(rc: RunCollection):
     run = rc.find({"r": 0})
-    assert isinstance(run, Run)
     assert run.data.params["p"] == "0"
+
+
+def test_find_kwarg(rc: RunCollection):
     run = rc.find(r=2)
-    assert isinstance(run, Run)
     assert run.data.params["p"] == "2"
 
 
@@ -284,16 +327,16 @@ def test_find_none(rc: RunCollection):
 
 
 def test_try_find_none(rc: RunCollection):
-    run = rc.try_find({"r": 10})
-    assert run is None
+    assert rc.try_find({"r": 10}) is None
 
 
-def test_find_last(rc: RunCollection):
+def test_find_last_dict(rc: RunCollection):
     run = rc.find_last({"r": 0})
-    assert isinstance(run, Run)
     assert run.data.params["p"] == "3"
+
+
+def test_find_last_kwarg(rc: RunCollection):
     run = rc.find_last(r=2)
-    assert isinstance(run, Run)
     assert run.data.params["p"] == "5"
 
 
@@ -303,51 +346,24 @@ def test_find_last_none(rc: RunCollection):
 
 
 def test_try_find_last_none(rc: RunCollection):
-    run = rc.try_find_last({"p": 10})
-    assert run is None
+    assert rc.try_find_last({"p": 10}) is None
 
 
-@pytest.fixture
-def runs2(monkeypatch, tmp_path):
-    mlflow.set_experiment("test_run2")
-    for x in range(3):
-        with mlflow.start_run(run_name=f"{x}"):
-            mlflow.log_param("x", x)
+def test_list_runs(rc: RunCollection):
+    mlflow.set_experiment("test_run_collection")
+    assert len(list_runs()) == 6
 
 
-def test_list_runs(rc, runs2):
-    from hydraflow.mlflow import list_runs
-
-    mlflow.set_experiment("test_run")
-    all_runs = list_runs()
-    assert len(all_runs) == 6
-
-    mlflow.set_experiment("test_run2")
-    all_runs = list_runs()
-    assert len(all_runs) == 3
+def test_list_runs_empty_list(rc: RunCollection):
+    assert len(list_runs([])) == 6
 
 
-def test_list_runs_empty_list(rc, runs2):
-    from hydraflow.mlflow import list_runs
-
-    all_runs = list_runs([])
-    assert len(all_runs) == 9
+def test_list_runs_str(rc: RunCollection):
+    assert len(list_runs("test_run_collection")) == 6
 
 
-@pytest.mark.parametrize(["name", "n"], [("test_run", 6), ("test_run2", 3)])
-def test_list_runs_list(rc, runs2, name, n):
-    from hydraflow.mlflow import list_runs
-
-    filtered_runs = list_runs(name)
-    assert len(filtered_runs) == n
-
-
-def test_list_runs_none(rc, runs2):
-    from hydraflow.mlflow import list_runs
-
-    no_runs = list_runs(["non_existent_experiment"])
-    assert len(no_runs) == 0
-    assert not no_runs
+def test_list_runs_none(rc: RunCollection):
+    assert not list_runs(["non_existent_experiment"])
 
 
 def test_map(rc: RunCollection):
@@ -389,6 +405,8 @@ def test_sort(rc: RunCollection):
     rc.sort(key=lambda x: x.data.params["p"])
     assert [run.data.params["p"] for run in rc] == ["0", "1", "2", "3", "4", "5"]
 
+
+def test_sort_reverse(rc: RunCollection):
     rc.sort(reverse=True)
     assert [run.data.params["p"] for run in rc] == ["5", "4", "3", "2", "1", "0"]
 
@@ -419,69 +437,43 @@ def test_getitem_slice_step_neg(rc: RunCollection, i: int):
 
 def test_take(rc: RunCollection):
     assert rc.take(3)._runs == rc._runs[:3]
-    assert len(rc.take(4)) == 4
     assert rc.take(10)._runs == rc._runs
 
 
 def test_take_neg(rc: RunCollection):
     assert rc.take(-3)._runs == rc._runs[-3:]
-    assert len(rc.take(-4)) == 4
     assert rc.take(-10)._runs == rc._runs
 
 
 @pytest.mark.parametrize("i", range(6))
 def test_contains(rc: RunCollection, i: int):
     assert rc[i] in rc
-    assert rc._runs[i] in rc
 
 
-def test_group_by(rc: RunCollection):
-    grouped = rc.group_by(["p"])
-    assert len(grouped) == 6
+@pytest.mark.parametrize(("name", "n"), [("p", 6), ("q", 2), ("r", 3)])
+def test_groupby_len(rc: RunCollection, name: str, n: int):
+    assert len(rc.groupby(name)) == n
+
+
+def test_groupby(rc: RunCollection):
+    grouped = rc.groupby(["p"])
     assert all(isinstance(group, RunCollection) for group in grouped.values())
     assert all(len(group) == 1 for group in grouped.values())
     assert grouped[("0",)][0] == rc[0]
     assert grouped[("1",)][0] == rc[1]
 
-    grouped = rc.group_by("q")
-    assert len(grouped) == 2
-
-    grouped = rc.group_by("r")
-    assert len(grouped) == 3
-
 
 def test_filter_runs_empty_list():
-    from hydraflow.run_collection import filter_runs
-
-    x = filter_runs([], p=[0, 1, 2])
-    assert x == []
+    assert not filter_runs([], p=[0, 1, 2])
 
 
-def test_filter_runs_no_match(run_list: list[Run]):
-    from hydraflow.run_collection import filter_runs
-
-    x = filter_runs(run_list, p=[10, 11, 12])
-    assert x == []
-
-
-def test_get_run_no_match(rc: RunCollection):
-    with pytest.raises(ValueError):
-        rc.get({"p": 10})
-
-
-def test_get_run_multiple_params(rc: RunCollection):
-    run = rc.get({"p": 4, "q": 0})
-    assert isinstance(run, Run)
-    assert run.data.params["p"] == "4"
-    assert run.data.params["q"] == "0"
-
-
-def test_try_get_run_no_match(rc: RunCollection):
-    assert rc.try_get({"p": 10}) is None
-
-
-def test_try_get_run_multiple_params(rc: RunCollection):
-    run = rc.try_get({"p": 4, "q": 0})
-    assert isinstance(run, Run)
-    assert run.data.params["p"] == "4"
-    assert run.data.params["q"] == "0"
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("p", ["0", "1", "2", "3", "4", "5"]),
+        ("q", ["0", "0", "0", "0", "0", "None"]),
+        ("r", ["0", "1", "2", "0", "1", "2"]),
+    ],
+)
+def test_data(rc: RunCollection, name, value):
+    assert rc.data.params[name] == value

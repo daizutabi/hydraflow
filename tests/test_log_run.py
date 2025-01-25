@@ -13,7 +13,7 @@ from mlflow.entities.run import Run
 
 @pytest.fixture(scope="module")
 def runs(tmp_path_factory: pytest.TempPathFactory):
-    file = Path("tests/scripts/app.py").absolute()
+    file = Path("tests/apps/app.py").absolute()
 
     cwd = Path.cwd()
     os.chdir(tmp_path_factory.mktemp("test_log_run"))

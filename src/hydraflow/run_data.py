@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from polars.dataframe import DataFrame
+from pandas import DataFrame
 
 from hydraflow.config import collect_params
 
@@ -33,10 +33,10 @@ class RunCollectionData:
 
     @property
     def config(self) -> DataFrame:
-        """Get the runs' configurations as a polars DataFrame.
+        """Get the runs' configurations as a DataFrame.
 
         Returns:
-            A polars DataFrame containing the runs' configurations.
+            A DataFrame containing the runs' configurations.
 
         """
         return DataFrame(self._runs.map_config(collect_params))

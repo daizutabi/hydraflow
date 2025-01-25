@@ -575,7 +575,7 @@ class RunCollection:
         """
         return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)  # noqa: A001
 
-    def group_by(
+    def groupby(
         self,
         names: str | list[str],
     ) -> dict[str | None | tuple[str | None, ...], RunCollection]:

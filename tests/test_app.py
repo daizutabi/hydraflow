@@ -23,7 +23,7 @@ def rc(tmp_path_factory: pytest.TempPathFactory):
 
     cwd = Path.cwd()
 
-    file = Path("tests/scripts/app.py").absolute()
+    file = Path("tests/apps/app.py").absolute()
     os.chdir(tmp_path_factory.mktemp("test_app"))
 
     args = [sys.executable, file.as_posix(), "-m"]
@@ -117,7 +117,7 @@ def test_app_data_config(rc: RunCollection):
 def test_app_data_config_list(rc: RunCollection):
     config = rc.data.config
     values = config["values"].to_list()
-    assert str(config.select("values").dtypes) == "[List(Int64)]"
+    assert str(config["values"].dtypes) == "object"
     for x in values:
         assert isinstance(x, list)
         assert x == [1, 2, 3]
@@ -159,8 +159,8 @@ def test_app_map_config(rc: RunCollection):
     assert ports == [2, 3, 2, 3]
 
 
-def test_app_group_by(rc: RunCollection):
-    grouped = rc.group_by("host")
+def test_app_groupby(rc: RunCollection):
+    grouped = rc.groupby("host")
     assert len(grouped) == 2
     assert grouped["x"].data.params["port"] == ["1", "2"]
     assert grouped["x"].data.params["host"] == ["x", "x"]
@@ -170,8 +170,8 @@ def test_app_group_by(rc: RunCollection):
     assert grouped["y"].data.params["values"] == ["[1, 2, 3]", "[1, 2, 3]"]
 
 
-def test_app_group_by_list(rc: RunCollection):
-    grouped = rc.group_by(["host"])
+def test_app_groupby_list(rc: RunCollection):
+    grouped = rc.groupby(["host"])
     assert len(grouped) == 2
     assert ("x",) in grouped
     assert ("y",) in grouped
