@@ -609,8 +609,8 @@ class RunCollection:
 
     def sort(
         self,
-        key: Callable[[Run], Any] | None = None,
         *,
+        key: Callable[[Run], Any] | None = None,
         reverse: bool = False,
     ) -> None:
         """Sort the runs in the collection.
@@ -652,7 +652,7 @@ class RunCollection:
 
         return [v[0] for v in values]
 
-    def sort_by(
+    def sorted(
         self,
         names: str | list[str],
         *,

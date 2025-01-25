@@ -187,11 +187,11 @@ def test_values(rc: RunCollection):
     assert values == [("x", 1), ("x", 2), ("y", 1), ("y", 2)]
 
 
-def test_sort_by(rc: RunCollection):
-    sorted = rc.sort_by("host", reverse=True)
+def test_sorted(rc: RunCollection):
+    sorted = rc.sorted("host", reverse=True)
     assert sorted.values(["host", "port"]) == [("y", 1), ("y", 2), ("x", 1), ("x", 2)]
 
-    sorted = rc.sort_by(["host", "port"], reverse=True)
+    sorted = rc.sorted(["host", "port"], reverse=True)
     assert sorted.values(["host", "port"]) == [("y", 2), ("y", 1), ("x", 2), ("x", 1)]
 
 
