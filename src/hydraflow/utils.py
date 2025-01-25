@@ -36,6 +36,22 @@ def get_artifact_dir(run: Run | None = None) -> Path:
     return Path(mlflow.artifacts.download_artifacts(uri))
 
 
+def get_artifact_path(run: Run | None, path: str) -> Path:
+    """Retrieve the artifact path for the given run and path.
+
+    This function uses MLflow to get the artifact path for the given run and path.
+
+    Args:
+        run (Run | None): The run object. Defaults to None.
+        path (str): The path to the artifact.
+
+    Returns:
+        The local path to the artifact.
+
+    """
+    return get_artifact_dir(run) / path
+
+
 def get_hydra_output_dir(run: Run | None = None) -> Path:
     """Retrieve the Hydra output directory for the given run.
 

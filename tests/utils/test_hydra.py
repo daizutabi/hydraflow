@@ -1,8 +1,6 @@
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from mlflow.artifacts import download_artifacts
 from mlflow.entities import Run
 
 from hydraflow.run_collection import RunCollection
@@ -23,10 +21,10 @@ def run(rc: RunCollection):
 
 
 def test_hydra_output_dir(run: Run):
-    from hydraflow.utils import get_hydra_output_dir
+    from hydraflow.utils import get_artifact_path, get_hydra_output_dir
 
-    path = download_artifacts(f"{run.info.artifact_uri}/hydra_output_dir.txt")
-    assert get_hydra_output_dir(run).as_posix() == Path(path).read_text()
+    path = get_artifact_path(run, "hydra_output_dir.txt")
+    assert get_hydra_output_dir(run).as_posix() == path.read_text()
 
 
 def test_load_config(run: Run):
@@ -39,8 +37,10 @@ def test_load_config(run: Run):
 
 
 def test_get_overrides(run: Run):
-    path = download_artifacts(f"{run.info.artifact_uri}/overrides.txt")
-    assert Path(path).read_text() == "['name=a', 'age=10']"
+    from hydraflow.utils import get_artifact_path
+
+    path = get_artifact_path(run, "overrides.txt")
+    assert path.read_text() == "['name=a', 'age=10']"
 
 
 def test_load_overrides(run: Run):

@@ -6,6 +6,7 @@ from .mlflow import list_runs, search_runs, set_experiment
 from .run_collection import RunCollection
 from .utils import (
     get_artifact_dir,
+    get_artifact_path,
     get_hydra_output_dir,
     get_overrides,
     load_config,
@@ -18,6 +19,7 @@ __all__ = [
     "chdir_artifact",
     "chdir_hydra_output",
     "get_artifact_dir",
+    "get_artifact_path",
     "get_hydra_output_dir",
     "get_overrides",
     "list_runs",

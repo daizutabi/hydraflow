@@ -31,7 +31,7 @@ def run_script(experiment_name: str):
         job_name = f"hydra.job.name={experiment_name}"
 
         args = [sys.executable, file.as_posix(), *args, job_name]
-        subprocess.check_call(args)
+        subprocess.run(args, check=False)
 
         return experiment_name
 
