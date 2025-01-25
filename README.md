@@ -69,7 +69,7 @@ def my_app(cfg: MySQLConfig) -> None:
     hydraflow.set_experiment()
 
     # Automatically log Hydra config as params.
-    with hydraflow.start_run():
+    with hydraflow.start_run(cfg):
         # Your app code below.
 
 
