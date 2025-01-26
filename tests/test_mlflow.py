@@ -1,14 +1,8 @@
-import sys
 from pathlib import Path
 
 import mlflow
 import pytest
 from mlflow.entities import Experiment, Run, RunStatus
-
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Windows is not supported",
-)
 
 
 @pytest.fixture(scope="module")
@@ -36,8 +30,11 @@ def test_set_experiment_uri(experiment: Experiment):
 
 
 def test_set_experiment_location(experiment: Experiment):
-    loc = Path.cwd() / "mlruns" / experiment.experiment_id
-    assert Path(experiment.artifact_location) == loc
+    path = Path.cwd() / "mlruns" / experiment.experiment_id
+    loc = experiment.artifact_location
+    assert isinstance(loc, str)
+    loc = loc.replace("file:", "")  # for windows
+    assert Path(loc) == path
 
 
 def test_set_experiment_name(experiment: Experiment):
@@ -68,7 +65,10 @@ def test_log_params(run: Run, experiment_name):
 def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
     from hydraflow.utils import get_artifact_dir
 
-    path = Path(experiment.artifact_location) / run.info.run_id / "artifacts"
+    loc = experiment.artifact_location
+    assert isinstance(loc, str)
+    loc = loc.replace("file:", "")  # for windows
+    path = Path(loc) / run.info.run_id / "artifacts"
     assert get_artifact_dir(run) == path
 
 

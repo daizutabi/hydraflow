@@ -214,7 +214,7 @@ def _list_runs(
             loc = experiment.artifact_location
 
             if isinstance(loc, str):
-                if loc.startswith("file://"):
+                if loc.startswith("file:"):
                     path = Path(mlflow.artifacts.download_artifacts(loc))
                 elif Path(loc).is_dir():
                     path = Path(loc)

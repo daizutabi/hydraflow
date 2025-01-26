@@ -33,7 +33,7 @@ def get_artifact_dir(run: Run | None = None) -> Path:
     if not isinstance(uri, str):
         raise NotImplementedError
 
-    if uri.startswith("file://"):
+    if uri.startswith("file:"):
         return Path(mlflow.artifacts.download_artifacts(uri))
 
     if Path(uri).is_dir():
