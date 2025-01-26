@@ -33,7 +33,8 @@ def test_set_experiment_location(experiment: Experiment):
     path = Path.cwd() / "mlruns" / experiment.experiment_id
     loc = experiment.artifact_location
     assert isinstance(loc, str)
-    loc = loc.replace("file:", "")  # for windows
+    if loc.startswith("file:"):
+        loc = loc.replace("file:/", "").replace("file:", "")  # for windows
     assert Path(loc) == path
 
 
@@ -67,7 +68,8 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
 
     loc = experiment.artifact_location
     assert isinstance(loc, str)
-    loc = loc.replace("file:", "")  # for windows
+    if loc.startswith("file:"):
+        loc = loc.replace("file:/", "").replace("file:", "")  # for windows
     path = Path(loc) / run.info.run_id / "artifacts"
     assert get_artifact_dir(run) == path
 
