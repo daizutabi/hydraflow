@@ -30,12 +30,13 @@ def test_set_experiment_uri(experiment: Experiment):
 
 
 def test_set_experiment_location(experiment: Experiment):
-    path = Path.cwd() / "mlruns" / experiment.experiment_id
     loc = experiment.artifact_location
     assert isinstance(loc, str)
-    if loc.startswith("file:"):
-        loc = loc.replace("file:/", "").replace("file:", "")  # for windows
-    assert Path(loc) == path
+    if loc.startswith("file:"):  # for windows
+        loc = loc[loc.index("C:") :]
+
+    path = Path.cwd() / "mlruns" / experiment.experiment_id
+    assert path == Path(loc)
 
 
 def test_set_experiment_name(experiment: Experiment):
@@ -68,10 +69,10 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
 
     loc = experiment.artifact_location
     assert isinstance(loc, str)
-    if loc.startswith("file:"):
-        loc = loc.replace("file:/", "").replace("file:", "")  # for windows
-    path = Path(loc) / run.info.run_id / "artifacts"
-    assert get_artifact_dir(run) == path
+    if loc.startswith("file:"):  # for windows
+        loc = loc[loc.index("C:") :]
+
+    assert get_artifact_dir(run) == Path(loc) / run.info.run_id / "artifacts"
 
 
 @pytest.mark.parametrize(
