@@ -48,7 +48,6 @@ def log_run(
             # Perform operations within the MLflow run context
             pass
         ```
-
     """
     if config:
         log_params(config, synchronous=synchronous)
@@ -118,7 +117,6 @@ def start_run(  # noqa: PLR0913
         - `mlflow.start_run`: The MLflow function to start a run directly.
         - `log_run`: A context manager to log parameters and manage the MLflow
            run context.
-
     """
     with (
         mlflow.start_run(
@@ -169,7 +167,6 @@ def chdir_artifact(
     Args:
         run (Run): The run to get the artifact directory from.
         artifact_path (str | None): The artifact path.
-
     """
     curdir = Path.cwd()
     path = mlflow.artifacts.download_artifacts(

@@ -106,7 +106,6 @@ class RunCollection:
 
         Returns:
             A new `RunCollection` instance with the runs from both collections.
-
         """
         return self.__class__(self._runs + other._runs)
 
@@ -119,7 +118,6 @@ class RunCollection:
         Returns:
             A new `RunCollection` instance with the runs that are in this collection
             but not in the other.
-
         """
         runs = [run for run in self._runs if run not in other._runs]  # noqa: SLF001
         return self.__class__(runs)
@@ -152,7 +150,6 @@ class RunCollection:
         Returns:
             A new `RunCollection` instance containing the first n runs if n is
             positive, or the last n runs if n is negative.
-
         """
         if n < 0:
             return self.__class__(self._runs[n:])
@@ -167,7 +164,6 @@ class RunCollection:
 
         Raises:
             ValueError: If the collection does not contain exactly one run.
-
         """
         if len(self._runs) != 1:
             raise ValueError("The collection does not contain exactly one run.")
@@ -180,7 +176,6 @@ class RunCollection:
         Returns:
             The only `Run` instance in the collection, or None if the collection
             does not contain exactly one run.
-
         """
         return self._runs[0] if len(self._runs) == 1 else None
 
@@ -192,7 +187,6 @@ class RunCollection:
 
         Raises:
             ValueError: If the collection is empty.
-
         """
         if not self._runs:
             raise ValueError("The collection is empty.")
@@ -205,7 +199,6 @@ class RunCollection:
         Returns:
             The first `Run` instance in the collection, or None if the collection
             is empty.
-
         """
         return self._runs[0] if self._runs else None
 
@@ -217,7 +210,6 @@ class RunCollection:
 
         Raises:
             ValueError: If the collection is empty.
-
         """
         if not self._runs:
             raise ValueError("The collection is empty.")
@@ -230,7 +222,6 @@ class RunCollection:
         Returns:
             The last `Run` instance in the collection, or None if the collection
             is empty.
-
         """
         return self._runs[-1] if self._runs else None
 
@@ -258,7 +249,6 @@ class RunCollection:
 
         Returns:
             A new `RunCollection` object containing the filtered runs.
-
         """
         return RunCollection(filter_runs(self._runs, config, **kwargs))
 
@@ -282,7 +272,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         try:
             return self.filter(config, **kwargs).first()
@@ -307,7 +296,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         return self.filter(config, **kwargs).try_first()
 
@@ -331,7 +319,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         try:
             return self.filter(config, **kwargs).last()
@@ -356,7 +343,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         return self.filter(config, **kwargs).try_last()
 
@@ -381,7 +367,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         try:
             return self.filter(config, **kwargs).one()
@@ -410,7 +395,6 @@ class RunCollection:
 
         See Also:
             `filter`: Perform the actual filtering logic.
-
         """
         return self.filter(config, **kwargs).try_one()
 
@@ -423,7 +407,6 @@ class RunCollection:
 
         Returns:
             A list of unique parameter names.
-
         """
         param_names = set()
 
@@ -448,7 +431,6 @@ class RunCollection:
         Returns:
             A dictionary where the keys are parameter names and the values are
             lists of parameter values.
-
         """
         params = {}
 
@@ -480,7 +462,6 @@ class RunCollection:
 
         Yields:
             Results obtained by applying the function to each run in the collection.
-
         """
         return (func(run, *args, **kwargs) for run in self)
 
@@ -501,7 +482,6 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each run id in the
             collection.
-
         """
         return (func(run_id, *args, **kwargs) for run_id in self.info.run_id)
 
@@ -522,7 +502,6 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each run configuration
             in the collection.
-
         """
         return (func(load_config(run), *args, **kwargs) for run in self)
 
@@ -547,7 +526,6 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each artifact URI in the
             collection.
-
         """
         return (func(uri, *args, **kwargs) for uri in self.info.artifact_uri)
 
@@ -571,7 +549,6 @@ class RunCollection:
         Yields:
             Results obtained by applying the function to each artifact directory
             in the collection.
-
         """
         return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)  # noqa: A001
 
@@ -595,7 +572,6 @@ class RunCollection:
             dictionary where the keys are tuples of parameter values and the
             values are `RunCollection` objects containing the runs that match
             those parameter values.
-
         """
         grouped_runs: dict[str | None | tuple[str | None, ...], list[Run]] = {}
         is_list = isinstance(names, list)
@@ -622,7 +598,6 @@ class RunCollection:
             key (Callable[[Run], Any] | None): A function that takes a run and returns
                 a value to sort by.
             reverse (bool): If True, sort in descending order.
-
         """
         self._runs.sort(key=key or (lambda x: x.info.start_time), reverse=reverse)
 
@@ -636,7 +611,6 @@ class RunCollection:
 
         Returns:
             A list of values for the specified parameters.
-
         """
         is_list = isinstance(names, list)
 
@@ -668,7 +642,6 @@ class RunCollection:
                 This can be a single parameter name or multiple names provided
                 as separate arguments or as a list.
             reverse (bool): If True, sort in descending order.
-
         """
         values = self.values(names)
         index = sorted(range(len(self)), key=lambda i: values[i], reverse=reverse)
@@ -726,7 +699,6 @@ def filter_runs(
 
     Returns:
         A list of runs that match the specified configuration and key-value pairs.
-
     """
     if override:
         config = select_overrides(config)
@@ -757,7 +729,6 @@ def filter_runs_by_status(
 
     Returns:
         A list of runs that match the specified status.
-
     """
     if isinstance(status, str):
         if status.startswith("!"):

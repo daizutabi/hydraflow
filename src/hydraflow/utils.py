@@ -26,7 +26,6 @@ def get_artifact_dir(run: Run | None = None) -> Path:
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
-
     """
     uri = mlflow.get_artifact_uri() if run is None else run.info.artifact_uri
 
@@ -53,7 +52,6 @@ def get_artifact_path(run: Run | None, path: str) -> Path:
 
     Returns:
         The local path to the artifact.
-
     """
     return get_artifact_dir(run) / path
 
@@ -76,7 +74,6 @@ def get_hydra_output_dir(run: Run | None = None) -> Path:
     Raises:
         FileNotFoundError: If the Hydra configuration file is not found
             in the artifacts.
-
     """
     if run is None:
         hc = HydraConfig.get()
@@ -105,7 +102,6 @@ def load_config(run: Run) -> DictConfig:
     Returns:
         The loaded configuration as a DictConfig object. Returns an empty
         DictConfig if the configuration file is not found.
-
     """
     path = get_artifact_dir(run) / ".hydra/config.yaml"
     return OmegaConf.load(path)  # type: ignore
@@ -130,7 +126,6 @@ def load_overrides(run: Run) -> list[str]:
     Returns:
         The loaded overrides as a list of strings. Returns an empty list
         if the overrides file is not found.
-
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
     return [str(x) for x in OmegaConf.load(path)]
