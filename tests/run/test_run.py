@@ -7,7 +7,7 @@ from hydraflow.run_collection import RunCollection
 if TYPE_CHECKING:
     from .run import Config
 
-pytestmark = pytest.mark.xdist_group(name="group1")
+pytestmark = pytest.mark.xdist_group(name="group4")
 
 
 @pytest.fixture(scope="module")

@@ -3,7 +3,7 @@ from mlflow.entities import Run
 
 from hydraflow.run_collection import RunCollection
 
-pytestmark = pytest.mark.xdist_group(name="group1")
+pytestmark = pytest.mark.xdist_group(name="group2")
 
 
 @pytest.fixture(scope="module")

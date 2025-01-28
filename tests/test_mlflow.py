@@ -4,7 +4,7 @@ import mlflow
 import pytest
 from mlflow.entities import Experiment, Run, RunStatus
 
-pytestmark = pytest.mark.xdist_group(name="group2")
+pytestmark = pytest.mark.xdist_group(name="group0")
 
 
 @pytest.fixture(scope="module")

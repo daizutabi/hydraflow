@@ -5,7 +5,7 @@ import pytest
 
 from hydraflow.param import match
 
-pytestmark = pytest.mark.xdist_group(name="group1")
+pytestmark = pytest.mark.xdist_group(name="group2")
 
 
 @pytest.fixture

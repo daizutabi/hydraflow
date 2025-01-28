@@ -4,7 +4,7 @@ from mlflow.entities import Run
 from hydraflow.run_collection import RunCollection
 from hydraflow.utils import get_artifact_path, get_hydra_output_dir
 
-pytestmark = pytest.mark.xdist_group(name="group1")
+pytestmark = pytest.mark.xdist_group(name="group2")
 
 
 @pytest.fixture(scope="module")
