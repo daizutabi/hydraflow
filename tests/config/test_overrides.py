@@ -10,7 +10,7 @@ from hydraflow.run_collection import RunCollection
 @pytest.fixture(scope="module")
 def rc(collect):
     args = ["-m", "name=a,b", "height=3"]
-    return collect("config/config.py", args)
+    return collect("config/overrides.py", args)
 
 
 @pytest.fixture(scope="module")

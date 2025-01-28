@@ -225,7 +225,15 @@ class RunCollection:
         """
         return self._runs[-1] if self._runs else None
 
-    def filter(self, config: object | None = None, **kwargs) -> RunCollection:
+    def filter(
+        self,
+        config: object | None = None,
+        *,
+        override: bool = False,
+        select: list[str] | None = None,
+        status: str | list[str] | int | list[int] | None = None,
+        **kwargs,
+    ) -> RunCollection:
         """Filter the `Run` instances based on the provided configuration.
 
         This method filters the runs in the collection according to the
@@ -245,12 +253,26 @@ class RunCollection:
             config (object | None): The configuration object to filter the runs.
                 This can be any object that provides key-value pairs through
                 the `iter_params` function.
+            override (bool): If True, override the configuration object with the
+                provided key-value pairs.
+            select (list[str] | None): The list of parameters to select.
+            status (str | list[str] | int | list[int] | None): The status of the
+                runs to filter.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
             A new `RunCollection` object containing the filtered runs.
         """
-        return RunCollection(filter_runs(self._runs, config, **kwargs))
+        return RunCollection(
+            filter_runs(
+                self._runs,
+                config,
+                override=override,
+                select=select,
+                status=status,
+                **kwargs,
+            ),
+        )
 
     def find(self, config: object | None = None, **kwargs) -> Run:
         """Find the first `Run` instance based on the provided configuration.

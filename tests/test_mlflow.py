@@ -9,7 +9,7 @@ from mlflow.entities import Experiment, Run, RunStatus
 def experiment(experiment_name: str):
     from hydraflow.mlflow import log_params, set_experiment
 
-    experiment = set_experiment(uri="mlruns", name="e")
+    experiment = set_experiment(uri="test_mlflow", name="e")
 
     with mlflow.start_run():
         log_params({"name": experiment_name})
@@ -22,11 +22,11 @@ def experiment(experiment_name: str):
 
     yield experiment
 
-    mlflow.set_tracking_uri("")
+    mlflow.set_tracking_uri("./mlruns")
 
 
 def test_set_experiment_uri(experiment: Experiment):
-    assert mlflow.get_tracking_uri() == "mlruns"
+    assert mlflow.get_tracking_uri() == "test_mlflow"
 
 
 def test_set_experiment_location(experiment: Experiment):
@@ -35,7 +35,7 @@ def test_set_experiment_location(experiment: Experiment):
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
 
-    path = Path.cwd() / "mlruns" / experiment.experiment_id
+    path = Path.cwd() / "test_mlflow" / experiment.experiment_id
     assert path == Path(loc)
 
 

@@ -15,7 +15,7 @@ def experiment_name(tmp_path_factory: pytest.TempPathFactory):
     cwd = Path.cwd()
     name = str(uuid.uuid4())
 
-    os.chdir(tmp_path_factory.mktemp(name))
+    os.chdir(tmp_path_factory.mktemp(name, numbered=False))
 
     yield name
 

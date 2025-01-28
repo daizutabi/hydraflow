@@ -12,7 +12,12 @@ if TYPE_CHECKING:
 @pytest.fixture(scope="module")
 def rc(collect):
     args = ["-m", "name=a,b", "age=10"]
+
     return collect("utils/utils.py", args)
+
+
+def test_rc(rc: RunCollection):
+    assert len(rc) == 2
 
 
 @pytest.fixture(scope="module")

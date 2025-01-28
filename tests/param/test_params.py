@@ -7,7 +7,7 @@ from hydraflow.run_collection import RunCollection
 @pytest.fixture(scope="module")
 def rc(collect):
     args = ["host=a"]
-    return collect("param/param.py", args)
+    return collect("param/params.py", args)
 
 
 @pytest.fixture(scope="module")
