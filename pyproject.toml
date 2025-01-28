@@ -48,7 +48,7 @@ packages = ["src/hydraflow"]
 addopts = [
   "--cov=hydraflow",
   "--cov-report=lcov:lcov.info",
-  "-n2",
+  "-n8",
   "--dist=loadgroup",
 ]
 filterwarnings = [
