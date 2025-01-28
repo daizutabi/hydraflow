@@ -4,6 +4,8 @@ import mlflow
 import pytest
 from mlflow.entities import Experiment, Run, RunStatus
 
+pytestmark = pytest.mark.xdist_group(name="group2")
+
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):
@@ -20,9 +22,7 @@ def experiment(experiment_name: str):
     mlflow.start_run()
     mlflow.end_run(status=RunStatus.to_string(RunStatus.FAILED))
 
-    yield experiment
-
-    mlflow.set_tracking_uri("./mlruns")
+    return experiment
 
 
 def test_set_experiment_uri(experiment: Experiment):

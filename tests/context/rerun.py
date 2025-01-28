@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import hydra
 from hydra.core.config_store import ConfigStore
 
 import hydraflow
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 @dataclass
 class Config:
-    name: str = "a"
+    count: int = 0
 
 
 cs = ConfigStore.instance()
@@ -29,10 +31,10 @@ def app(cfg: Config):
         run_id = None
 
     with hydraflow.start_run(cfg, run_id=run_id) as run:
-        process(hydraflow.get_artifact_dir(run))
+        log(hydraflow.get_artifact_dir(run))
 
 
-def process(path: Path):
+def log(path: Path):
     file = path / "a.txt"
     text = file.read_text() if file.exists() else ""
     file.write_text(text + "a")

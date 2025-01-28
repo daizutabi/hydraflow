@@ -7,6 +7,8 @@ from mlflow.entities import Experiment, Run, RunStatus
 from hydraflow.mlflow import list_runs
 from hydraflow.run_collection import RunCollection, filter_runs
 
+pytestmark = pytest.mark.xdist_group(name="group1")
+
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):

@@ -4,6 +4,8 @@ from mlflow.entities import Experiment
 
 from hydraflow.run_collection import RunCollection
 
+pytestmark = pytest.mark.xdist_group(name="group1")
+
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):

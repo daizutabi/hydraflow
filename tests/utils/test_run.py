@@ -4,6 +4,8 @@ from mlflow.entities import Experiment, Run
 
 from hydraflow.run_collection import RunCollection
 
+pytestmark = pytest.mark.xdist_group(name="group1")
+
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):
@@ -28,6 +30,7 @@ def run(rc: RunCollection):
     return rc.first()
 
 
+@pytest.mark.order(0)
 def test_hydra_output_dir(run: Run):
     from hydraflow.utils import get_hydra_output_dir
 
@@ -35,6 +38,7 @@ def test_hydra_output_dir(run: Run):
         get_hydra_output_dir(run)
 
 
+@pytest.mark.order(1)
 def test_remove_run(rc: RunCollection):
     from hydraflow.utils import get_artifact_dir, remove_run
 

@@ -5,6 +5,8 @@ import pytest
 
 from hydraflow.param import match
 
+pytestmark = pytest.mark.xdist_group(name="group1")
+
 
 @pytest.fixture
 def param(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):

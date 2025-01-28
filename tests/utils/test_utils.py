@@ -8,6 +8,8 @@ from hydraflow.run_collection import RunCollection
 if TYPE_CHECKING:
     from .utils import Config
 
+pytestmark = pytest.mark.xdist_group(name="group1")
+
 
 @pytest.fixture(scope="module")
 def rc(collect):
@@ -16,7 +18,7 @@ def rc(collect):
     return collect("utils/utils.py", args)
 
 
-def test_rc(rc: RunCollection):
+def test_rc_len(rc: RunCollection):
     assert len(rc) == 2
 
 
