@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from mlflow.entities import Run
 
 
-def match(param: str, value: Any) -> bool:
+def match(param: str, value: Any) -> bool:  # noqa: PLR0911
     """Check if the string matches the specified value.
 
     Args:
@@ -29,6 +29,9 @@ def match(param: str, value: Any) -> bool:
         True if the parameter matches the specified value,
         False otherwise.
     """
+    if callable(value):
+        return value(param)
+
     if any(value is x for x in [None, True, False]):
         return param == str(value)
 
