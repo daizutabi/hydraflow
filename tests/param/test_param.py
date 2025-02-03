@@ -55,6 +55,14 @@ def test_param(param, x, y):
 
 @pytest.mark.parametrize(
     ("param", "value"),
+    [("1.0", lambda x: float(x) > 0), ("-1.0", lambda x: float(x) < 0)],
+)
+def test_match_callable(param, value):
+    assert match(param, value)
+
+
+@pytest.mark.parametrize(
+    ("param", "value"),
     [("1.0", 1.0), ("1.0", 1), ("0.0", 0), ("0.0", 0.0)],
 )
 def test_match_float(param, value):
