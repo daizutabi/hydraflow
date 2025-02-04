@@ -27,6 +27,13 @@ def run(rc: RunCollection):
     return rc.first()
 
 
+def test_artifact_dir_error(run: Run):
+    from hydraflow.utils import get_artifact_dir
+
+    with pytest.raises(ValueError):
+        get_artifact_dir(run, "a")
+
+
 def test_hydra_output_dir(run: Run):
     from hydraflow.utils import get_artifact_path, get_hydra_output_dir
 
