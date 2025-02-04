@@ -48,6 +48,7 @@ def log_run(
             # Perform operations within the MLflow run context
             pass
         ```
+
     """
     if config:
         log_params(config, synchronous=synchronous)
@@ -77,6 +78,7 @@ def start_run(  # noqa: PLR0913
     config: object,
     *,
     chdir: bool = False,
+    run: Run | None = None,
     run_id: str | None = None,
     experiment_id: str | None = None,
     run_name: str | None = None,
@@ -96,6 +98,7 @@ def start_run(  # noqa: PLR0913
         config (object): The configuration object to log parameters from.
         chdir (bool): Whether to change the current working directory to the
             artifact directory of the current run. Defaults to False.
+        run (Run | None): The existing run. Defaults to None.
         run_id (str | None): The existing run ID. Defaults to None.
         experiment_id (str | None): The experiment ID. Defaults to None.
         run_name (str | None): The name of the run. Defaults to None.
@@ -120,7 +123,11 @@ def start_run(  # noqa: PLR0913
         - `mlflow.start_run`: The MLflow function to start a run directly.
         - `log_run`: A context manager to log parameters and manage the MLflow
            run context.
+
     """
+    if run:
+        run_id = run.info.run_id
+
     with (
         mlflow.start_run(
             run_id=run_id,
@@ -174,6 +181,7 @@ def chdir_artifact(
     Args:
         run (Run): The run to get the artifact directory from.
         artifact_path (str | None): The artifact path.
+
     """
     curdir = Path.cwd()
     path = mlflow.artifacts.download_artifacts(

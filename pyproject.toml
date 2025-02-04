@@ -68,8 +68,32 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["ALL"]
 unfixable = ["F401"]
-ignore = ["A005", "ANN003", "ANN401", "B904", "D", "EM101", "PGH003", "TRY003"]
+ignore = [
+  "A005",
+  "ANN003",
+  "ANN401",
+  "B904",
+  "D105",
+  "D107",
+  "D203",
+  "D213",
+  "EM101",
+  "PGH003",
+  "PLR1704",
+  "TRY003",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["A001", "ANN", "ARG", "FBT", "PLR", "PT", "S", "SIM108", "SLF"]
+"tests/*" = [
+  "A001",
+  "ANN",
+  "ARG",
+  "D",
+  "FBT",
+  "PLR",
+  "PT",
+  "S",
+  "SIM108",
+  "SLF",
+]
 "apps/*.py" = ["D", "G", "INP"]
