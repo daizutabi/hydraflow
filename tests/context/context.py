@@ -15,8 +15,7 @@ class Config:
     name: str = "a"
 
 
-cs = ConfigStore.instance()
-cs.store(name="config", node=Config)
+ConfigStore.instance().store(name="config", node=Config)
 
 
 @hydra.main(version_base=None, config_name="config")
