@@ -31,12 +31,14 @@ def test_set_experiment_uri(experiment: Experiment):
 
 def test_set_experiment_location(experiment: Experiment):
     loc = experiment.artifact_location
+    print("DD", loc)
     assert isinstance(loc, str)
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
 
     path = Path.cwd() / "test_mlflow" / experiment.experiment_id
     assert path == Path(loc)
+    assert 0
 
 
 def test_set_experiment_name(experiment: Experiment):

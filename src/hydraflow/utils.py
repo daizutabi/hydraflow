@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -41,12 +43,19 @@ def get_artifact_dir(run: Run | None = None, uri: str | None = None) -> Path:
         raise NotImplementedError
 
     if uri.startswith("file:"):
-        return Path(mlflow.artifacts.download_artifacts(uri))
+        print("CCC", file_uri_to_path(uri))  # noqa: T201
+        return file_uri_to_path(uri)
+        # return Path(mlflow.artifacts.download_artifacts(uri))  # noqa: ERA001
 
-    if Path(uri).is_dir():
-        return Path(uri)
+    return Path(uri)
 
-    raise NotImplementedError
+
+def file_uri_to_path(uri: str) -> Path:
+    """Convert a file URI to a local path."""
+    print("AAA", uri)  # noqa: T201
+    path = urllib.parse.urlparse(uri).path
+    print("BBB", path)  # noqa: T201
+    return Path(urllib.request.url2pathname(path))
 
 
 def get_artifact_path(run: Run | None, path: str) -> Path:

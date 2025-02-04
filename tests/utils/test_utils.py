@@ -27,6 +27,16 @@ def run(rc: RunCollection):
     return rc.first()
 
 
+@pytest.mark.parametrize(
+    ("uri", "path"),
+    [("file:///a/b/c", "/a/b/c")],
+)
+def test_file_uri_to_path(uri, path):
+    from hydraflow.utils import file_uri_to_path
+
+    assert file_uri_to_path(uri).as_posix() == path
+
+
 def test_artifact_dir_error(run: Run):
     from hydraflow.utils import get_artifact_dir
 
