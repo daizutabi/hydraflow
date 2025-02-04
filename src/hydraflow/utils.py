@@ -51,7 +51,7 @@ def get_artifact_dir(run: Run | None = None, uri: str | None = None) -> Path:
 def file_uri_to_path(uri: str) -> Path:
     """Convert a file URI to a local path."""
     return Path(urllib.parse.urlparse(uri).path)
-    return Path(urllib.request.url2pathname(path))
+    # return Path(urllib.request.url2pathname(path))  # noqa: ERA001
 
 
 def get_artifact_path(run: Run | None, path: str) -> Path:
