@@ -56,7 +56,7 @@ def log_run(
     hc = HydraConfig.get()
     output_dir = Path(hc.runtime.output_dir)
 
-    # Save '.hydra' config directory first.
+    # Save '.hydra' config directory.
     output_subdir = output_dir / (hc.output_subdir or "")
     mlflow.log_artifacts(output_subdir.as_posix(), hc.output_subdir)
 
@@ -69,8 +69,33 @@ def log_run(
         raise
 
     finally:
-        # Save output_dir including '.hydra' config directory.
-        mlflow.log_artifacts(output_dir.as_posix())
+        log_hydra(output_dir)
+
+
+def log_hydra(output_dir: Path) -> None:
+    """Log hydra logs of the current run as artifacts.
+
+    Args:
+        output_dir (Path): The output directory of the Hydra job.
+
+    """
+    uri = mlflow.get_artifact_uri()
+    artifact_dir = Path(mlflow.artifacts.download_artifacts(uri))
+
+    for file_hydra in output_dir.glob("*.log"):
+        if not file_hydra.is_file():
+            continue
+
+        file_artifact = artifact_dir / file_hydra.name
+        if file_artifact.exists():
+            text = file_artifact.read_text()
+            if not text.endswith("\n"):
+                text += "\n"
+        else:
+            text = ""
+
+        text += file_hydra.read_text()
+        mlflow.log_text(text, file_hydra.name)
 
 
 @contextmanager
