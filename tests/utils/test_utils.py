@@ -39,7 +39,7 @@ def test_file_uri_to_path(uri, path):
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="This test is for Windows")
-def test_file_uri_to_path_win10_11():
+def test_file_uri_to_path_win_python_310_311():
     from hydraflow.utils import file_uri_to_path
 
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
