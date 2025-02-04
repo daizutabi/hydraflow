@@ -1,3 +1,4 @@
+import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -29,17 +30,19 @@ def run(rc: RunCollection):
 
 @pytest.mark.parametrize(
     ("uri", "path"),
-    [
-        ("file:///a/b/c", "/a/b/c"),
-        ("file:C:/a/b/c", "C:/a/b/c"),
-        ("file:///C:/a/b/c", "C:/a/b/c"),
-    ],
+    [("/a/b/c", "/a/b/c"), ("file:///a/b/c", "/a/b/c"), ("file:C:/a/b/c", "C:/a/b/c")],
 )
 def test_file_uri_to_path(uri, path):
-    print("uri", uri)  # noqa: T201
     from hydraflow.utils import file_uri_to_path
 
     assert file_uri_to_path(uri).as_posix() == path
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="This test is for Windows")
+def test_file_uri_to_path_win10_11():
+    from hydraflow.utils import file_uri_to_path
+
+    assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
 def test_artifact_dir_error(run: Run):

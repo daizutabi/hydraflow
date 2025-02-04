@@ -31,14 +31,12 @@ def test_set_experiment_uri(experiment: Experiment):
 
 def test_set_experiment_location(experiment: Experiment):
     loc = experiment.artifact_location
-    print("DD", loc)  # noqa: T201
     assert isinstance(loc, str)
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
 
     path = Path.cwd() / "test_mlflow" / experiment.experiment_id
     assert path == Path(loc)
-    assert 0
 
 
 def test_set_experiment_name(experiment: Experiment):
@@ -74,11 +72,7 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
 
-    print("a", run.info.artifact_uri)  # noqa: T201
-    print("b", get_artifact_dir(run))  # noqa: T201
-
     assert get_artifact_dir(run) == Path(loc) / run.info.run_id / "artifacts"
-    assert 0
 
 
 @pytest.mark.parametrize(

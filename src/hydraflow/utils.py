@@ -43,18 +43,14 @@ def get_artifact_dir(run: Run | None = None, uri: str | None = None) -> Path:
         raise NotImplementedError
 
     if uri.startswith("file:"):
-        print("CCC", file_uri_to_path(uri))  # noqa: T201
         return file_uri_to_path(uri)
-        # return Path(mlflow.artifacts.download_artifacts(uri))  # noqa: ERA001
 
     return Path(uri)
 
 
 def file_uri_to_path(uri: str) -> Path:
     """Convert a file URI to a local path."""
-    print("AAA", uri)  # noqa: T201
-    path = urllib.parse.urlparse(uri).path
-    print("BBB", path)  # noqa: T201
+    return Path(urllib.parse.urlparse(uri).path)
     return Path(urllib.request.url2pathname(path))
 
 
