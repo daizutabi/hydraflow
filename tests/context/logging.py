@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import sys
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,10 +9,12 @@ from hydra.core.config_store import ConfigStore
 
 import hydraflow
 
+log = logging.getLogger(__name__)
+
 
 @dataclass
 class Config:
-    name: str = "a"
+    count: int = 0
 
 
 ConfigStore.instance().store(name="config", node=Config)
@@ -22,18 +24,15 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    with hydraflow.start_run(cfg) as run:
-        with hydraflow.chdir_artifact(run):
-            Path("b.txt").write_text("chdir_artifact")
+    run = hydraflow.list_runs().try_get(cfg, override=True)
 
-        if cfg.name == "b":
-            raise ValueError
+    with hydraflow.start_run(cfg, run=run):
+        log.info("second" if run else "first")
+        log.info(cfg.count)
 
-        if cfg.name == "c":
-            sys.exit(1)
-
-    with hydraflow.start_run(cfg, run_id=run.info.run_id):  # Skip log config
-        pass
+        with hydraflow.chdir_hydra_output():
+            Path("text.log").write_text("text\n")
+            Path("dir.log").mkdir()
 
 
 if __name__ == "__main__":
