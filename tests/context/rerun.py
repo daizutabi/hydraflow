@@ -24,12 +24,9 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    if run := hydraflow.list_runs().try_find(cfg, override=True):
-        run_id = run.info.run_id
-    else:
-        run_id = None
+    run = hydraflow.list_runs().try_find(cfg, override=True)
 
-    with hydraflow.start_run(cfg, run_id=run_id) as run:
+    with hydraflow.start_run(cfg, run=run) as run:
         log(hydraflow.get_artifact_dir(run))
 
 

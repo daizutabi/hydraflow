@@ -37,6 +37,7 @@ class RunCollectionData:
 
         Returns:
             A DataFrame containing the runs' configurations.
+
         """
         return DataFrame(self._runs.map_config(collect_params))
 

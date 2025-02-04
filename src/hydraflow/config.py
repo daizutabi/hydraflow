@@ -22,6 +22,7 @@ def collect_params(config: object) -> dict[str, Any]:
 
     Returns:
         dict[str, Any]: A dictionary of collected parameters.
+
     """
     return dict(iter_params(config))
 
@@ -40,6 +41,7 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
 
     Yields:
         Key-value pairs representing the parameters in the configuration object.
+
     """
     if config is None:
         return
@@ -113,6 +115,7 @@ def select_config(config: object, names: list[str]) -> dict[str, Any]:
 
     Returns:
         DictConfig: A new configuration object containing only the selected parameters.
+
     """
     if not isinstance(config, DictConfig):
         config = OmegaConf.structured(config)

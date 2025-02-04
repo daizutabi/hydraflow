@@ -54,6 +54,7 @@ def set_experiment(
     Returns:
         Experiment: An instance of `mlflow.entities.Experiment` representing
         the new active experiment.
+
     """
     if uri is not None:
         mlflow.set_tracking_uri(uri)
@@ -77,6 +78,7 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
         config (object): The configuration object to log the parameters from.
         synchronous (bool | None): Whether to log the parameters synchronously.
             Defaults to None.
+
     """
     for key, value in iter_params(config):
         mlflow.log_param(key, value, synchronous=synchronous)
@@ -133,6 +135,7 @@ def search_runs(  # noqa: PLR0913
 
     Returns:
         A `RunCollection` object containing the search results.
+
     """
     runs = mlflow.search_runs(
         experiment_ids=experiment_ids,
@@ -177,6 +180,7 @@ def list_runs(
     Returns:
         RunCollection: A `RunCollection` instance containing the runs for the
         specified experiments.
+
     """
     rc = _list_runs(experiment_names, n_jobs)
     if status is None:

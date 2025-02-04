@@ -28,6 +28,7 @@ def match(param: str, value: Any) -> bool:  # noqa: PLR0911
     Returns:
         True if the parameter matches the specified value,
         False otherwise.
+
     """
     if callable(value):
         return value(param)
@@ -94,6 +95,7 @@ def to_value(param: str | None, type_: type) -> Any:
 
     Returns:
         The converted value.
+
     """
     if param is None or param == "None":
         return None
@@ -129,6 +131,7 @@ def get_params(run: Run, *names: str | list[str]) -> tuple[str | None, ...]:
     Returns:
         tuple[str | None, ...]: A tuple containing the values of the specified
         parameters in the order they were provided.
+
     """
     names_ = []
     for name in names:
@@ -155,6 +158,7 @@ def get_values(run: Run, names: list[str], types: list[type]) -> tuple[Any, ...]
     Returns:
         tuple[Any, ...]: A tuple containing the values of the specified
         parameters in the order they were provided.
+
     """
     params = get_params(run, names)
     it = zip(params, types, strict=True)
