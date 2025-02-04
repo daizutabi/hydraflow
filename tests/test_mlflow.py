@@ -31,7 +31,7 @@ def test_set_experiment_uri(experiment: Experiment):
 
 def test_set_experiment_location(experiment: Experiment):
     loc = experiment.artifact_location
-    print("DD", loc)
+    print("DD", loc)  # noqa: T201
     assert isinstance(loc, str)
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
