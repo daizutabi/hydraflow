@@ -74,7 +74,11 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
     if loc.startswith("file:"):  # for windows
         loc = loc[loc.index("C:") :]
 
+    print("a", run.info.artifact_uri)  # noqa: T201
+    print("b", get_artifact_dir(run))  # noqa: T201
+
     assert get_artifact_dir(run) == Path(loc) / run.info.run_id / "artifacts"
+    assert 0
 
 
 @pytest.mark.parametrize(

@@ -29,9 +29,14 @@ def run(rc: RunCollection):
 
 @pytest.mark.parametrize(
     ("uri", "path"),
-    [("file:///a/b/c", "/a/b/c")],
+    [
+        ("file:///a/b/c", "/a/b/c"),
+        ("file:C:/a/b/c", "C:/a/b/c"),
+        ("file:///C:/a/b/c", "C:/a/b/c"),
+    ],
 )
 def test_file_uri_to_path(uri, path):
+    print("uri", uri)  # noqa: T201
     from hydraflow.utils import file_uri_to_path
 
     assert file_uri_to_path(uri).as_posix() == path
