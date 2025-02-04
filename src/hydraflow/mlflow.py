@@ -16,7 +16,6 @@ Key Features:
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import joblib
@@ -28,8 +27,11 @@ from mlflow.tracking.fluent import SEARCH_MAX_RESULTS_PANDAS, _get_experiment_id
 
 from hydraflow.config import iter_params
 from hydraflow.run_collection import RunCollection
+from hydraflow.utils import get_artifact_dir
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from mlflow.entities.experiment import Experiment
 
 
@@ -211,16 +213,10 @@ def _list_runs(
 
     for name in experiment_names:
         if experiment := mlflow.get_experiment_by_name(name):
-            loc = experiment.artifact_location
+            uri = experiment.artifact_location
 
-            if isinstance(loc, str):
-                if loc.startswith("file:"):
-                    path = Path(mlflow.artifacts.download_artifacts(loc))
-                elif Path(loc).is_dir():
-                    path = Path(loc)
-                else:
-                    continue  # no cov
-
+            if isinstance(uri, str):
+                path = get_artifact_dir(uri=uri)
                 run_ids.extend(file.stem for file in path.iterdir() if file.is_dir())
 
     it = (joblib.delayed(mlflow.get_run)(run_id) for run_id in run_ids)

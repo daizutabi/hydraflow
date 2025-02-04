@@ -6,6 +6,7 @@ from pathlib import Path
 
 import hydra
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
@@ -30,9 +31,9 @@ def app(cfg: Config):
         log.info("second" if run else "first")
         log.info(cfg.count)
 
-        with hydraflow.chdir_hydra_output():
-            Path("text.log").write_text("text\n")
-            Path("dir.log").mkdir()
+        output_dir = Path(HydraConfig.get().runtime.output_dir)
+        (output_dir / "text.log").write_text("text\n")
+        (output_dir / "dir.log").mkdir()
 
 
 if __name__ == "__main__":

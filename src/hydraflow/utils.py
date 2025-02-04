@@ -16,19 +16,26 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-def get_artifact_dir(run: Run | None = None) -> Path:
+def get_artifact_dir(run: Run | None = None, uri: str | None = None) -> Path:
     """Retrieve the artifact directory for the given run.
 
     This function uses MLflow to get the artifact directory for the given run.
 
     Args:
         run (Run | None): The run object. Defaults to None.
+        uri (str | None): The URI of the artifact. Defaults to None.
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
 
     """
-    uri = mlflow.get_artifact_uri() if run is None else run.info.artifact_uri
+    if run is not None and uri is not None:
+        raise ValueError("Cannot provide both run and uri")
+
+    if run is None and uri is None:
+        uri = mlflow.get_artifact_uri()
+    elif run:
+        uri = run.info.artifact_uri
 
     if not isinstance(uri, str):
         raise NotImplementedError

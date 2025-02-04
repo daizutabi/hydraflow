@@ -13,6 +13,7 @@ import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 
 from hydraflow.mlflow import log_params
+from hydraflow.utils import get_artifact_dir
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -69,24 +70,26 @@ def log_run(
         raise
 
     finally:
-        log_hydra(output_dir)
+        log_text(output_dir)
 
 
-def log_hydra(output_dir: Path) -> None:
-    """Log hydra logs of the current run as artifacts.
+def log_text(directory: Path, pattern: str = "*.log") -> None:
+    """Log text files in the given directory as artifacts.
+
+    Append the text files to the existing text file in the artifact directory.
 
     Args:
-        output_dir (Path): The output directory of the Hydra job.
+        directory (Path): The directory to find the logs in.
+        pattern (str): The pattern to match the logs.
 
     """
-    uri = mlflow.get_artifact_uri()
-    artifact_dir = Path(mlflow.artifacts.download_artifacts(uri))
+    artifact_dir = get_artifact_dir()
 
-    for file_hydra in output_dir.glob("*.log"):
-        if not file_hydra.is_file():
+    for file in directory.glob(pattern):
+        if not file.is_file():
             continue
 
-        file_artifact = artifact_dir / file_hydra.name
+        file_artifact = artifact_dir / file.name
         if file_artifact.exists():
             text = file_artifact.read_text()
             if not text.endswith("\n"):
@@ -94,8 +97,8 @@ def log_hydra(output_dir: Path) -> None:
         else:
             text = ""
 
-        text += file_hydra.read_text()
-        mlflow.log_text(text, file_hydra.name)
+        text += file.read_text()
+        mlflow.log_text(text, file.name)
 
 
 @contextmanager
@@ -174,29 +177,7 @@ def start_run(  # noqa: PLR0913
 
 
 @contextmanager
-def chdir_hydra_output() -> Iterator[Path]:
-    """Change the current working directory to the hydra output directory.
-
-    This context manager changes the current working directory to the hydra output
-    directory. It ensures that the directory is changed back to the original
-    directory after the context is exited.
-    """
-    curdir = Path.cwd()
-    path = HydraConfig.get().runtime.output_dir
-
-    os.chdir(path)
-    try:
-        yield Path(path)
-
-    finally:
-        os.chdir(curdir)
-
-
-@contextmanager
-def chdir_artifact(
-    run: Run,
-    artifact_path: str | None = None,
-) -> Iterator[Path]:
+def chdir_artifact(run: Run | None = None) -> Iterator[Path]:
     """Change the current working directory to the artifact directory of the given run.
 
     This context manager changes the current working directory to the artifact
@@ -204,19 +185,16 @@ def chdir_artifact(
     to the original directory after the context is exited.
 
     Args:
-        run (Run): The run to get the artifact directory from.
-        artifact_path (str | None): The artifact path.
+        run (Run | None): The run to get the artifact directory from.
 
     """
     curdir = Path.cwd()
-    path = mlflow.artifacts.download_artifacts(
-        run_id=run.info.run_id,
-        artifact_path=artifact_path,
-    )
+    artifact_dir = get_artifact_dir(run)
 
-    os.chdir(path)
+    os.chdir(artifact_dir)
+
     try:
-        yield Path(path)
+        yield artifact_dir
 
     finally:
         os.chdir(curdir)
