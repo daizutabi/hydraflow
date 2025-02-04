@@ -76,6 +76,7 @@ def log_run(
 def start_run(  # noqa: PLR0913
     config: object,
     *,
+    chdir: bool = False,
     run_id: str | None = None,
     experiment_id: str | None = None,
     run_name: str | None = None,
@@ -93,6 +94,8 @@ def start_run(  # noqa: PLR0913
 
     Args:
         config (object): The configuration object to log parameters from.
+        chdir (bool): Whether to change the current working directory to the
+            artifact directory of the current run. Defaults to False.
         run_id (str | None): The existing run ID. Defaults to None.
         experiment_id (str | None): The experiment ID. Defaults to None.
         run_name (str | None): The name of the run. Defaults to None.
@@ -131,7 +134,11 @@ def start_run(  # noqa: PLR0913
         ) as run,
         log_run(config if run_id is None else None, synchronous=synchronous),
     ):
-        yield run
+        if chdir:
+            with chdir_artifact(run):
+                yield run
+        else:
+            yield run
 
 
 @contextmanager

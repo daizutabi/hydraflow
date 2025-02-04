@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from pathlib import Path
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -9,16 +10,8 @@ import hydraflow
 
 
 @dataclass
-class Data:
-    x: list[int] = field(default_factory=lambda: [1, 2, 3])
-    y: list[int] = field(default_factory=lambda: [4, 5, 6])
-
-
-@dataclass
 class Config:
-    host: str = "localhost"
-    port: int = 3306
-    data: Data = field(default_factory=Data)
+    count: int = 0
 
 
 ConfigStore.instance().store(name="config", node=Config)
@@ -28,8 +21,8 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    with hydraflow.start_run(cfg):
-        pass
+    with hydraflow.start_run(cfg, chdir=True):
+        Path("a.txt").write_text(str(cfg.count))
 
 
 if __name__ == "__main__":
