@@ -25,7 +25,7 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    run = hydraflow.list_runs().filter(cfg, override=True).try_one()
+    run = hydraflow.list_runs().try_get(cfg, override=True)
 
     with hydraflow.start_run(cfg, run=run):
         log.info("second" if run else "first")
