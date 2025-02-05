@@ -129,6 +129,12 @@ def test_filter_list_none(runs: list[Run]):
     assert not filter_runs(runs, ["invalid=0"])
 
 
+def test_filter_callable(runs: list[Run]):
+    runs = filter_runs(runs, lambda run: run.data.params["r"] == "0")
+    assert len(runs) == 2
+    assert all(run.data.params["q"] == "0" for run in runs)
+
+
 @pytest.mark.parametrize(
     ("status", "n"),
     [
