@@ -236,7 +236,7 @@ class RunCollection:
 
     def filter(
         self,
-        config: object | None = None,
+        config: object | Callable[[Run], bool] | None = None,
         *,
         override: bool = False,
         select: list[str] | None = None,
@@ -257,11 +257,13 @@ class RunCollection:
         - Membership checks for lists of values.
         - Range checks for tuples of two values (inclusive of both the lower
           and upper bound).
+        - Callable that takes a `Run` object and returns a boolean value.
 
         Args:
-            config (object | None): The configuration object to filter the runs.
-                This can be any object that provides key-value pairs through
-                the `iter_params` function.
+            config (object | Callable[[Run], bool] | None): The configuration object
+                to filter the runs. This can be any object that provides key-value
+                pairs through the `iter_params` function, or a callable that
+                takes a `Run` object and returns a boolean value.
             override (bool): If True, override the configuration object with the
                 provided key-value pairs.
             select (list[str] | None): The list of parameters to select.
@@ -711,7 +713,7 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
 
 def filter_runs(
     runs: list[Run],
-    config: object | None = None,
+    config: object | Callable[[Run], bool] | None = None,
     *,
     override: bool = False,
     select: list[str] | None = None,
@@ -735,9 +737,11 @@ def filter_runs(
 
     Args:
         runs (list[Run]): The list of runs to filter.
-        config (object | None, optional): The configuration object to filter the
-            runs. This can be any object that provides key-value pairs through
-            the `iter_params` function. Defaults to None.
+        config (object | Callable[[Run], bool] | None, optional): The
+            configuration object to filter the runs. This can be any object
+            that provides key-value pairs through the `iter_params` function.
+            This can also be a callable that takes a `Run` object and returns
+            a boolean value. Defaults to None.
         override (bool, optional): If True, filter the runs based on
             the overrides. Defaults to False.
         select (list[str] | None, optional): The list of parameters to select.
@@ -750,15 +754,19 @@ def filter_runs(
         A list of runs that match the specified configuration and key-value pairs.
 
     """
-    if override:
-        config = select_overrides(config)
-    elif select:
-        config = select_config(config, select)
+    if callable(config):
+        runs = [run for run in runs if config(run)]
 
-    for key, value in chain(iter_params(config), kwargs.items()):
-        runs = [run for run in runs if _param_matches(run, key, value)]
-        if not runs:
-            return []
+    else:
+        if override:
+            config = select_overrides(config)
+        elif select:
+            config = select_config(config, select)
+
+        for key, value in chain(iter_params(config), kwargs.items()):
+            runs = [run for run in runs if _param_matches(run, key, value)]
+            if not runs:
+                return []
 
     if status is None:
         return runs
