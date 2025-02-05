@@ -97,4 +97,4 @@ ignore = [
   "SLF",
 ]
 "apps/*.py" = ["D", "G", "INP"]
-"src/hydraflow/main.py" = ["ANN", "D"]
+"src/hydraflow/main.py" = ["ANN201", "D401", "PLR0913"]

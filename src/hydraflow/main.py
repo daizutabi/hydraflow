@@ -25,6 +25,7 @@ def main(
     *,
     chdir: bool = True,
     skip_finished: bool = True,
+    force_new_run: bool = False,
     override: bool = True,
 ):
     """Main decorator."""
@@ -37,11 +38,14 @@ def main(
         def inner_app(cfg: object) -> None:
             hydraflow.set_experiment()
 
-            rc = hydraflow.search_runs()
-            run = rc.try_get(cfg, override=override)
+            if force_new_run:
+                run = None
+            else:
+                rc = hydraflow.search_runs()
+                run = rc.try_get(cfg, override=override)
 
-            if skip_finished and run and run.info.status == FINISHED:
-                return
+                if skip_finished and run and run.info.status == FINISHED:
+                    return
 
             with hydraflow.start_run(cfg, run=run, chdir=chdir) as run:
                 app(run, cfg)
