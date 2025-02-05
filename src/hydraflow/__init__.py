@@ -1,10 +1,11 @@
 """Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
-from .config import select_config, select_overrides
-from .context import chdir_artifact, log_run, start_run
-from .mlflow import list_runs, search_runs, set_experiment
-from .run_collection import RunCollection
-from .utils import (
+from hydraflow.config import select_config, select_overrides
+from hydraflow.context import chdir_artifact, log_run, start_run
+from hydraflow.main import main
+from hydraflow.mlflow import list_runs, search_runs, set_experiment
+from hydraflow.run_collection import RunCollection
+from hydraflow.utils import (
     get_artifact_dir,
     get_artifact_path,
     get_hydra_output_dir,
@@ -25,6 +26,7 @@ __all__ = [
     "load_config",
     "load_overrides",
     "log_run",
+    "main",
     "remove_run",
     "search_runs",
     "select_config",
