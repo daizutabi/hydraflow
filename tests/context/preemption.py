@@ -29,12 +29,7 @@ def app(cfg: Config):
     if rc.filter(status="finished"):
         return
 
-    if run := rc.try_one():
-        run_id = run.info.run_id
-    else:
-        run_id = None
-
-    with hydraflow.start_run(cfg, run_id=run_id) as run:
+    with hydraflow.start_run(cfg, run=rc.try_one()) as run:
         log(hydraflow.get_artifact_dir(run))
 
 
