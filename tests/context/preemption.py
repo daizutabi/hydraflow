@@ -24,12 +24,12 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    rc = hydraflow.list_runs()
+    rc = hydraflow.list_runs().filter(cfg, override=True)
 
-    if rc.filter(cfg, status="finished", override=True):
+    if rc.filter(status="finished"):
         return
 
-    if run := rc.try_find(cfg, override=True):
+    if run := rc.try_one():
         run_id = run.info.run_id
     else:
         run_id = None

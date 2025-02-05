@@ -286,105 +286,11 @@ class RunCollection:
             ),
         )
 
-    def find(self, config: object | None = None, **kwargs) -> Run:
-        """Find the first `Run` instance based on the provided configuration.
-
-        This method filters the runs in the collection according to the
-        specified configuration object and returns the first run that matches
-        the provided parameters. If no run matches the criteria, a `ValueError`
-        is raised.
-
-        Args:
-            config (object | None): The configuration object to identify the run.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The first `Run` instance that matches the provided configuration.
-
-        Raises:
-            ValueError: If no run matches the criteria.
-
-        See Also:
-            `filter`: Perform the actual filtering logic.
-
-        """
-        try:
-            return self.filter(config, **kwargs).first()
-        except ValueError:
-            raise ValueError("No run matches the provided configuration.")
-
-    def try_find(self, config: object | None = None, **kwargs) -> Run | None:
-        """Try to find the first `Run` instance based on the provided configuration.
-
-        This method filters the runs in the collection according to the
-        specified configuration object and returns the first run that matches
-        the provided parameters. If no run matches the criteria, None is
-        returned.
-
-        Args:
-            config (object | None): The configuration object to identify the run.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The first `Run` instance that matches the provided configuration, or
-            None if no runs match the criteria.
-
-        See Also:
-            `filter`: Perform the actual filtering logic.
-
-        """
-        return self.filter(config, **kwargs).try_first()
-
-    def find_last(self, config: object | None = None, **kwargs) -> Run:
-        """Find the last `Run` instance based on the provided configuration.
-
-        This method filters the runs in the collection according to the
-        specified configuration object and returns the last run that matches
-        the provided parameters. If no run matches the criteria, a `ValueError`
-        is raised.
-
-        Args:
-            config (object | None): The configuration object to identify the run.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The last `Run` instance that matches the provided configuration.
-
-        Raises:
-            ValueError: If no run matches the criteria.
-
-        See Also:
-            `filter`: Perform the actual filtering logic.
-
-        """
-        try:
-            return self.filter(config, **kwargs).last()
-        except ValueError:
-            raise ValueError("No run matches the provided configuration.")
-
-    def try_find_last(self, config: object | None = None, **kwargs) -> Run | None:
-        """Try to find the last `Run` instance based on the provided configuration.
-
-        This method filters the runs in the collection according to the
-        specified configuration object and returns the last run that matches
-        the provided parameters. If no run matches the criteria, None is
-        returned.
-
-        Args:
-            config (object | None): The configuration object to identify the run.
-            **kwargs: Additional key-value pairs to filter the runs.
-
-        Returns:
-            The last `Run` instance that matches the provided configuration, or
-            None if no runs match the criteria.
-
-        See Also:
-            `filter`: Perform the actual filtering logic.
-
-        """
-        return self.filter(config, **kwargs).try_last()
-
-    def get(self, config: object | None = None, **kwargs) -> Run:
+    def get(
+        self,
+        config: object | Callable[[Run], bool] | None = None,
+        **kwargs,
+    ) -> Run:
         """Retrieve a specific `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
@@ -393,7 +299,10 @@ class RunCollection:
         one run matches the criteria, a `ValueError` is raised.
 
         Args:
-            config (object | None): The configuration object to identify the run.
+            config (object | Callable[[Run], bool] | None): The configuration object
+                to identify the run. This can be any object that provides key-value
+                pairs through the `iter_params` function, or a callable that
+                takes a `Run` object and returns a boolean value.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
@@ -413,7 +322,11 @@ class RunCollection:
             msg = "The filtered collection does not contain exactly one run."
             raise ValueError(msg)
 
-    def try_get(self, config: object | None = None, **kwargs) -> Run | None:
+    def try_get(
+        self,
+        config: object | Callable[[Run], bool] | None = None,
+        **kwargs,
+    ) -> Run | None:
         """Try to get a specific `Run` instance based on the provided configuration.
 
         This method filters the runs in the collection according to the
@@ -422,7 +335,10 @@ class RunCollection:
         If more than one run matches the criteria, a `ValueError` is raised.
 
         Args:
-            config (object | None): The configuration object to identify the run.
+            config (object | Callable[[Run], bool] | None): The configuration object
+                to identify the run. This can be any object that provides key-value
+                pairs through the `iter_params` function, or a callable that
+                takes a `Run` object and returns a boolean value.
             **kwargs: Additional key-value pairs to filter the runs.
 
         Returns:
