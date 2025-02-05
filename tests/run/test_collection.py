@@ -332,44 +332,6 @@ def test_get_param_dict_drop_const(rc: RunCollection):
     assert "r" in params
 
 
-def test_find_dict(rc: RunCollection):
-    run = rc.find({"r": 0})
-    assert run.data.params["p"] == "0"
-
-
-def test_find_kwarg(rc: RunCollection):
-    run = rc.find(r=2)
-    assert run.data.params["p"] == "2"
-
-
-def test_find_none(rc: RunCollection):
-    with pytest.raises(ValueError):
-        rc.find({"r": 10})
-
-
-def test_try_find_none(rc: RunCollection):
-    assert rc.try_find({"r": 10}) is None
-
-
-def test_find_last_dict(rc: RunCollection):
-    run = rc.find_last({"r": 0})
-    assert run.data.params["p"] == "3"
-
-
-def test_find_last_kwarg(rc: RunCollection):
-    run = rc.find_last(r=2)
-    assert run.data.params["p"] == "5"
-
-
-def test_find_last_none(rc: RunCollection):
-    with pytest.raises(ValueError):
-        rc.find_last({"p": 10})
-
-
-def test_try_find_last_none(rc: RunCollection):
-    assert rc.try_find_last({"p": 10}) is None
-
-
 @pytest.mark.parametrize("n_jobs", [0, 1, 2])
 def test_list_runs(rc: RunCollection, n_jobs: int):
     assert len(list_runs(n_jobs=n_jobs)) == 6

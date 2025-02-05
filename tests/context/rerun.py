@@ -24,7 +24,7 @@ ConfigStore.instance().store(name="config", node=Config)
 def app(cfg: Config):
     hydraflow.set_experiment()
 
-    run = hydraflow.list_runs().try_find(cfg, override=True)
+    run = hydraflow.list_runs().filter(cfg, override=True).try_one()
 
     with hydraflow.start_run(cfg, run=run) as run:
         log(hydraflow.get_artifact_dir(run))
