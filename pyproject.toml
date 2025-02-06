@@ -19,12 +19,15 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.10"
-dependencies = ["hydra-core>=1.3", "mlflow>=2.15"]
+dependencies = ["hydra-core>=1.3", "mlflow>=2.15", "omegaconf", "rich", "typer"]
 
 [project.urls]
 Documentation = "https://daizutabi.github.io/hydraflow/"
 Source = "https://github.com/daizutabi/hydraflow"
 Issues = "https://github.com/daizutabi/hydraflow/issues"
+
+[project.scripts]
+hydraflow = "hydraflow.cli:app"
 
 [tool.uv]
 dev-dependencies = [
@@ -32,6 +35,7 @@ dev-dependencies = [
   "mkapi",
   "mkdocs-material",
   "mkdocs>=1.6",
+  "pytest-clarity",
   "pytest-cov",
   "pytest-order",
   "pytest-randomly",
@@ -98,3 +102,4 @@ ignore = [
 ]
 "apps/*.py" = ["D", "G", "INP"]
 "src/hydraflow/main.py" = ["ANN201", "D401", "PLR0913"]
+"src/hydraflow/cli.py" = ["ANN", "D"]
