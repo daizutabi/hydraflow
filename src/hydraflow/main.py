@@ -23,10 +23,9 @@ def main(
     node: Any,
     config_name: str = "config",
     *,
-    chdir: bool = True,
-    skip_finished: bool = True,
+    chdir: bool = False,
     force_new_run: bool = False,
-    override: bool = True,
+    skip_finished: bool = True,
 ):
     """Main decorator."""
 
@@ -42,7 +41,7 @@ def main(
                 run = None
             else:
                 rc = hydraflow.search_runs()
-                run = rc.try_get(cfg, override=override)
+                run = rc.try_get(cfg, override=True)
 
                 if skip_finished and run and run.info.status == FINISHED:
                     return

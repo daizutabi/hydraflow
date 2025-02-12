@@ -15,11 +15,12 @@ class Config:
     count: int = 0
 
 
-@hydraflow.main(Config, chdir=True, skip_finished=False)
+@hydraflow.main(Config)
 def app(run: Run, cfg: Config):
-    file = Path("a.txt")
-    text = file.read_text() if file.exists() else ""
-    file.write_text(text + f"{cfg.count}")
+    path = hydraflow.get_artifact_dir() / "a.txt"
+    path.write_text(f"{run.info.run_id},{cfg.count}")
+    path = hydraflow.get_artifact_dir() / "b.txt"
+    path.write_text(f"{Path.cwd().absolute().as_posix()}")
 
 
 if __name__ == "__main__":
