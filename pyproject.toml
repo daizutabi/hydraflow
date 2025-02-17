@@ -29,24 +29,22 @@ Issues = "https://github.com/daizutabi/hydraflow/issues"
 [project.scripts]
 hydraflow = "hydraflow.cli:app"
 
-[tool.uv]
-dev-dependencies = [
-  "markdown-exec[ansi]",
-  "mkapi",
-  "mkdocs-material",
+[dependency-groups]
+dev = [
   "pytest-clarity",
   "pytest-cov",
   "pytest-order",
   "pytest-randomly",
   "pytest-xdist",
 ]
+docs = ["markdown-exec[ansi]", "mkapi", "mkdocs-material"]
 
 [tool.pytest.ini_options]
 addopts = [
   "--cov=hydraflow",
   "--cov-report=lcov:lcov.info",
   "--dist=loadgroup",
-  "--numprocesses=8",
+  "-n8",
 ]
 filterwarnings = [
   "ignore:Support for class-based `config` is deprecated",
