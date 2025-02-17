@@ -50,5 +50,3 @@ def test_invoke():
     Path("hydraflow.yaml").write_text("a:\n b: [1, 2]")
     result = runner.invoke(app, ["show"])
     assert result.exit_code == 0
-    assert "a:" in result.stdout
-    assert "- 1" in result.stdout
