@@ -3,7 +3,13 @@
 from hydraflow.config import select_config, select_overrides
 from hydraflow.context import chdir_artifact, log_run, start_run
 from hydraflow.main import main
-from hydraflow.mlflow import list_runs, search_runs, set_experiment
+from hydraflow.mlflow import (
+    list_run_ids,
+    list_run_paths,
+    list_runs,
+    search_runs,
+    set_experiment,
+)
 from hydraflow.run_collection import RunCollection
 from hydraflow.utils import (
     get_artifact_dir,
@@ -22,6 +28,8 @@ __all__ = [
     "get_artifact_path",
     "get_hydra_output_dir",
     "get_overrides",
+    "list_run_ids",
+    "list_run_paths",
     "list_runs",
     "load_config",
     "load_overrides",

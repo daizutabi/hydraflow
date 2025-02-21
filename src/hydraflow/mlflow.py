@@ -153,6 +153,84 @@ def search_runs(  # noqa: PLR0913
     return RunCollection(runs)  # type: ignore
 
 
+def list_run_paths(
+    experiment_names: str | list[str] | None = None,
+    *other: str,
+) -> list[Path]:
+    """List all run paths for the specified experiments.
+
+    This function retrieves all run paths for the given list of experiment names.
+    If no experiment names are provided (None), it defaults to searching all runs
+    for the currently active experiment. If an empty list is provided, the function
+    will search all runs for all experiments except the "Default" experiment.
+    The function returns the results as a list of `Path` objects.
+
+    Note:
+        The returned runs are sorted by their start time in ascending order.
+
+    Args:
+        experiment_names (list[str] | None): List of experiment names to search
+            for runs. If None or an empty list is provided, the function will
+            search the currently active experiment or all experiments except
+            the "Default" experiment.
+        other (str): The parts of the run directory to join.
+
+    Returns:
+        list[Path]: A list of run paths for the specified experiments.
+
+    """
+    if isinstance(experiment_names, str):
+        experiment_names = [experiment_names]
+
+    elif experiment_names == []:
+        experiments = mlflow.search_experiments()
+        experiment_names = [e.name for e in experiments if e.name != "Default"]
+
+    if experiment_names is None:
+        experiment_id = _get_experiment_id()
+        experiment_names = [mlflow.get_experiment(experiment_id).name]
+
+    run_paths: list[Path] = []
+
+    for name in experiment_names:
+        if experiment := mlflow.get_experiment_by_name(name):
+            uri = experiment.artifact_location
+
+            if isinstance(uri, str):
+                path = get_artifact_dir(uri=uri)
+                run_paths.extend(p for p in path.iterdir() if p.is_dir())
+
+    if other:
+        return [p.joinpath(*other) for p in run_paths]
+
+    return run_paths
+
+
+def list_run_ids(experiment_names: str | list[str] | None = None) -> list[str]:
+    """List all run IDs for the specified experiments.
+
+    This function retrieves all runs for the given list of experiment names.
+    If no experiment names are provided (None), it defaults to searching all runs
+    for the currently active experiment. If an empty list is provided, the function
+    will search all runs for all experiments except the "Default" experiment.
+    The function returns the results as a list of string.
+
+    Note:
+        The returned runs are sorted by their start time in ascending order.
+
+    Args:
+        experiment_names (list[str] | None): List of experiment names to search
+            for runs. If None or an empty list is provided, the function will
+            search the currently active experiment or all experiments except
+            the "Default" experiment.
+
+    Returns:
+        list[str]: A list of run IDs for the specified experiments.
+
+    """
+    return [run_dir.stem for run_dir in list_run_paths(experiment_names)]
+
+
 def list_runs(
     experiment_names: str | list[str] | None = None,
     n_jobs: int = 0,
@@ -184,42 +262,19 @@ def list_runs(
         specified experiments.
 
     """
-    rc = _list_runs(experiment_names, n_jobs)
+    run_ids = list_run_ids(experiment_names)
+
+    if n_jobs == 0:
+        runs = [mlflow.get_run(run_id) for run_id in run_ids]
+
+    else:
+        it = (joblib.delayed(mlflow.get_run)(run_id) for run_id in run_ids)
+        runs = joblib.Parallel(n_jobs, prefer="threads")(it)
+
+    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
+    rc = RunCollection(runs)  # type: ignore
+
     if status is None:
         return rc
 
     return rc.filter(status=status)
-
-
-def _list_runs(
-    experiment_names: str | list[str] | None = None,
-    n_jobs: int = 0,
-) -> RunCollection:
-    if isinstance(experiment_names, str):
-        experiment_names = [experiment_names]
-
-    elif experiment_names == []:
-        experiments = mlflow.search_experiments()
-        experiment_names = [e.name for e in experiments if e.name != "Default"]
-
-    if n_jobs == 0:
-        return search_runs(experiment_names=experiment_names)
-
-    if experiment_names is None:
-        experiment_id = _get_experiment_id()
-        experiment_names = [mlflow.get_experiment(experiment_id).name]
-
-    run_ids = []
-
-    for name in experiment_names:
-        if experiment := mlflow.get_experiment_by_name(name):
-            uri = experiment.artifact_location
-
-            if isinstance(uri, str):
-                path = get_artifact_dir(uri=uri)
-                run_ids.extend(file.stem for file in path.iterdir() if file.is_dir())
-
-    it = (joblib.delayed(mlflow.get_run)(run_id) for run_id in run_ids)
-    runs = joblib.Parallel(n_jobs, prefer="threads")(it)
-    runs = sorted(runs, key=lambda run: run.info.start_time)  # type: ignore
-    return RunCollection(runs)  # type: ignore
