@@ -18,7 +18,7 @@ def test_rc_len(rc: RunCollection):
 
 @pytest.fixture(scope="module")
 def run(rc: RunCollection):
-    return rc[0]
+    return rc.first()
 
 
 def test_config(run: Run):

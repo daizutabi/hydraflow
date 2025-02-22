@@ -9,8 +9,7 @@ pytestmark = pytest.mark.xdist_group(name="group2")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    args = ["-m", "name=a,b,c"]
-    return collect("context/start_run.py", args)
+    return collect("context/start_run.py", ["-m", "name=a,b,c"])
 
 
 def test_rc_len(rc: RunCollection):
