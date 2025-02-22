@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 from mlflow.entities import RunStatus
 
 import hydraflow.param
-from hydraflow.config import iter_params, select_config, select_overrides
+from hydraflow.config import iter_params, select_config
 from hydraflow.param import get_params, get_values
 from hydraflow.run_data import RunCollectionData
 from hydraflow.run_info import RunCollectionInfo
@@ -631,7 +631,6 @@ def filter_runs(
     runs: list[Run],
     config: object | Callable[[Run], bool] | None = None,
     *,
-    override: bool = False,
     select: list[str] | None = None,
     status: str | list[str] | int | list[int] | None = None,
     **kwargs,
@@ -658,8 +657,6 @@ def filter_runs(
             that provides key-value pairs through the `iter_params` function.
             This can also be a callable that takes a `Run` object and returns
             a boolean value. Defaults to None.
-        override (bool, optional): If True, filter the runs based on
-            the overrides. Defaults to False.
         select (list[str] | None, optional): The list of parameters to select.
             Defaults to None.
         status (str | list[str] | RunStatus | list[RunStatus] | None, optional): The
@@ -674,9 +671,7 @@ def filter_runs(
         runs = [run for run in runs if config(run)]
 
     else:
-        if override:
-            config = select_overrides(config)
-        elif select:
+        if select:
             config = select_config(config, select)
 
         for key, value in chain(iter_params(config), kwargs.items()):

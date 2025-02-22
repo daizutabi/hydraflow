@@ -94,7 +94,7 @@ def test_list_runs(experiment: Experiment, status, n, n_jobs, func):
     assert len(rc) == n
 
 
-def test_list_run_dirs(experiment: Experiment):
+def test_list_run_paths(experiment: Experiment):
     from hydraflow.mlflow import list_run_paths
 
     dirs = list_run_paths(experiment.name, "artifacts")

@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
-from hydraflow.utils import get_overrides
-
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from typing import Any
@@ -130,10 +128,3 @@ def _get(config: DictConfig, name: str) -> Any:
 
     prefix, name = name.split(".", 1)
     return _get(config.get(prefix), name)
-
-
-def select_overrides(config: object) -> dict[str, Any]:
-    """Select the given overrides from the configuration object."""
-    overrides = get_overrides()
-    names = [override.split("=")[0].strip() for override in overrides]
-    return select_config(config, names)
