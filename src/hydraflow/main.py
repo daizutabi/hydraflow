@@ -7,6 +7,7 @@ management.
 
 The main functionality is provided through the `main` decorator, which can be
 used to wrap experiment entry points. This decorator handles:
+
 - Configuration management via Hydra
 - Experiment tracking via MLflow
 - Run deduplication based on configurations
@@ -49,6 +50,7 @@ from hydraflow.utils import file_uri_to_path
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
+    from typing import Any
 
     from mlflow.entities import Run
 
@@ -115,7 +117,7 @@ def main(
     return decorator
 
 
-def get_run_id(uri: str, config: object, overrides: list[str] | None) -> str | None:
+def get_run_id(uri: str, config: Any, overrides: list[str] | None) -> str | None:
     """Try to get the run ID for the given configuration.
 
     If the run is not found, the function will return None.
@@ -137,7 +139,7 @@ def get_run_id(uri: str, config: object, overrides: list[str] | None) -> str | N
     return None
 
 
-def equals(run_dir: Path, config: object, overrides: list[str] | None) -> bool:
+def equals(run_dir: Path, config: Any, overrides: list[str] | None) -> bool:
     """Check if the run directory matches the given configuration or overrides.
 
     Args:
