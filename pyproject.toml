@@ -71,21 +71,21 @@ ignore = [
   "D107",
   "D203",
   "D213",
+  "EM101",
   "FBT001",
   "FBT002",
-  "EM101",
   "PGH003",
   "PLR0911",
   "PLR0913",
-  "PLR2004",
   "PLR1704",
+  "PLR2004",
   "SIM102",
   "SIM108",
   "TRY003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PLR", "PT", "S", "SLF"]
+"tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
 "apps/*.py" = ["D", "G", "INP"]
 "src/hydraflow/main.py" = ["ANN201", "D401"]
 "src/hydraflow/cli.py" = ["ANN", "D"]

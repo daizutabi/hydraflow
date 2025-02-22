@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import hydra
 import mlflow
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
@@ -19,16 +20,14 @@ class Config:
 ConfigStore.instance().store(name="config", node=Config)
 
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(config_name="config", version_base=None)
 def app(cfg: Config):
-    hydraflow.set_experiment()
+    hc = HydraConfig.get()
+    mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(cfg):
         hydra_output_dir = hydraflow.get_hydra_output_dir()
         mlflow.log_text(hydra_output_dir.as_posix(), "hydra_output_dir.txt")
-
-        overrides = hydraflow.get_overrides()
-        mlflow.log_text(str(overrides), "overrides.txt")
 
 
 if __name__ == "__main__":

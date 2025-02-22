@@ -1,5 +1,6 @@
-import logging
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 
 import hydra
 import mlflow
@@ -8,26 +9,25 @@ from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
-log = logging.getLogger(__name__)
-
 
 @dataclass
 class Config:
-    width: int = 1024
-    height: int = 768
+    host: str = "localhost"
+    port: int = 3306
+    x: float = 1e-8
+    y: list[float] = field(default_factory=lambda: [0.1, 0.2, 0.3])
 
 
-cs = ConfigStore.instance()
-cs.store(name="config", node=Config)
+ConfigStore.instance().store(name="config", node=Config)
 
 
 @hydra.main(config_name="config", version_base=None)
-def app(cfg: Config) -> None:
+def app(cfg: Config):
     hc = HydraConfig.get()
     mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(cfg):
-        log.info(f"{cfg.width=}, {cfg.height=}")
+        pass
 
 
 if __name__ == "__main__":

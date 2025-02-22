@@ -154,6 +154,15 @@ def test_filter_select(runs: list[Run], select, n):
     assert len(filter_runs(runs, cfg, select=select)) == n
 
 
+@pytest.mark.parametrize(
+    ("overrides", "n"),
+    [(["p=4"], 3), (["q=1000"], 5), (["r=1"], 0)],
+)
+def test_filter_overrides(runs: list[Run], overrides, n):
+    cfg = {"p": [0, 4, 5], "q": 0}
+    assert len(filter_runs(runs, cfg, overrides=overrides)) == n
+
+
 def test_get_params(runs: list[Run]):
     from hydraflow.param import get_params
 

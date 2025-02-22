@@ -9,9 +9,10 @@ pytestmark = pytest.mark.xdist_group(name="group0")
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):
-    from hydraflow.mlflow import log_params, set_experiment
+    from hydraflow.mlflow import log_params
 
-    experiment = set_experiment(uri="test_mlflow", name="e")
+    mlflow.set_tracking_uri("test_mlflow")
+    experiment = mlflow.set_experiment("e")
 
     with mlflow.start_run():
         log_params({"name": experiment_name})
@@ -46,17 +47,17 @@ def test_set_experiment_name(experiment: Experiment):
 
 
 def test_search_runs(experiment: Experiment):
-    from hydraflow.mlflow import search_runs
+    from hydraflow.mlflow import list_runs
 
-    rc = search_runs(experiment_names=[experiment.name])
+    rc = list_runs(experiment.name)
     assert len(rc) == 3
 
 
 @pytest.fixture(scope="module")
 def run(experiment: Experiment):
-    from hydraflow.mlflow import search_runs
+    from hydraflow.mlflow import list_runs
 
-    rc = search_runs(experiment_names=[experiment.name])
+    rc = list_runs(experiment.name)
     return rc.first()
 
 
@@ -73,25 +74,6 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
         loc = loc[loc.index("C:") :]
 
     assert get_artifact_dir(run) == Path(loc) / run.info.run_id / "artifacts"
-
-
-@pytest.mark.parametrize(
-    ("status", "n"),
-    [
-        (RunStatus.FINISHED, 1),
-        (RunStatus.RUNNING, 1),
-        (RunStatus.FAILED, 1),
-        (None, 3),
-    ],
-)
-@pytest.mark.parametrize("n_jobs", [0, 1, 2])
-@pytest.mark.parametrize("func", [lambda x: x, list, lambda x: [], lambda x: None])
-def test_list_runs(experiment: Experiment, status, n, n_jobs, func):
-    from hydraflow.mlflow import list_runs
-
-    experiment_names = func(experiment.name)
-    rc = list_runs(experiment_names=experiment_names, status=status, n_jobs=n_jobs)
-    assert len(rc) == n
 
 
 def test_list_run_paths(experiment: Experiment):

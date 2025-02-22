@@ -14,9 +14,7 @@ pytestmark = pytest.mark.xdist_group(name="group6")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    args = ["-m", "name=a,b", "age=10"]
-
-    return collect("utils/utils.py", args)
+    return collect("utils/utils.py", ["-m", "name=a,b", "age=10"])
 
 
 def test_rc_len(rc: RunCollection):
@@ -45,13 +43,6 @@ def test_file_uri_to_path_win_python_310_311():
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
-def test_artifact_dir_error(run: Run):
-    from hydraflow.utils import get_artifact_dir
-
-    with pytest.raises(ValueError):
-        get_artifact_dir(run, "a")
-
-
 def test_hydra_output_dir(run: Run):
     from hydraflow.utils import get_artifact_path, get_hydra_output_dir
 
@@ -66,13 +57,6 @@ def test_load_config(run: Run):
     assert cfg.name == "a"
     assert cfg.age == 10
     assert cfg.height == 1.7
-
-
-def test_get_overrides(run: Run):
-    from hydraflow.utils import get_artifact_path
-
-    path = get_artifact_path(run, "overrides.txt")
-    assert path.read_text() == "['name=a', 'age=10']"
 
 
 def test_load_overrides(run: Run):

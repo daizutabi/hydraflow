@@ -10,17 +10,15 @@ pytestmark = pytest.mark.xdist_group(name="group5")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    filename = "main/base.py"
-    args = ["-m", "count=1,2,3"]
-
-    return collect(filename, args)
+    collect("main/default.py", ["-m", "count=1,2"])
+    return collect("main/default.py", ["-m", "name=a", "count=1,2,3,4"])
 
 
 def test_rc_len(rc: RunCollection):
-    assert len(rc) == 3
+    assert len(rc) == 4
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3])
+@pytest.fixture(scope="module", params=[1, 2, 3, 4])
 def run(rc: RunCollection, request: pytest.FixtureRequest):
     return rc.get(count=request.param)
 
@@ -56,3 +54,9 @@ def cwd(run: Run):
 
 def test_cwd(cwd: Path, experiment_name: str):
     assert cwd.name == experiment_name
+
+
+def test_equals_invalid():
+    from hydraflow.main import equals
+
+    assert equals(Path("test"), {"a": 1}, None) is False
