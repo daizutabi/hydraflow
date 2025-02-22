@@ -10,7 +10,11 @@ pytestmark = pytest.mark.xdist_group(name="group2")
 @pytest.fixture(scope="module")
 def rc(collect):
     args = ["-m", "name=a,b,c"]
-    return collect("context/context.py", args)
+    return collect("context/start_run.py", args)
+
+
+def test_rc_len(rc: RunCollection):
+    assert len(rc) == 3
 
 
 @pytest.fixture(scope="module", params=range(3))
@@ -18,6 +22,11 @@ def run(rc: RunCollection, request: pytest.FixtureRequest):
     return rc[request.param]
 
 
-def test_chdir_artifact(run: Run):
-    path = get_artifact_path(run, "b.txt")
-    assert path.read_text() == "chdir_artifact"
+def test_run_first(run: Run):
+    path = get_artifact_path(run, "1.txt")
+    assert path.read_text() == run.data.params["name"]
+
+
+def test_run_second(run: Run):
+    path = get_artifact_path(run, "2.txt")
+    assert path.read_text() == run.data.params["name"] * 2

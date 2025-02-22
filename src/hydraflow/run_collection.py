@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, overload
 
 from mlflow.entities import RunStatus
 
@@ -34,15 +34,9 @@ from hydraflow.utils import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
-    from pathlib import Path
     from typing import Any
 
     from mlflow.entities.run import Run
-    from omegaconf import DictConfig
-
-
-T = TypeVar("T")
-P = ParamSpec("P")
 
 
 @dataclass
@@ -124,11 +118,6 @@ class RunCollection:
         runs = [run for run in self._runs if run not in other._runs]  # noqa: SLF001
         return self.__class__(runs)
 
-    @classmethod
-    def from_list(cls, runs: list[Run]) -> RunCollection:
-        """Create a `RunCollection` instance from a list of MLflow `Run` instances."""
-        return cls(runs)
-
     @property
     def info(self) -> RunCollectionInfo:
         """An instance of `RunCollectionInfo`."""
@@ -138,26 +127,6 @@ class RunCollection:
     def data(self) -> RunCollectionData:
         """An instance of `RunCollectionData`."""
         return self._data
-
-    def take(self, n: int) -> RunCollection:
-        """Take the first n runs from the collection.
-
-        If n is negative, the method returns the last n runs
-        from the collection.
-
-        Args:
-            n (int): The number of runs to take. If n is negative, the method
-            returns the last n runs from the collection.
-
-        Returns:
-            A new `RunCollection` instance containing the first n runs if n is
-            positive, or the last n runs if n is negative.
-
-        """
-        if n < 0:
-            return self.__class__(self._runs[n:])
-
-        return self.__class__(self._runs[:n])
 
     def one(self) -> Run:
         """Get the only `Run` instance in the collection.
@@ -238,7 +207,6 @@ class RunCollection:
         self,
         config: object | Callable[[Run], bool] | None = None,
         *,
-        override: bool = False,
         select: list[str] | None = None,
         status: str | list[str] | int | list[int] | None = None,
         **kwargs,
@@ -264,8 +232,6 @@ class RunCollection:
                 to filter the runs. This can be any object that provides key-value
                 pairs through the `iter_params` function, or a callable that
                 takes a `Run` object and returns a boolean value.
-            override (bool): If True, override the configuration object with the
-                provided key-value pairs.
             select (list[str] | None): The list of parameters to select.
             status (str | list[str] | int | list[int] | None): The status of the
                 runs to filter.
@@ -279,7 +245,6 @@ class RunCollection:
             filter_runs(
                 self._runs,
                 config,
-                override=override,
                 select=select,
                 status=status,
                 **kwargs,
@@ -399,121 +364,6 @@ class RunCollection:
                 params[name] = unique_values
 
         return params
-
-    def map(
-        self,
-        func: Callable[Concatenate[Run, P], T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Iterator[T]:
-        """Return an iterator of results by applying a function to each run.
-
-        This method iterates over each run in the collection and applies the
-        provided function to it, along with any additional arguments and
-        keyword arguments.
-
-        Args:
-            func (Callable[[Run, P], T]): A function that takes a run and
-                additional arguments and returns a result.
-            *args: Additional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Yields:
-            Results obtained by applying the function to each run in the collection.
-
-        """
-        return (func(run, *args, **kwargs) for run in self)
-
-    def map_id(
-        self,
-        func: Callable[Concatenate[str, P], T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Iterator[T]:
-        """Return an iterator of results by applying a function to each run id.
-
-        Args:
-            func (Callable[[str, P], T]): A function that takes a run id and returns a
-                result.
-            *args: Additional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Yields:
-            Results obtained by applying the function to each run id in the
-            collection.
-
-        """
-        return (func(run_id, *args, **kwargs) for run_id in self.info.run_id)
-
-    def map_config(
-        self,
-        func: Callable[Concatenate[DictConfig, P], T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Iterator[T]:
-        """Return an iterator of results by applying a function to each run config.
-
-        Args:
-            func (Callable[[DictConfig, P], T]): A function that takes a run
-                configuration and returns a result.
-            *args: Additional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Yields:
-            Results obtained by applying the function to each run configuration
-            in the collection.
-
-        """
-        return (func(load_config(run), *args, **kwargs) for run in self)
-
-    def map_uri(
-        self,
-        func: Callable[Concatenate[str | None, P], T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Iterator[T]:
-        """Return an iterator of results by applying a function to each artifact URI.
-
-        Iterate over each run in the collection, retrieves the artifact URI, and
-        apply the provided function to it. If a run does not have an artifact
-        URI, None is passed to the function.
-
-        Args:
-            func (Callable[[str | None, P], T]): A function that takes an
-                artifact URI (string or None) and returns a result.
-            *args: Additional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Yields:
-            Results obtained by applying the function to each artifact URI in the
-            collection.
-
-        """
-        return (func(uri, *args, **kwargs) for uri in self.info.artifact_uri)
-
-    def map_dir(
-        self,
-        func: Callable[Concatenate[Path, P], T],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Iterator[T]:
-        """Return an iterator of results by applying a function to each artifact dir.
-
-        Iterate over each run in the collection, downloads the artifact
-        directory, and apply the provided function to the directory path.
-
-        Args:
-            func (Callable[[Path, P], T]): A function that takes an artifact directory
-                path (string) and returns a result.
-            *args: Additional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Yields:
-            Results obtained by applying the function to each artifact directory
-            in the collection.
-
-        """
-        return (func(dir, *args, **kwargs) for dir in self.info.artifact_dir)  # noqa: A001
 
     def groupby(
         self,

@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+import pytest
+
 
 @dataclass
 class C:
@@ -18,12 +20,18 @@ class A:
     b: B = field(default_factory=B)
 
 
-def test_select_config():
+@pytest.mark.parametrize(
+    "names,expected",
+    [
+        (["x"], {"x": 1}),
+        (["b.y"], {"b.y": 2}),
+        (["b.c.z"], {"b.c.z": 3}),
+        (["b.c.z", "x"], {"b.c.z": 3, "x": 1}),
+        (["b.c.z", "b.y"], {"b.c.z": 3, "b.y": 2}),
+    ],
+)
+def test_select_config(names, expected):
     from hydraflow.config import select_config
 
     a = A()
-    assert select_config(a, ["x"]) == {"x": 1}
-    assert select_config(a, ["b.y"]) == {"b.y": 2}
-    assert select_config(a, ["b.c.z"]) == {"b.c.z": 3}
-    assert select_config(a, ["b.c.z", "x"]) == {"b.c.z": 3, "x": 1}
-    assert select_config(a, ["b.c.z", "b.y"]) == {"b.c.z": 3, "b.y": 2}
+    assert select_config(a, names) == expected

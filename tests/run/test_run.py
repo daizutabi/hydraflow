@@ -45,10 +45,3 @@ def test_sorted(rc: RunCollection):
 @pytest.mark.parametrize(("port", "n"), [(1, 1), (2, 1), (3, 0)])
 def test_filter_dict(rc: RunCollection, port, n):
     assert len(rc.filter({"port": port})) == n
-
-
-def test_config(get_config):
-    cfg: Config = get_config("run/run.py")
-    assert cfg.host == "localhost"
-    assert cfg.port == 3306
-    assert cfg.data.x == [1, 2, 3]

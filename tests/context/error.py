@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import hydra
+import mlflow
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
@@ -20,7 +22,8 @@ ConfigStore.instance().store(name="config", node=Config)
 
 @hydra.main(version_base=None, config_name="config")
 def app(cfg: Config):
-    hydraflow.set_experiment()
+    hc = HydraConfig.get()
+    mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(cfg) as run:
         with hydraflow.chdir_artifact(run):

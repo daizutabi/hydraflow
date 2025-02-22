@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
 import hydra
 import mlflow
@@ -13,7 +12,7 @@ import hydraflow
 
 @dataclass
 class Config:
-    count: int = 0
+    name: str = "a"
 
 
 ConfigStore.instance().store(name="config", node=Config)
@@ -24,8 +23,11 @@ def app(cfg: Config):
     hc = HydraConfig.get()
     mlflow.set_experiment(hc.job.name)
 
-    with hydraflow.start_run(cfg, chdir=True):
-        Path("a.txt").write_text(str(cfg.count))
+    with hydraflow.start_run(cfg) as run:
+        mlflow.log_text(cfg.name, "1.txt")
+
+    with hydraflow.start_run(cfg, run_id=run.info.run_id):  # Skip log config
+        mlflow.log_text(cfg.name * 2, "2.txt")
 
 
 if __name__ == "__main__":

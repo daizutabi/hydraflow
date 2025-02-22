@@ -11,28 +11,14 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-def collect_params(config: object) -> dict[str, Any]:
-    """Iterate over parameters and collect them into a dictionary.
-
-    Args:
-        config (object): The configuration object to iterate over.
-        prefix (str): The prefix to prepend to the parameter keys.
-
-    Returns:
-        dict[str, Any]: A dictionary of collected parameters.
-
-    """
-    return dict(iter_params(config))
-
-
-def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
+def iter_params(config: Any, prefix: str = "") -> Iterator[tuple[str, Any]]:
     """Recursively iterate over the parameters in the given configuration object.
 
     This function traverses the configuration object and yields key-value pairs
     representing the parameters. The keys are prefixed with the provided prefix.
 
     Args:
-        config (object): The configuration object to iterate over. This can be a
+        config (Any): The configuration object to iterate over. This can be a
             dictionary, list, DictConfig, or ListConfig.
         prefix (str): The prefix to prepend to the parameter keys.
             Defaults to an empty string.
@@ -48,7 +34,7 @@ def iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
         config = _from_dotlist(config)
 
     if not isinstance(config, DictConfig | ListConfig):
-        config = OmegaConf.create(config)  # type: ignore
+        config = OmegaConf.create(config)
 
     yield from _iter_params(config, prefix)
 
@@ -63,7 +49,7 @@ def _from_dotlist(config: list[str]) -> dict[str, str]:
     return result
 
 
-def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
+def _iter_params(config: Any, prefix: str = "") -> Iterator[tuple[str, Any]]:
     if isinstance(config, DictConfig):
         for key, value in config.items():
             if _is_param(value):
@@ -81,12 +67,12 @@ def _iter_params(config: object, prefix: str = "") -> Iterator[tuple[str, Any]]:
                 yield from _iter_params(value, f"{prefix}{index}.")
 
 
-def _is_param(value: object) -> bool:
+def _is_param(value: Any) -> bool:
     """Check if the given value is a parameter."""
     if isinstance(value, DictConfig):
         return False
 
-    if isinstance(value, ListConfig):  # noqa: SIM102
+    if isinstance(value, ListConfig):
         if any(isinstance(v, DictConfig | ListConfig) for v in value):
             return False
 
@@ -101,14 +87,14 @@ def _convert(value: Any) -> Any:
     return value
 
 
-def select_config(config: object, names: list[str]) -> dict[str, Any]:
+def select_config(config: Any, names: list[str]) -> dict[str, Any]:
     """Select the given parameters from the configuration object.
 
     This function selects the given parameters from the configuration object
     and returns a new configuration object containing only the selected parameters.
 
     Args:
-        config (object): The configuration object to select parameters from.
+        config (Any): The configuration object to select parameters from.
         names (list[str]): The names of the parameters to select.
 
     Returns:
@@ -118,7 +104,7 @@ def select_config(config: object, names: list[str]) -> dict[str, Any]:
     if not isinstance(config, DictConfig):
         config = OmegaConf.structured(config)
 
-    return {name: _get(config, name) for name in names}  # type: ignore
+    return {name: _get(config, name) for name in names}
 
 
 def _get(config: DictConfig, name: str) -> Any:

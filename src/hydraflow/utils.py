@@ -18,6 +18,15 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
+def file_uri_to_path(uri: str) -> Path:
+    """Convert a file URI to a local path."""
+    if not uri.startswith("file:"):
+        return Path(uri)
+
+    path = urllib.parse.urlparse(uri).path
+    return Path(urllib.request.url2pathname(path))  # for Windows
+
+
 def get_artifact_dir(run: Run | None = None) -> Path:
     """Retrieve the artifact directory for the given run.
 
@@ -39,15 +48,6 @@ def get_artifact_dir(run: Run | None = None) -> Path:
         raise NotImplementedError
 
     return file_uri_to_path(uri)
-
-
-def file_uri_to_path(uri: str) -> Path:
-    """Convert a file URI to a local path."""
-    if not uri.startswith("file:"):
-        return Path(uri)
-
-    path = urllib.parse.urlparse(uri).path
-    return Path(urllib.request.url2pathname(path))  # for Windows
 
 
 def get_artifact_path(run: Run | None, path: str) -> Path:

@@ -12,7 +12,7 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 
-from hydraflow.mlflow import log_params
+from hydraflow.mlflow import log_params, log_text
 from hydraflow.utils import get_artifact_dir
 
 if TYPE_CHECKING:
@@ -71,34 +71,6 @@ def log_run(
 
     finally:
         log_text(hydra_dir)
-
-
-def log_text(directory: Path, pattern: str = "*.log") -> None:
-    """Log text files in the given directory as artifacts.
-
-    Append the text files to the existing text file in the artifact directory.
-
-    Args:
-        directory (Path): The directory to find the logs in.
-        pattern (str): The pattern to match the logs.
-
-    """
-    artifact_dir = get_artifact_dir()
-
-    for file in directory.glob(pattern):
-        if not file.is_file():
-            continue
-
-        file_artifact = artifact_dir / file.name
-        if file_artifact.exists():
-            text = file_artifact.read_text()
-            if not text.endswith("\n"):
-                text += "\n"
-        else:
-            text = ""
-
-        text += file.read_text()
-        mlflow.log_text(text, file.name)
 
 
 @contextmanager

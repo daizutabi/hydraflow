@@ -1,17 +1,8 @@
-"""Provide functionality to log parameters from Hydra configuration objects.
+"""Integration of MLflow experiment tracking with Hydra configuration management.
 
 This module provides functions to log parameters from Hydra configuration objects
 to MLflow, set experiments, and manage tracking URIs. It integrates Hydra's
 configuration management with MLflow's experiment tracking capabilities.
-
-Key Features:
-- **Experiment Management**: Set experiment names and tracking URIs using Hydra
-  configuration details.
-- **Parameter Logging**: Log parameters from Hydra configuration objects to MLflow,
-  supporting both synchronous and asynchronous logging.
-- **Run Collection**: Utilize the `RunCollection` class to manage and interact with
-  multiple MLflow runs, providing methods to filter and retrieve runs based on
-  various criteria.
 """
 
 from __future__ import annotations
@@ -24,13 +15,14 @@ import mlflow.artifacts
 
 from hydraflow.config import iter_params
 from hydraflow.run_collection import RunCollection
-from hydraflow.utils import file_uri_to_path
+from hydraflow.utils import file_uri_to_path, get_artifact_dir
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Any
 
 
-def log_params(config: object, *, synchronous: bool | None = None) -> None:
+def log_params(config: Any, *, synchronous: bool | None = None) -> None:
     """Log the parameters from the given configuration object.
 
     This method logs the parameters from the provided configuration object
@@ -38,13 +30,41 @@ def log_params(config: object, *, synchronous: bool | None = None) -> None:
     `mlflow.log_param` method.
 
     Args:
-        config (object): The configuration object to log the parameters from.
+        config (Any): The configuration object to log the parameters from.
         synchronous (bool | None): Whether to log the parameters synchronously.
             Defaults to None.
 
     """
     for key, value in iter_params(config):
         mlflow.log_param(key, value, synchronous=synchronous)
+
+
+def log_text(from_dir: Path, pattern: str = "*.log") -> None:
+    """Log text files in the given directory as artifacts.
+
+    Append the text files to the existing text file in the artifact directory.
+
+    Args:
+        from_dir (Path): The directory to find the logs in.
+        pattern (str): The pattern to match the logs.
+
+    """
+    artifact_dir = get_artifact_dir()
+
+    for file in from_dir.glob(pattern):
+        if not file.is_file():
+            continue
+
+        file_artifact = artifact_dir / file.name
+        if file_artifact.exists():
+            text = file_artifact.read_text()
+            if not text.endswith("\n"):
+                text += "\n"
+        else:
+            text = ""
+
+        text += file.read_text()
+        mlflow.log_text(text, file.name)
 
 
 def list_run_paths(
