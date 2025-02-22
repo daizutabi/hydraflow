@@ -23,6 +23,8 @@ def config(chdir):
 
     def config(text: str):
         Path("hydraflow.yaml").write_text(text)
-        return load_config()
+        cfg = load_config()
+        Path("hydraflow.yaml").unlink()
+        return cfg
 
     return config
