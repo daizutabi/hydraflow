@@ -15,7 +15,7 @@ def test_scheme_type(schema: DictConfig):
 
 
 def test_merge(schema: DictConfig):
-    cfg: HydraflowConf = OmegaConf.merge(schema, {"run": "test"})  # type: ignore
+    cfg = OmegaConf.merge(schema, {"run": "test"})
     assert cfg.run == "test"
     assert cfg.jobs == {}
 
@@ -26,26 +26,20 @@ def test_none():
     assert cfg.jobs == {}
 
 
-def test_run(save):
-    save("run: test\n")
-
-    cfg = load_config()
+def test_run(config):
+    cfg = config("run: test\n")
     assert cfg.run == "test"
     assert cfg.jobs == {}
 
 
-def test_job(save):
-    save("jobs:\n  a:\n    run: a.test\n")
-
-    cfg = load_config()
+def test_job(config):
+    cfg = config("jobs:\n  a:\n    run: a.test\n")
     assert cfg.run == ""
     assert cfg.jobs["a"].run == "a.test"
 
 
-def test_step(save):
-    save("jobs:\n  a:\n    steps:\n      - run: a.0.test\n")
-
-    cfg = load_config()
+def test_step(config):
+    cfg = config("jobs:\n  a:\n    steps:\n      - run: a.0.test\n")
     assert cfg.run == ""
     assert cfg.jobs["a"].run == ""
     assert cfg.jobs["a"].steps[0].run == "a.0.test"

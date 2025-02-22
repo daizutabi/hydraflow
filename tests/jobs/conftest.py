@@ -4,8 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from hydraflow.jobs.conf import HydraflowConf
-
 
 @pytest.fixture(scope="module")
 def chdir(tmp_path_factory: pytest.TempPathFactory):
@@ -20,20 +18,11 @@ def chdir(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.fixture(scope="module")
-def save(chdir):
-    def save(text: str):
-        Path("hydraflow.yaml").write_text(text)
-
-    return save
-
-
-@pytest.fixture(scope="module")
 def config(chdir):
     from hydraflow.jobs.io import load_config
 
-    return load_config()
+    def config(text: str):
+        Path("hydraflow.yaml").write_text(text)
+        return load_config()
 
-
-@pytest.fixture(scope="module")
-def jobs(config: HydraflowConf):
-    return config.jobs
+    return config
