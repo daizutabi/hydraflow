@@ -12,16 +12,6 @@ There are two main steps to using Hydraflow:
 --8<-- "apps/quickstart.py"
 ```
 
-### Set the MLflow experiment
-
-[`hydraflow.set_experiment`][] sets the MLflow experiment using the Hydra job name.
-Optionally, it can also set the tracking URI with `uri` argument.
-For example,
-
-```python
-hydraflow.set_experiment(uri="sqlite:///mlruns.db")
-```
-
 ### Start a new MLflow run
 
 [`hydraflow.start_run`][] starts a new MLflow run that logs the Hydra configuration.
@@ -64,10 +54,8 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 ### Run collection
 
 ```pycon exec="1" source="console" session="quickstart"
->>> import mlflow
->>> mlflow.set_experiment("quickstart")
 >>> import hydraflow
->>> rc = hydraflow.list_runs()
+>>> rc = hydraflow.list_runs("quickstart")
 >>> print(rc)
 ```
 
