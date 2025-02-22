@@ -4,8 +4,8 @@ import mlflow
 import pytest
 from mlflow.entities import Experiment, Run, RunStatus
 
-from hydraflow.mlflow import list_runs
-from hydraflow.run_collection import RunCollection, filter_runs
+from hydraflow.core.mlflow import list_runs
+from hydraflow.entities.run_collection import RunCollection, filter_runs
 
 pytestmark = pytest.mark.xdist_group(name="group3")
 
@@ -164,7 +164,7 @@ def test_filter_overrides(runs: list[Run], overrides, n):
 
 
 def test_get_params(runs: list[Run]):
-    from hydraflow.param import get_params
+    from hydraflow.core.param import get_params
 
     assert get_params(runs[1], "p") == ("1",)
     assert get_params(runs[2], "p", "q") == ("2", "0")
@@ -174,14 +174,14 @@ def test_get_params(runs: list[Run]):
 
 
 def test_get_values(runs: list[Run]):
-    from hydraflow.param import get_values
+    from hydraflow.core.param import get_values
 
     assert get_values(runs[3], ["p", "q"], [int, int]) == (3, 0)
 
 
 @pytest.mark.parametrize("i", range(6))
 def test_chdir_artifact_list(runs: list[Run], i):
-    from hydraflow.context import chdir_artifact
+    from hydraflow.core.context import chdir_artifact
 
     with chdir_artifact(runs[i]):
         assert Path("abc.txt").read_text() == f"{i}"

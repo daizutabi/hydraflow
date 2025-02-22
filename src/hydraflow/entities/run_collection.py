@@ -25,12 +25,13 @@ from typing import TYPE_CHECKING, Any, overload
 
 from mlflow.entities import RunStatus
 
-import hydraflow.param
-from hydraflow.config import iter_params, select_config, select_overrides
-from hydraflow.param import get_params, get_values
-from hydraflow.run_data import RunCollectionData
-from hydraflow.run_info import RunCollectionInfo
+import hydraflow.core.param
+from hydraflow.core.config import iter_params, select_config, select_overrides
+from hydraflow.core.param import get_params, get_values
 from hydraflow.utils import load_config
+
+from .run_data import RunCollectionData
+from .run_info import RunCollectionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -478,7 +479,7 @@ def _param_matches(run: Run, key: str, value: Any) -> bool:
     if param == "None":
         return value is None or value == "None"
 
-    return hydraflow.param.match(param, value)
+    return hydraflow.core.param.match(param, value)
 
 
 def filter_runs(

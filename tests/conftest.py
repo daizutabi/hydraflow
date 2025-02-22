@@ -37,7 +37,7 @@ def run_script(experiment_name: str):
 
 @pytest.fixture(scope="module")
 def collect(run_script):
-    from hydraflow.mlflow import list_runs
+    from hydraflow.core.mlflow import list_runs
 
     def collect(filename: str, args: list[str]):
         experiment_name = run_script(filename, args)

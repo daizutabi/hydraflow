@@ -9,7 +9,7 @@ pytestmark = pytest.mark.xdist_group(name="group0")
 
 @pytest.fixture(scope="module")
 def experiment(experiment_name: str):
-    from hydraflow.mlflow import log_params
+    from hydraflow.core.mlflow import log_params
 
     mlflow.set_tracking_uri("test_mlflow")
     experiment = mlflow.set_experiment("e")
@@ -47,7 +47,7 @@ def test_set_experiment_name(experiment: Experiment):
 
 
 def test_search_runs(experiment: Experiment):
-    from hydraflow.mlflow import list_runs
+    from hydraflow.core.mlflow import list_runs
 
     rc = list_runs(experiment.name)
     assert len(rc) == 3
@@ -55,7 +55,7 @@ def test_search_runs(experiment: Experiment):
 
 @pytest.fixture(scope="module")
 def run(experiment: Experiment):
-    from hydraflow.mlflow import list_runs
+    from hydraflow.core.mlflow import list_runs
 
     rc = list_runs(experiment.name)
     return rc.first()
@@ -77,7 +77,7 @@ def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
 
 
 def test_list_run_paths(experiment: Experiment):
-    from hydraflow.mlflow import list_run_paths
+    from hydraflow.core.mlflow import list_run_paths
 
     dirs = list_run_paths(experiment.name, "artifacts")
     assert all(d.is_dir() for d in dirs)

@@ -1,15 +1,15 @@
 import pytest
 from pandas import DataFrame
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group7")
 
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    collect("run/filter.py", ["-m", "host=a,b", "port=1,2,3"])
-    return collect("run/filter.py", ["-m", "host=b,c", "port=1,2,4"])
+    collect("entities/filter.py", ["-m", "host=a,b", "port=1,2,3"])
+    return collect("entities/filter.py", ["-m", "host=b,c", "port=1,2,4"])
 
 
 def test_rc_len(rc: RunCollection):

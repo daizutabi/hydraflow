@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from mlflow.entities import Run
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group5")
 
@@ -57,6 +57,6 @@ def test_cwd(cwd: Path, experiment_name: str):
 
 
 def test_equals_invalid():
-    from hydraflow.main import equals
+    from hydraflow.core.main import equals
 
     assert equals(Path("test"), {"a": 1}, None) is False

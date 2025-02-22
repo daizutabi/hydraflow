@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import pytest
 from omegaconf import ListConfig, OmegaConf
 
-from hydraflow.config import _is_param, iter_params
+from hydraflow.core.config import _is_param, iter_params
 
 
 @pytest.mark.parametrize("value", (1, "string", 3.14, True))

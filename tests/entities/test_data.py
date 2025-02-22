@@ -2,7 +2,7 @@ import mlflow
 import pytest
 from mlflow.entities import Experiment
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group3")
 
@@ -22,7 +22,7 @@ def experiment(experiment_name: str):
 
 @pytest.fixture
 def rc(experiment: Experiment):
-    from hydraflow.mlflow import list_runs
+    from hydraflow.core.mlflow import list_runs
 
     return list_runs(experiment.name)
 

@@ -1,7 +1,7 @@
 import pytest
 from mlflow.entities import Run
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group6")
 

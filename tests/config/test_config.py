@@ -31,7 +31,7 @@ class A:
     ],
 )
 def test_select_config(names, expected):
-    from hydraflow.config import select_config
+    from hydraflow.core.config import select_config
 
     a = A()
     assert select_config(a, names) == expected
@@ -48,7 +48,7 @@ def test_select_config(names, expected):
     ],
 )
 def test_select_overrides(overrides, expected):
-    from hydraflow.config import select_overrides
+    from hydraflow.core.config import select_overrides
 
     a = A()
     assert select_overrides(a, overrides) == expected

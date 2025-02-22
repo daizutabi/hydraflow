@@ -1,13 +1,13 @@
 import pytest
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group7")
 
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("run/values.py", ["-m", "host=a", "x=1e-6,1e-8,1e-7"])
+    return collect("entities/values.py", ["-m", "host=a", "x=1e-6,1e-8,1e-7"])
 
 
 def test_rc_len(rc: RunCollection):

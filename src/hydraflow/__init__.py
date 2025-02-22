@@ -1,9 +1,9 @@
 """Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
-from hydraflow.context import chdir_artifact, log_run, start_run
-from hydraflow.main import main
-from hydraflow.mlflow import list_run_ids, list_run_paths, list_runs
-from hydraflow.run_collection import RunCollection
+from hydraflow.core.context import chdir_artifact, log_run, start_run
+from hydraflow.core.main import main
+from hydraflow.core.mlflow import list_run_ids, list_run_paths, list_runs
+from hydraflow.entities.run_collection import RunCollection
 from hydraflow.utils import (
     get_artifact_dir,
     get_artifact_path,

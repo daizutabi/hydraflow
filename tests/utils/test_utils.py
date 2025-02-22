@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import pytest
 from mlflow.entities import Run
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 if TYPE_CHECKING:
     from .utils import Config

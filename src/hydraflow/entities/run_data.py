@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING
 
 from pandas import DataFrame
 
-from hydraflow.config import iter_params
+from hydraflow.core.config import iter_params
 from hydraflow.utils import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
 
-    from hydraflow.run_collection import RunCollection
+    from .run_collection import RunCollection
 
 
 class RunCollectionData:

@@ -1,7 +1,7 @@
 import pytest
 from mlflow.entities import Run
 
-from hydraflow.run_collection import RunCollection
+from hydraflow.entities.run_collection import RunCollection
 
 pytestmark = pytest.mark.xdist_group(name="group1")
 
@@ -17,30 +17,30 @@ def run(rc: RunCollection):
 
 
 def test_get_params_str(run: Run):
-    from hydraflow.param import get_params
+    from hydraflow.core.param import get_params
 
     assert get_params(run, "host") == ("a",)
 
 
 def test_get_params_dot(run: Run):
-    from hydraflow.param import get_params
+    from hydraflow.core.param import get_params
 
     assert get_params(run, "data.x") == ("[1, 2, 3]",)
 
 
 def test_get_params_dot_overrides(run: Run):
-    from hydraflow.param import get_params
+    from hydraflow.core.param import get_params
 
     assert get_params(run, "data.y") == ("[10, 20, 30]",)
 
 
 def test_get_params_list(run: Run):
-    from hydraflow.param import get_params
+    from hydraflow.core.param import get_params
 
     assert get_params(run, ["host"], ["port"]) == ("a", "3306")
 
 
 def test_get_values(run: Run):
-    from hydraflow.param import get_values
+    from hydraflow.core.param import get_values
 
     assert get_values(run, ["host", "port"], [str, int]) == ("a", 3306)

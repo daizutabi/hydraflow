@@ -3,7 +3,7 @@ from pathlib import Path
 import mlflow
 import pytest
 
-from hydraflow.param import match
+from hydraflow.core.param import match
 
 pytestmark = pytest.mark.xdist_group(name="group2")
 
@@ -93,7 +93,7 @@ def test_match_bool(param, value):
     ],
 )
 def test_match_list(param, value, result):
-    from hydraflow.param import _match_list, match
+    from hydraflow.core.param import _match_list, match
 
     assert _match_list(param, value) is result
     if result is not None:
@@ -115,7 +115,7 @@ def test_match_list(param, value, result):
     ],
 )
 def test_match_tuple(param, value, result):
-    from hydraflow.param import _match_tuple, match
+    from hydraflow.core.param import _match_tuple, match
 
     assert _match_tuple(param, value) is result
     if result is not None:
@@ -127,7 +127,7 @@ def test_match_tuple(param, value, result):
     [("1", int, 1), ("1", float, 1.0), ("1.0", float, 1.0), ("a", str, "a")],
 )
 def test_to_value_eq(param, type_, result):
-    from hydraflow.param import to_value
+    from hydraflow.core.param import to_value
 
     v = to_value(param, type_)
     assert v == result
@@ -139,7 +139,7 @@ def test_to_value_eq(param, type_, result):
     [("True", bool, True), ("False", bool, False), ("None", int, None)],
 )
 def test_to_value_is(param, type_, result):
-    from hydraflow.param import to_value
+    from hydraflow.core.param import to_value
 
     assert to_value(param, type_) is result
 
@@ -153,6 +153,6 @@ def test_to_value_is(param, type_, result):
     ],
 )
 def test_to_value_list(param, result):
-    from hydraflow.param import to_value
+    from hydraflow.core.param import to_value
 
     assert to_value(param, list) == result
