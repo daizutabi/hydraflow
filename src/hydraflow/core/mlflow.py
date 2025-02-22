@@ -13,9 +13,10 @@ import joblib
 import mlflow
 import mlflow.artifacts
 
-from hydraflow.core.config import iter_params
 from hydraflow.entities.run_collection import RunCollection
 from hydraflow.utils import file_uri_to_path, get_artifact_dir
+
+from .config import iter_params
 
 if TYPE_CHECKING:
     from pathlib import Path

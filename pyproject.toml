@@ -88,5 +88,5 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
 "apps/*.py" = ["D", "G", "INP"]
-"src/hydraflow/main.py" = ["ANN201", "D401"]
+"src/hydraflow/core/main.py" = ["ANN201", "D401"]
 "src/hydraflow/cli.py" = ["ANN", "D"]

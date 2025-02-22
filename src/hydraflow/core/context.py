@@ -12,8 +12,9 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 
-from hydraflow.core.mlflow import log_params, log_text
 from hydraflow.utils import get_artifact_dir
+
+from .mlflow import log_params, log_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

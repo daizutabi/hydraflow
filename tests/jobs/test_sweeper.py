@@ -1,11 +1,11 @@
 import pytest
 
-from hydra_plugins.hydra_ext_sweeper import _parser as parser
-
 
 @pytest.mark.parametrize(("s", "x"), [("1", 1), ("1.2", 1.2), ("", 0)])
 def test_to_number(s, x):
-    assert parser.to_number(s) == x
+    from hydraflow.jobs.sweeper import to_number
+
+    assert to_number(s) == x
 
 
 @pytest.mark.parametrize(
@@ -13,7 +13,9 @@ def test_to_number(s, x):
     [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0)],
 )
 def test_num_point(s, x):
-    assert parser.num_point(s) == x
+    from hydraflow.jobs.sweeper import num_point
+
+    assert num_point(s) == x
 
 
 @pytest.mark.parametrize(
@@ -26,8 +28,10 @@ def test_num_point(s, x):
     ],
 )
 def test_get_range_errors(arg, expected_exception, expected_message):
+    from hydraflow.jobs.sweeper import _get_range
+
     with pytest.raises(expected_exception) as excinfo:
-        parser._get_range(arg)  # noqa: SLF001
+        _get_range(arg)
     assert str(excinfo.value) == expected_message
 
 
@@ -50,7 +54,9 @@ def test_get_range_errors(arg, expected_exception, expected_message):
     ],
 )
 def test_split_suffix(s, x):
-    assert parser.split_suffix(s) == x
+    from hydraflow.jobs.sweeper import split_suffix
+
+    assert split_suffix(s) == x
 
 
 @pytest.mark.parametrize(
@@ -77,7 +83,9 @@ def test_split_suffix(s, x):
     ],
 )
 def test_collect_value(s, x):
-    assert parser.collect_values(s) == x
+    from hydraflow.jobs.sweeper import collect_values
+
+    assert collect_values(s) == x
 
 
 @pytest.mark.parametrize(
@@ -91,5 +99,7 @@ def test_collect_value(s, x):
     ],
 )
 def test_expand_value(s, x):
-    assert parser.expand_values(s) == x
-    assert parser.parse(s) == ",".join(x)
+    from hydraflow.jobs.sweeper import expand_values, parse
+
+    assert expand_values(s) == x
+    assert parse(s) == ",".join(x)
