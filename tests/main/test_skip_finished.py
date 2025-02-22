@@ -39,7 +39,7 @@ def count(run: Run):
 
 @pytest.fixture(scope="module")
 def text(run: Run):
-    from hydraflow.utils import get_artifact_path
+    from hydraflow.core.io import get_artifact_path
 
     path = get_artifact_path(run, "a.txt")
     return path.read_text()

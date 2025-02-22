@@ -27,7 +27,7 @@ def run(rc: RunCollection, request: pytest.FixtureRequest):
 
 
 def test_count(run: Run):
-    from hydraflow.utils import get_artifact_path
+    from hydraflow.core.io import get_artifact_path
 
     path = get_artifact_path(run, "a.txt")
     assert path.read_text() == "3"

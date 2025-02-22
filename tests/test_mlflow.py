@@ -66,7 +66,7 @@ def test_log_params(run: Run, experiment_name):
 
 
 def test_get_artifact_dir_from_utils(run: Run, experiment: Experiment):
-    from hydraflow.utils import get_artifact_dir
+    from hydraflow.core.io import get_artifact_dir
 
     loc = experiment.artifact_location
     assert isinstance(loc, str)

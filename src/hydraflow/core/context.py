@@ -12,7 +12,7 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 
-from hydraflow.utils import get_artifact_dir
+from hydraflow.core.io import get_artifact_dir
 
 from .mlflow import log_params, log_text
 

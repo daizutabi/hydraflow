@@ -1,8 +1,8 @@
 import pytest
 from mlflow.entities import Run
 
+from hydraflow.core.io import get_artifact_path
 from hydraflow.entities.run_collection import RunCollection
-from hydraflow.utils import get_artifact_path
 
 pytestmark = pytest.mark.xdist_group(name="group6")
 

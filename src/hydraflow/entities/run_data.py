@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from pandas import DataFrame
 
 from hydraflow.core.config import iter_params
-from hydraflow.utils import load_config
+from hydraflow.core.io import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

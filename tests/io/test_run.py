@@ -32,7 +32,7 @@ def run(rc: RunCollection):
 
 @pytest.mark.order(0)
 def test_hydra_output_dir(run: Run):
-    from hydraflow.utils import get_hydra_output_dir
+    from hydraflow.core.io import get_hydra_output_dir
 
     with pytest.raises(FileNotFoundError):
         get_hydra_output_dir(run)
@@ -40,7 +40,7 @@ def test_hydra_output_dir(run: Run):
 
 @pytest.mark.order(1)
 def test_remove_run(rc: RunCollection):
-    from hydraflow.utils import get_artifact_dir, remove_run
+    from hydraflow.core.io import get_artifact_dir, remove_run
 
     paths = [get_artifact_dir(r).parent for r in rc]
 

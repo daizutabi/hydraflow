@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from hydraflow.utils import get_artifact_dir
+from hydraflow.core.io import get_artifact_dir
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -13,8 +13,8 @@ import joblib
 import mlflow
 import mlflow.artifacts
 
+from hydraflow.core.io import file_uri_to_path, get_artifact_dir
 from hydraflow.entities.run_collection import RunCollection
-from hydraflow.utils import file_uri_to_path, get_artifact_dir
 
 from .config import iter_params
 

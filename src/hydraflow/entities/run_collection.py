@@ -27,8 +27,8 @@ from mlflow.entities import RunStatus
 
 import hydraflow.core.param
 from hydraflow.core.config import iter_params, select_config, select_overrides
+from hydraflow.core.io import load_config
 from hydraflow.core.param import get_params, get_values
-from hydraflow.utils import load_config
 
 from .run_data import RunCollectionData
 from .run_info import RunCollectionInfo

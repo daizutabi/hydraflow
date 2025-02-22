@@ -17,7 +17,7 @@ def test_rc_len(rc: RunCollection):
 
 
 def test_count(rc: RunCollection):
-    from hydraflow.utils import get_artifact_path
+    from hydraflow.core.io import get_artifact_path
 
     run = rc.get(count=3)
     path = get_artifact_path(run, "a.txt")

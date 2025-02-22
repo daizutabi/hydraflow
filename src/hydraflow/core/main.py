@@ -45,7 +45,7 @@ from mlflow.entities import RunStatus
 from omegaconf import OmegaConf
 
 import hydraflow
-from hydraflow.utils import file_uri_to_path
+from hydraflow.core.io import file_uri_to_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable
