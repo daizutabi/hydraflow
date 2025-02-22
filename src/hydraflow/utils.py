@@ -12,7 +12,7 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import Run
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -116,6 +116,26 @@ def load_config(run: Run) -> DictConfig:
 
     """
     path = get_artifact_dir(run) / ".hydra/config.yaml"
+    return OmegaConf.load(path)  # type: ignore
+
+
+def load_overrides(run: Run) -> ListConfig:
+    """Load the overrides for a given run.
+
+    This function loads the overrides for the provided Run instance
+    by downloading the overrides file from the MLflow artifacts and
+    loading it using OmegaConf. It returns an empty config if
+    `.hydra/overrides.yaml` is not found in the run's artifact directory.
+
+    Args:
+        run (Run): The Run instance for which to load the configuration.
+
+    Returns:
+        The loaded configuration as a DictConfig object. Returns an empty
+        DictConfig if the configuration file is not found.
+
+    """
+    path = get_artifact_dir(run) / ".hydra/overrides.yaml"
     return OmegaConf.load(path)  # type: ignore
 
 

@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any, overload
 from mlflow.entities import RunStatus
 
 import hydraflow.param
-from hydraflow.config import iter_params, select_config
+from hydraflow.config import iter_params, select_config, select_overrides
 from hydraflow.param import get_params, get_values
 from hydraflow.run_data import RunCollectionData
 from hydraflow.run_info import RunCollectionInfo
@@ -208,6 +208,7 @@ class RunCollection:
         config: object | Callable[[Run], bool] | None = None,
         *,
         select: list[str] | None = None,
+        overrides: list[str] | None = None,
         status: str | list[str] | int | list[int] | None = None,
         **kwargs,
     ) -> RunCollection:
@@ -233,6 +234,8 @@ class RunCollection:
                 pairs through the `iter_params` function, or a callable that
                 takes a `Run` object and returns a boolean value.
             select (list[str] | None): The list of parameters to select.
+            overrides (list[str] | None): The list of overrides to filter the
+                runs.
             status (str | list[str] | int | list[int] | None): The status of the
                 runs to filter.
             **kwargs: Additional key-value pairs to filter the runs.
@@ -246,6 +249,7 @@ class RunCollection:
                 self._runs,
                 config,
                 select=select,
+                overrides=overrides,
                 status=status,
                 **kwargs,
             ),
@@ -482,6 +486,7 @@ def filter_runs(
     config: object | Callable[[Run], bool] | None = None,
     *,
     select: list[str] | None = None,
+    overrides: list[str] | None = None,
     status: str | list[str] | int | list[int] | None = None,
     **kwargs,
 ) -> list[Run]:
@@ -509,6 +514,8 @@ def filter_runs(
             a boolean value. Defaults to None.
         select (list[str] | None, optional): The list of parameters to select.
             Defaults to None.
+        overrides (list[str] | None, optional): The list of overrides to filter the
+            runs. Defaults to None.
         status (str | list[str] | RunStatus | list[RunStatus] | None, optional): The
             status of the runs to filter. Defaults to None.
         **kwargs: Additional key-value pairs to filter the runs.
@@ -521,7 +528,9 @@ def filter_runs(
         runs = [run for run in runs if config(run)]
 
     else:
-        if select:
+        if overrides:
+            config = select_overrides(config, overrides)
+        elif select:
             config = select_config(config, select)
 
         for key, value in chain(iter_params(config), kwargs.items()):

@@ -114,3 +114,9 @@ def _get(config: DictConfig, name: str) -> Any:
 
     prefix, name = name.split(".", 1)
     return _get(config.get(prefix), name)
+
+
+def select_overrides(config: object, overrides: list[str]) -> dict[str, Any]:
+    """Select the given overrides from the configuration object."""
+    names = [override.split("=")[0].strip() for override in overrides]
+    return select_config(config, names)

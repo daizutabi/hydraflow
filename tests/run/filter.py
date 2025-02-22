@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import hydra
+import mlflow
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
@@ -17,11 +19,12 @@ class Config:
 ConfigStore.instance().store(name="config", node=Config)
 
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(config_name="config", version_base=None)
 def app(cfg: Config):
-    hydraflow.set_experiment()
+    hc = HydraConfig.get()
+    e = mlflow.set_experiment(hc.job.name)
 
-    if hydraflow.list_runs().filter(cfg, override=True):
+    if hydraflow.list_runs(e.name).filter(cfg):
         return
 
     with hydraflow.start_run(cfg):

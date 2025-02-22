@@ -35,13 +35,6 @@ def test_start_time(runs: list[Run]):
     assert start_times == sorted(start_times)
 
 
-def test_search_runs(experiment: Experiment, runs: list[Run]):
-    from hydraflow.mlflow import search_runs
-
-    rc = search_runs(experiment_names=[experiment.name])
-    assert [r.info.run_id for r in rc] == [r.info.run_id for r in runs]
-
-
 @pytest.fixture
 def rc(runs: list[Run]):
     return RunCollection(runs)
@@ -49,7 +42,7 @@ def rc(runs: list[Run]):
 
 def test_bool_false():
     assert not RunCollection([])
-    assert bool(RunCollection.from_list([])) is False
+    assert bool(RunCollection([])) is False
 
 
 def test_bool_true(rc: RunCollection):
@@ -62,21 +55,21 @@ def test_len(rc: RunCollection):
 
 
 def test_from_list(runs: list[Run]):
-    rc = RunCollection.from_list(runs)
+    rc = RunCollection(runs)
     assert len(rc) == len(runs)
     assert all(run in rc for run in runs)
 
 
 def test_add(runs: list[Run]):
-    rc1 = RunCollection.from_list(runs[:3])
-    rc2 = RunCollection.from_list(runs[3:])
+    rc1 = RunCollection(runs[:3])
+    rc2 = RunCollection(runs[3:])
     rc = rc1 + rc2
     assert rc._runs == runs
 
 
 def test_sub(runs: list[Run]):
-    rc1 = RunCollection.from_list(runs)
-    rc2 = RunCollection.from_list(runs[3:])
+    rc1 = RunCollection(runs)
+    rc2 = RunCollection(runs[3:])
     rc = rc1 - rc2
     assert rc._runs == runs[:3]
 
@@ -339,57 +332,12 @@ def test_list_runs(rc: RunCollection, n_jobs: int):
 
 @pytest.mark.parametrize("n_jobs", [0, 1, 2])
 def test_list_runs_empty_list(rc: RunCollection, n_jobs: int):
-    assert len(list_runs([], n_jobs=n_jobs)) == 6
+    assert len(list_runs(None, n_jobs=n_jobs)) == 6
 
 
 @pytest.mark.parametrize("n_jobs", [0, 1, 2])
 def test_list_runs_none(rc: RunCollection, n_jobs: int):
     assert not list_runs(["non_existent_experiment"], n_jobs=n_jobs)
-
-
-def test_map(rc: RunCollection):
-    results = list(rc.map(lambda run: run.info.run_id))
-    assert len(results) == len(rc._runs)
-    assert all(isinstance(run_id, str) for run_id in results)
-
-
-def test_map_args(rc: RunCollection):
-    results = list(rc.map(lambda run, x: run.info.run_id + x, "test"))
-    assert all(x.endswith("test") for x in results)
-
-
-def test_map_id(rc: RunCollection):
-    results = list(rc.map_id(lambda run_id: run_id))
-    assert len(results) == len(rc._runs)
-    assert all(isinstance(run_id, str) for run_id in results)
-
-
-def test_map_id_kwargs(rc: RunCollection):
-    results = list(rc.map_id(lambda run_id, x: x + run_id, x="test"))
-    assert all(x.startswith("test") for x in results)
-
-
-def test_map_uri(rc: RunCollection):
-    results = list(rc.map_uri(lambda uri: uri))
-    assert len(results) == len(rc._runs)
-    assert all(isinstance(uri, str | type(None)) for uri in results)
-
-
-def test_map_dir(rc: RunCollection):
-    results = list(rc.map_dir(lambda dir_path, x: dir_path / x, "a.csv"))
-    assert len(results) == len(rc._runs)
-    assert all(isinstance(dir_path, Path) for dir_path in results)
-    assert all(dir_path.stem == "a" for dir_path in results)
-
-
-def test_sort(rc: RunCollection):
-    rc.sort(key=lambda x: x.data.params["p"])
-    assert [run.data.params["p"] for run in rc] == ["0", "1", "2", "3", "4", "5"]
-
-
-def test_sort_reverse(rc: RunCollection):
-    rc.sort(reverse=True)
-    assert [run.data.params["p"] for run in rc] == ["5", "4", "3", "2", "1", "0"]
 
 
 def test_iter(rc: RunCollection):
@@ -416,16 +364,6 @@ def test_getitem_slice_step_neg(rc: RunCollection, i: int):
     assert rc[i::-2]._runs == rc._runs[i::-2]
 
 
-def test_take(rc: RunCollection):
-    assert rc.take(3)._runs == rc._runs[:3]
-    assert rc.take(10)._runs == rc._runs
-
-
-def test_take_neg(rc: RunCollection):
-    assert rc.take(-3)._runs == rc._runs[-3:]
-    assert rc.take(-10)._runs == rc._runs
-
-
 @pytest.mark.parametrize("i", range(6))
 def test_contains(rc: RunCollection, i: int):
     assert rc[i] in rc
@@ -442,6 +380,16 @@ def test_groupby(rc: RunCollection):
     assert all(len(group) == 1 for group in grouped.values())
     assert grouped[("0",)][0] == rc[0]
     assert grouped[("1",)][0] == rc[1]
+
+
+def test_sort(rc: RunCollection):
+    rc.sort(key=lambda x: x.data.params["p"])
+    assert [run.data.params["p"] for run in rc] == ["0", "1", "2", "3", "4", "5"]
+
+
+def test_sort_reverse(rc: RunCollection):
+    rc.sort(reverse=True)
+    assert [run.data.params["p"] for run in rc] == ["5", "4", "3", "2", "1", "0"]
 
 
 def test_filter_runs_empty_list():

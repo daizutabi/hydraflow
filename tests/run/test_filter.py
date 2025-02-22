@@ -1,4 +1,5 @@
 import pytest
+from pandas import DataFrame
 
 from hydraflow.run_collection import RunCollection
 
@@ -7,13 +8,34 @@ pytestmark = pytest.mark.xdist_group(name="group7")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    collect("run/filter.py", ["-m", "port=1,2,3"])
-    return collect("run/filter.py", ["-m", "port=1,2,4"])
+    collect("run/filter.py", ["-m", "host=a,b", "port=1,2,3"])
+    return collect("run/filter.py", ["-m", "host=b,c", "port=1,2,4"])
 
 
 def test_rc_len(rc: RunCollection):
-    assert len(rc) == 4
+    assert len(rc) == 10
 
 
-def test_params(rc: RunCollection):
-    assert rc.data.params["port"] == ["1", "2", "3", "4"]
+@pytest.fixture(scope="module")
+def df(rc: RunCollection):
+    return rc.data.config.sort_values(["host", "port"])
+
+
+@pytest.mark.parametrize(
+    ("i", "host", "port"),
+    [
+        (0, "a", 1),
+        (1, "a", 2),
+        (2, "a", 3),
+        (3, "b", 1),
+        (4, "b", 2),
+        (5, "b", 3),
+        (6, "b", 4),
+        (7, "c", 1),
+        (8, "c", 2),
+        (9, "c", 4),
+    ],
+)
+def test_params(df: DataFrame, i: int, host: str, port: int):
+    assert df.iloc[i]["host"] == host
+    assert df.iloc[i]["port"] == port

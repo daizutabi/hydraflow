@@ -21,7 +21,7 @@ class A:
 
 
 @pytest.mark.parametrize(
-    "names,expected",
+    ("names", "expected"),
     [
         (["x"], {"x": 1}),
         (["b.y"], {"b.y": 2}),
@@ -35,3 +35,20 @@ def test_select_config(names, expected):
 
     a = A()
     assert select_config(a, names) == expected
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    [
+        (["x=4"], {"x": 1}),
+        (["b.y=2"], {"b.y": 2}),
+        (["b.c.z=10"], {"b.c.z": 3}),
+        (["b.c.z=1", "x=0"], {"b.c.z": 3, "x": 1}),
+        (["b.c.z=1", "b.y=1"], {"b.c.z": 3, "b.y": 2}),
+    ],
+)
+def test_select_overrides(overrides, expected):
+    from hydraflow.config import select_overrides
+
+    a = A()
+    assert select_overrides(a, overrides) == expected
