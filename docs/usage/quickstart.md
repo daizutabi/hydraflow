@@ -107,16 +107,6 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 >>> print(filtered)
 ```
 
-```pycon exec="1" source="console" session="quickstart"
->>> run = rc.find(height=100)
->>> print(run.data.params)
-```
-
-```pycon exec="1" source="console" session="quickstart"
->>> run = rc.find_last(height=100)
->>> print(run.data.params)
-```
-
 ### Group runs
 
 ```pycon exec="1" source="console" session="quickstart"
