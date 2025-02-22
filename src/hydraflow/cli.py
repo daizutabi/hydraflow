@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated
 
 import typer
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 from rich.console import Console
 from typer import Argument, Option
+
+from hydraflow.jobs.io import load_config
 
 app = typer.Typer(add_completion=False)
 console = Console()
@@ -31,12 +32,9 @@ def run(
 @app.command()
 def show() -> None:
     """Show the config."""
-    from rich.syntax import Syntax
-
     cfg = load_config()
     code = OmegaConf.to_yaml(cfg)
-    syntax = Syntax(code, "yaml")
-    console.print(syntax)
+    typer.echo(code)
 
 
 @app.callback(invoke_without_command=True)
@@ -52,24 +50,3 @@ def callback(
 
         typer.echo(f"hydraflow {importlib.metadata.version('hydraflow')}")
         raise typer.Exit
-
-
-def find_config() -> Path:
-    if Path("hydraflow.yaml").exists():
-        return Path("hydraflow.yaml")
-
-    if Path("hydraflow.yml").exists():
-        return Path("hydraflow.yml")
-
-    typer.echo("No config file found.")
-    raise typer.Exit(code=1)
-
-
-def load_config() -> DictConfig:
-    cfg = OmegaConf.load(find_config())
-
-    if isinstance(cfg, DictConfig):
-        return cfg
-
-    typer.echo("Invalid config file.")
-    raise typer.Exit(code=1)
