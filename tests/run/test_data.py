@@ -22,9 +22,9 @@ def experiment(experiment_name: str):
 
 @pytest.fixture
 def rc(experiment: Experiment):
-    from hydraflow.mlflow import search_runs
+    from hydraflow.mlflow import list_runs
 
-    return search_runs(experiment_names=[experiment.name])
+    return list_runs(experiment.name)
 
 
 def test_data_params(rc: RunCollection):

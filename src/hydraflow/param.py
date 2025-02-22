@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from mlflow.entities import Run
 
 
-def match(param: str, value: Any) -> bool:  # noqa: PLR0911
+def match(param: str, value: Any) -> bool:
     """Check if the string matches the specified value.
 
     Args:
@@ -68,7 +68,7 @@ def _match_list(param: str, value: list) -> bool | None:
 
 
 def _match_tuple(param: str, value: tuple) -> bool | None:
-    if len(value) != 2:  # noqa: PLR2004
+    if len(value) != 2:
         return None
 
     if any(param.startswith(x) for x in ["[", "(", "{"]):

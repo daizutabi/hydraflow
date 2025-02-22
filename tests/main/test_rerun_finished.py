@@ -8,7 +8,7 @@ pytestmark = pytest.mark.xdist_group(name="group7")
 @pytest.fixture(scope="module")
 def rc(collect):
     for _ in range(3):
-        rc = collect("main/restart.py", ["count=3"])
+        rc = collect("main/rerun_finished.py", ["count=3"])
     return rc
 
 

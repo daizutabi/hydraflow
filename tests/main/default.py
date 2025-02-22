@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class Config:
-    count: int = 0
+    count: int = 1
+    name: str = "a"
 
 
 @hydraflow.main(Config)

@@ -12,46 +12,42 @@ import mlflow
 import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 from mlflow.entities import Run
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-def get_artifact_dir(run: Run | None = None, uri: str | None = None) -> Path:
+def file_uri_to_path(uri: str) -> Path:
+    """Convert a file URI to a local path."""
+    if not uri.startswith("file:"):
+        return Path(uri)
+
+    path = urllib.parse.urlparse(uri).path
+    return Path(urllib.request.url2pathname(path))  # for Windows
+
+
+def get_artifact_dir(run: Run | None = None) -> Path:
     """Retrieve the artifact directory for the given run.
 
     This function uses MLflow to get the artifact directory for the given run.
 
     Args:
         run (Run | None): The run object. Defaults to None.
-        uri (str | None): The URI of the artifact. Defaults to None.
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
 
     """
-    if run is not None and uri is not None:
-        raise ValueError("Cannot provide both run and uri")
-
-    if run is None and uri is None:
+    if run is None:
         uri = mlflow.get_artifact_uri()
-    elif run:
+    else:
         uri = run.info.artifact_uri
 
     if not isinstance(uri, str):
         raise NotImplementedError
 
-    if uri.startswith("file:"):
-        return file_uri_to_path(uri)
-
-    return Path(uri)
-
-
-def file_uri_to_path(uri: str) -> Path:
-    """Convert a file URI to a local path."""
-    path = urllib.parse.urlparse(uri).path
-    return Path(urllib.request.url2pathname(path))  # for Windows
+    return file_uri_to_path(uri)
 
 
 def get_artifact_path(run: Run | None, path: str) -> Path:
@@ -123,12 +119,7 @@ def load_config(run: Run) -> DictConfig:
     return OmegaConf.load(path)  # type: ignore
 
 
-def get_overrides() -> list[str]:
-    """Retrieve the overrides for the current run."""
-    return list(HydraConfig.get().overrides.task)  # ListConifg -> list
-
-
-def load_overrides(run: Run) -> list[str]:
+def load_overrides(run: Run) -> ListConfig:
     """Load the overrides for a given run.
 
     This function loads the overrides for the provided Run instance
@@ -137,15 +128,15 @@ def load_overrides(run: Run) -> list[str]:
     `.hydra/overrides.yaml` is not found in the run's artifact directory.
 
     Args:
-        run (Run): The Run instance for which to load the overrides.
+        run (Run): The Run instance for which to load the configuration.
 
     Returns:
-        The loaded overrides as a list of strings. Returns an empty list
-        if the overrides file is not found.
+        The loaded configuration as a DictConfig object. Returns an empty
+        DictConfig if the configuration file is not found.
 
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
-    return [str(x) for x in OmegaConf.load(path)]
+    return OmegaConf.load(path)  # type: ignore
 
 
 def remove_run(run: Run | Iterable[Run]) -> None:

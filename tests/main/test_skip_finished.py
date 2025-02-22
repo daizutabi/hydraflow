@@ -12,7 +12,7 @@ def rc(collect):
     client = MlflowClient()
     running = RunStatus.to_string(RunStatus.RUNNING)
 
-    filename = "main/skip.py"
+    filename = "main/skip_finished.py"
     args = ["-m", "count=1,2,3"]
 
     rc = collect(filename, args)

@@ -4,14 +4,12 @@ from dataclasses import dataclass, field
 import pytest
 from omegaconf import ListConfig, OmegaConf
 
-from hydraflow.config import _is_param, collect_params, iter_params
+from hydraflow.config import _is_param, iter_params
 
 
-def test_is_param_with_simple_values():
-    assert _is_param(1) is True
-    assert _is_param("string") is True
-    assert _is_param(3.14) is True
-    assert _is_param(True) is True
+@pytest.mark.parametrize("value", (1, "string", 3.14, True))
+def test_is_param_with_simple_values(value):
+    assert _is_param(value) is True
 
 
 def test_is_param_with_dictconfig_containing_simple_values():
@@ -65,12 +63,6 @@ def test_iter_params():
     assert next(it) == ("l.1.a", "1")
     assert next(it) == ("l.1.b", "2")
     assert next(it) == ("l.1.3", "c")
-
-
-def test_collect_params():
-    conf = OmegaConf.create({"k": "v", "l": [1, {"a": "1", "b": "2", 3: "c"}]})
-    params = collect_params(conf)
-    assert params == {"k": "v", "l.0": 1, "l.1.a": "1", "l.1.b": "2", "l.1.3": "c"}
 
 
 @dataclass
@@ -157,6 +149,13 @@ def test_iter_params_with_mixed_types_in_list():
     assert next(it) == ("items.2.key", "value")
 
 
+def test_iter_params_dotlist():
+    it = iter_params(["a=1", "b.c=2", "d.e=[1,2,3]"])
+    assert next(it) == ("a", "1")
+    assert next(it) == ("b.c", "2")
+    assert next(it) == ("d.e", "[1,2,3]")
+
+
 @pytest.mark.parametrize("type_", [int, float])
 @pytest.mark.parametrize("s", ["[1, 2, 3]", "[1.0, 2.0, 3.0]"])
 def test_list_config(type_, s):
@@ -175,18 +174,3 @@ def test_list_config_str(s):
     assert isinstance(b, ListConfig)
     t = OmegaConf.create(json.loads(s))
     assert b == t
-
-
-@pytest.mark.parametrize("x", [{"a": 1}, {"a": [1, 2, 3]}])
-def test_collect_params_dict(x):
-    assert collect_params(x) == x
-
-
-def test_collect_params_dict_dot():
-    assert collect_params({"a": {"b": 1}}) == {"a.b": 1}
-    assert collect_params({"a.b": 1}) == {"a.b": 1}
-
-
-def test_collect_params_list_dot():
-    assert collect_params(["a=1"]) == {"a": "1"}
-    assert collect_params(["a.b=2", "c"]) == {"a.b": "2"}

@@ -117,18 +117,6 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 >>> print(run.data.params)
 ```
 
-### Map runs
-
-```pycon exec="1" source="console" session="quickstart"
->>> params = rc.map(lambda x: x.data.params)
->>> for p in params:
-...     print(p)
-```
-
-```pycon exec="1" source="console" session="quickstart"
->>> list(rc.map_id(print))
-```
-
 ### Group runs
 
 ```pycon exec="1" source="console" session="quickstart"

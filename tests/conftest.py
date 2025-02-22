@@ -1,4 +1,3 @@
-import importlib
 import os
 import subprocess
 import sys
@@ -6,8 +5,6 @@ import uuid
 from pathlib import Path
 
 import pytest
-from hydra import compose, initialize
-from hydra.core.config_store import ConfigStore
 
 
 @pytest.fixture(scope="module")
@@ -40,42 +37,10 @@ def run_script(experiment_name: str):
 
 @pytest.fixture(scope="module")
 def collect(run_script):
-    from hydraflow.mlflow import search_runs
+    from hydraflow.mlflow import list_runs
 
     def collect(filename: str, args: list[str]):
         experiment_name = run_script(filename, args)
-        return search_runs(experiment_names=[experiment_name])
+        return list_runs(experiment_name)
 
     return collect
-
-
-@pytest.fixture(scope="module")
-def get_config_class():
-    parent = Path(__file__).parent
-
-    def get_config_class(filename: str):
-        file = parent / filename
-
-        sys.path.insert(0, file.parent.as_posix())
-        module = importlib.import_module(file.stem)
-        del sys.path[0]
-
-        return module.Config
-
-    return get_config_class
-
-
-@pytest.fixture
-def get_config(get_config_class):
-    cs = ConfigStore.instance()
-
-    def get_config(filename: str, overrides: list[str] | None = None):
-        cls = get_config_class(filename)
-
-        name = str(uuid.uuid4())
-        cs.store(name=name, node=cls)
-
-        with initialize(version_base=None):
-            return compose(config_name=name, overrides=overrides)
-
-    return get_config

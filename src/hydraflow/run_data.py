@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING
 
 from pandas import DataFrame
 
-from hydraflow.config import collect_params
+from hydraflow.config import iter_params
+from hydraflow.utils import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -39,7 +40,8 @@ class RunCollectionData:
             A DataFrame containing the runs' configurations.
 
         """
-        return DataFrame(self._runs.map_config(collect_params))
+        values = [dict(iter_params(load_config(r))) for r in self._runs]
+        return DataFrame(values)
 
 
 def _to_dict(it: Iterable[dict[str, Any]]) -> dict[str, list[Any]]:

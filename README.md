@@ -63,7 +63,7 @@ class MySQLConfig:
 cs = ConfigStore.instance()
 cs.store(name="config", node=MySQLConfig)
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(config_name="config", version_base=None)
 def my_app(cfg: MySQLConfig) -> None:
     # Set experiment by Hydra job name.
     hydraflow.set_experiment()

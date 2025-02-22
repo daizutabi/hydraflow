@@ -3,30 +3,28 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import hydra
+import mlflow
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
-
-
-@dataclass
-class Data:
-    x: list[int] = field(default_factory=lambda: [1, 2, 3])
-    y: list[int] = field(default_factory=lambda: [4, 5, 6])
 
 
 @dataclass
 class Config:
     host: str = "localhost"
     port: int = 3306
-    data: Data = field(default_factory=Data)
+    x: float = 1e-8
+    y: list[float] = field(default_factory=lambda: [0.1, 0.2, 0.3])
 
 
 ConfigStore.instance().store(name="config", node=Config)
 
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(config_name="config", version_base=None)
 def app(cfg: Config):
-    hydraflow.set_experiment()
+    hc = HydraConfig.get()
+    mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(cfg):
         pass

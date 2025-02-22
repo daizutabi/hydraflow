@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 import hydra
+import mlflow
 from hydra.core.config_store import ConfigStore
+from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
@@ -18,22 +18,16 @@ class Config:
 ConfigStore.instance().store(name="config", node=Config)
 
 
-@hydra.main(version_base=None, config_name="config")
+@hydra.main(config_name="config", version_base=None)
 def app(cfg: Config):
-    hydraflow.set_experiment()
+    hc = HydraConfig.get()
+    mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(cfg) as run:
-        with hydraflow.chdir_artifact(run):
-            Path("b.txt").write_text("chdir_artifact")
-
-        if cfg.name == "b":
-            raise ValueError
-
-        if cfg.name == "c":
-            sys.exit(1)
+        mlflow.log_text(cfg.name, "1.txt")
 
     with hydraflow.start_run(cfg, run_id=run.info.run_id):  # Skip log config
-        pass
+        mlflow.log_text(cfg.name * 2, "2.txt")
 
 
 if __name__ == "__main__":
