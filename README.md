@@ -48,31 +48,29 @@ pip install hydraflow
 Here is a simple example to get you started with Hydraflow:
 
 ```python
-import hydra
-import hydraflow
-import mlflow
+from __future__ import annotations
+
 from dataclasses import dataclass
-from hydra.core.config_store import ConfigStore
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+import hydraflow
+
+if TYPE_CHECKING:
+    from mlflow.entities import Run
+
 
 @dataclass
-class MySQLConfig:
-    host: str = "localhost"
-    port: int = 3306
+class Config:
+    count: int = 1
+    name: str = "a"
 
-cs = ConfigStore.instance()
-cs.store(name="config", node=MySQLConfig)
 
-@hydra.main(config_name="config", version_base=None)
-def my_app(cfg: MySQLConfig) -> None:
-    # Set experiment by Hydra job name.
-    hydraflow.set_experiment()
-
-    # Automatically log Hydra config as params.
-    with hydraflow.start_run(cfg):
-        # Your app code below.
+@hydraflow.main(Config)
+def app(run: Run, cfg: Config):
+    """Your app code here."""
 
 
 if __name__ == "__main__":
-    my_app()
+    app()
 ```
