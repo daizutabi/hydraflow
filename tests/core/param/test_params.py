@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from mlflow.entities import Run
 
@@ -8,7 +10,8 @@ pytestmark = pytest.mark.xdist_group(name="group1")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("param/params.py", ["host=a", "data.y=[10,20,30]"])
+    file = Path(__file__).parent / "params.py"
+    return collect(file, ["host=a", "data.y=[10,20,30]"])
 
 
 @pytest.fixture(scope="module")

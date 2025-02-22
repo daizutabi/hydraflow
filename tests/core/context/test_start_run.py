@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from mlflow.entities import Run
 
@@ -9,7 +11,8 @@ pytestmark = pytest.mark.xdist_group(name="group2")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("context/start_run.py", ["-m", "name=a,b,c"])
+    file = Path(__file__).parent / "start_run.py"
+    return collect(file, ["-m", "name=a,b,c"])
 
 
 def test_rc_len(rc: RunCollection):

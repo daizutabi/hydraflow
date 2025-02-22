@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from mlflow.entities import Run, RunStatus
 from mlflow.tracking import MlflowClient
@@ -12,15 +14,15 @@ def rc(collect):
     client = MlflowClient()
     running = RunStatus.to_string(RunStatus.RUNNING)
 
-    filename = "main/skip_finished.py"
+    file = Path(__file__).parent / "skip_finished.py"
     args = ["-m", "count=1,2,3"]
 
-    rc = collect(filename, args)
+    rc = collect(file, args)
     client.set_terminated(rc.get(count=2).info.run_id, status=running)
     client.set_terminated(rc.get(count=3).info.run_id, status=running)
-    rc = collect(filename, args)
+    rc = collect(file, args)
     client.set_terminated(rc.get(count=3).info.run_id, status=running)
-    return collect(filename, args)
+    return collect(file, args)
 
 
 def test_rc_len(rc: RunCollection):

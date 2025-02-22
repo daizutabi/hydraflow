@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from mlflow.entities import Run
 
@@ -8,7 +10,8 @@ pytestmark = pytest.mark.xdist_group(name="group4")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("context/chdir.py", ["-m", "count=1,2"])
+    file = Path(__file__).parent / "chdir.py"
+    return collect(file, ["-m", "count=1,2"])
 
 
 def test_rc_len(rc: RunCollection):

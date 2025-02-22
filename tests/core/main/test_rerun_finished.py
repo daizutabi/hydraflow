@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from hydraflow.entities.run_collection import RunCollection
@@ -7,8 +9,9 @@ pytestmark = pytest.mark.xdist_group(name="group7")
 
 @pytest.fixture(scope="module")
 def rc(collect):
+    file = Path(__file__).parent / "rerun_finished.py"
     for _ in range(3):
-        rc = collect("main/rerun_finished.py", ["count=3"])
+        rc = collect(file, ["count=3"])
     return rc
 
 

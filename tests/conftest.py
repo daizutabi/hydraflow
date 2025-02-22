@@ -23,7 +23,7 @@ def experiment_name(tmp_path_factory: pytest.TempPathFactory):
 def run_script(experiment_name: str):
     parent = Path(__file__).parent
 
-    def run_script(filename: str, args: list[str]):
+    def run_script(filename: Path | str, args: list[str]):
         file = parent / filename
         job_name = f"hydra.job.name={experiment_name}"
 
@@ -39,7 +39,7 @@ def run_script(experiment_name: str):
 def collect(run_script):
     from hydraflow.core.mlflow import list_runs
 
-    def collect(filename: str, args: list[str]):
+    def collect(filename: Path | str, args: list[str]):
         experiment_name = run_script(filename, args)
         return list_runs(experiment_name)
 

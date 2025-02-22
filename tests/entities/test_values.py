@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from hydraflow.entities.run_collection import RunCollection
@@ -7,7 +9,8 @@ pytestmark = pytest.mark.xdist_group(name="group7")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("entities/values.py", ["-m", "host=a", "x=1e-6,1e-8,1e-7"])
+    file = Path(__file__).parent / "values.py"
+    return collect(file, ["-m", "host=a", "x=1e-6,1e-8,1e-7"])
 
 
 def test_rc_len(rc: RunCollection):

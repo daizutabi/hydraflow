@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pandas import DataFrame
 
@@ -8,8 +10,9 @@ pytestmark = pytest.mark.xdist_group(name="group7")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    collect("entities/filter.py", ["-m", "host=a,b", "port=1,2,3"])
-    return collect("entities/filter.py", ["-m", "host=b,c", "port=1,2,4"])
+    file = Path(__file__).parent / "filter.py"
+    collect(file, ["-m", "host=a,b", "port=1,2,3"])
+    return collect(file, ["-m", "host=b,c", "port=1,2,4"])
 
 
 def test_rc_len(rc: RunCollection):

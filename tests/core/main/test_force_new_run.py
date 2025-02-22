@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from mlflow.entities import Run
 
@@ -8,8 +10,9 @@ pytestmark = pytest.mark.xdist_group(name="group6")
 
 @pytest.fixture(scope="module")
 def rc(collect):
+    file = Path(__file__).parent / "force_new_run.py"
     for _ in range(3):
-        rc = collect("main/force_new_run.py", ["count=3"])
+        rc = collect(file, ["count=3"])
     return rc
 
 

@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 import pytest
 from mlflow.entities import Run
@@ -10,7 +11,8 @@ pytestmark = pytest.mark.xdist_group(name="group6")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    return collect("io/hydra_dir.py", ["-m", "name=a,b", "age=10"])
+    file = Path(__file__).parent / "hydra_dir.py"
+    return collect(file, ["-m", "name=a,b", "age=10"])
 
 
 def test_rc_len(rc: RunCollection):

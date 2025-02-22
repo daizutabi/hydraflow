@@ -10,8 +10,9 @@ pytestmark = pytest.mark.xdist_group(name="group5")
 
 @pytest.fixture(scope="module")
 def rc(collect):
-    collect("main/default.py", ["-m", "count=1,2"])
-    return collect("main/default.py", ["-m", "name=a", "count=1,2,3,4"])
+    file = Path(__file__).parent / "default.py"
+    collect(file, ["-m", "count=1,2"])
+    return collect(file, ["-m", "name=a", "count=1,2,3,4"])
 
 
 def test_rc_len(rc: RunCollection):
