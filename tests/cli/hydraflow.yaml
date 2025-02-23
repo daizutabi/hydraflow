@@ -1,0 +1,13 @@
+jobs:
+  args:
+    run: python app.py
+    steps:
+      - args: count=1:3 name=a,b
+      - args: count=4:6 name=c,d
+  batch:
+    run: python app.py
+    steps:
+      - args: count=1,2
+        batch: name=a,b
+      - args: name=c,d
+        batch: count=10:11

@@ -17,16 +17,25 @@ console = Console()
 
 @app.command()
 def run(
-    names: Annotated[
-        list[str] | None,
-        Argument(help="Job names.", show_default=False),
-    ] = None,
+    name: Annotated[str, Argument(help="Job name.", show_default=False)],
+    show_: Annotated[
+        bool,
+        Option("--show", help="Show the job and exit."),
+    ] = False,
 ) -> None:
-    """Run jobs."""
-    typer.echo(names)
+    """Run a job."""
+    from hydraflow.executor.job import multirun, show
 
     cfg = load_config()
-    typer.echo(cfg)
+    job = cfg.jobs[name]
+    if not job.name:
+        job.name = name
+
+    if show_:
+        show(job)
+        raise typer.Exit
+
+    multirun(job)
 
 
 @app.command()

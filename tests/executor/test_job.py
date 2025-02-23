@@ -35,7 +35,7 @@ def test_iter_args_with_options():
     assert next(it) == ["--opt1", "--opt2", "b=4", "a=1,2,3"]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def job():
     s1 = Step(args="a=1:2", batch="b=5,6")
     s2 = Step(args="a=3:4", batch="c=7,8")

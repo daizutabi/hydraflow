@@ -127,3 +127,25 @@ def multirun(job: Job) -> None:
             except Exception as e:  # noqa: PERF203
                 msg = f"Function call '{job.call}' failed with args: {args}"
                 raise RuntimeError(msg) from e
+
+
+def show(job: Job) -> None:
+    """Show the job configuration.
+
+    This function shows the job configuration for a given job.
+
+    Args:
+        job (Job): The job configuration to show.
+    """
+    it = iter_batches(job)
+
+    if job.run:
+        base_cmds = shlex.split(job.run)
+        for args in it:
+            cmds = " ".join([*base_cmds, *args])
+            print(cmds)  # noqa: T201
+
+    elif job.call:
+        print(f"call: {job.call}")  # noqa: T201
+        for args in it:
+            print(f"args: {args}")  # noqa: T201

@@ -1,9 +1,12 @@
 from pathlib import Path
+from shutil import copy
 
 import pytest
 
 
-@pytest.fixture(autouse=True)
-def setup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    monkeypatch.chdir(tmp_path)
-    yield
+@pytest.fixture(scope="module", autouse=True)
+def setup(experiment_name):
+    src = Path(__file__).parent / "hydraflow.yaml"
+    copy(src, src.name)
+    src = Path(__file__).parent / "app.py"
+    copy(src, src.name)
