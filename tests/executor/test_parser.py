@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.parametrize(("s", "x"), [("1", 1), ("1.2", 1.2), ("", 0)])
 def test_to_number(s, x):
-    from hydraflow.jobs.parser import to_number
+    from hydraflow.executor.parser import to_number
 
     assert to_number(s) == x
 
@@ -13,7 +13,7 @@ def test_to_number(s, x):
     [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0), ("1.234e-10", 3)],
 )
 def test_count_decimal_places(s, x):
-    from hydraflow.jobs.parser import count_decimal_places
+    from hydraflow.executor.parser import count_decimal_places
 
     assert count_decimal_places(s) == x
 
@@ -23,7 +23,7 @@ def test_count_decimal_places(s, x):
     [("1k", "1e3"), ("1.2M", "1.2e6"), ("", ""), ("1", "1"), ("ab", "ab")],
 )
 def test_convert_suffix_to_exponent(s, x):
-    from hydraflow.jobs.parser import convert_suffix_to_exponent
+    from hydraflow.executor.parser import convert_suffix_to_exponent
 
     assert convert_suffix_to_exponent(s) == x
 
@@ -37,7 +37,7 @@ def test_convert_suffix_to_exponent(s, x):
     ],
 )
 def test_get_range(s, x):
-    from hydraflow.jobs.parser import _get_range
+    from hydraflow.executor.parser import _get_range
 
     assert _get_range(s) == x
 
@@ -52,7 +52,7 @@ def test_get_range(s, x):
     ],
 )
 def test_get_range_errors(arg, expected_exception, expected_message):
-    from hydraflow.jobs.parser import _get_range
+    from hydraflow.executor.parser import _get_range
 
     with pytest.raises(expected_exception) as excinfo:
         _get_range(arg)
@@ -82,7 +82,7 @@ def test_get_range_errors(arg, expected_exception, expected_message):
     ],
 )
 def test_split_suffix(s, x):
-    from hydraflow.jobs.parser import split_suffix
+    from hydraflow.executor.parser import split_suffix
 
     assert split_suffix(s) == x
 
@@ -92,6 +92,7 @@ def test_split_suffix(s, x):
     [
         ("1", ["1"]),
         ("1k", ["1e3"]),
+        ("1:m", ["1e-3"]),
         ("0.234p", ["0.234e-12"]),
         ("1:3", ["1", "2", "3"]),
         ("0:0.25:1", ["0", "0.25", "0.5", "0.75", "1.0"]),
@@ -114,7 +115,7 @@ def test_split_suffix(s, x):
     ],
 )
 def test_collect_value(s, x):
-    from hydraflow.jobs.parser import collect_values
+    from hydraflow.executor.parser import collect_values
 
     assert collect_values(s) == x
 
@@ -135,7 +136,7 @@ def test_collect_value(s, x):
     ],
 )
 def test_expand_value(s, x):
-    from hydraflow.jobs.parser import expand_values
+    from hydraflow.executor.parser import expand_values
 
     assert expand_values(s) == x
 
@@ -152,7 +153,7 @@ def test_expand_value(s, x):
     ],
 )
 def test_collect_arg(s, x):
-    from hydraflow.jobs.parser import collect_arg
+    from hydraflow.executor.parser import collect_arg
 
     assert collect_arg(s) == x
 
@@ -172,13 +173,13 @@ def test_collect_arg(s, x):
     ],
 )
 def test_expand_arg(s, x):
-    from hydraflow.jobs.parser import expand_arg
+    from hydraflow.executor.parser import expand_arg
 
     assert list(expand_arg(s)) == x
 
 
 def test_expand_arg_error():
-    from hydraflow.jobs.parser import expand_arg
+    from hydraflow.executor.parser import expand_arg
 
     with pytest.raises(ValueError):
         list(expand_arg("1,2|3,4|"))
@@ -195,7 +196,7 @@ def test_expand_arg_error():
     ],
 )
 def test_collect(s, x):
-    from hydraflow.jobs.parser import collect
+    from hydraflow.executor.parser import collect
 
     assert collect(s) == x
 
@@ -223,6 +224,6 @@ def test_collect(s, x):
     ],
 )
 def test_expand(s, x):
-    from hydraflow.jobs.parser import expand
+    from hydraflow.executor.parser import expand
 
     assert expand(s) == x

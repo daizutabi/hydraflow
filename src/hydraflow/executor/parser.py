@@ -183,6 +183,8 @@ def split_suffix(arg: str) -> tuple[str, str]:
         tuple[str, str]: A tuple containing the prefix and suffix.
 
     Examples:
+        >>> split_suffix("1:k")
+        ('1', 'e3')
         >>> split_suffix("1:2:k")
         ('1:2', 'e3')
         >>> split_suffix("1:2:M")
@@ -241,6 +243,9 @@ def collect_values(arg: str) -> list[str]:
         return [convert_suffix_to_exponent(arg)]
 
     arg, exponent = split_suffix(arg)
+
+    if ":" not in arg:
+        return [f"{arg}{exponent}"]
 
     rng = _get_range(arg)
 

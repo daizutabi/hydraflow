@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from hydraflow.jobs.conf import HydraflowConf
+    from hydraflow.executor.conf import HydraflowConf
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +23,7 @@ def chdir(tmp_path_factory: pytest.TempPathFactory):
 
 @pytest.fixture(scope="module")
 def config(chdir):
-    from hydraflow.jobs.io import load_config
+    from hydraflow.executor.io import load_config
 
     def config(text: str):
         Path("hydraflow.yaml").write_text(text)

@@ -1,8 +1,8 @@
 import pytest
 from omegaconf import DictConfig, OmegaConf
 
-from hydraflow.jobs.conf import HydraflowConf
-from hydraflow.jobs.io import load_config
+from hydraflow.executor.conf import HydraflowConf
+from hydraflow.executor.io import load_config
 
 
 @pytest.fixture(scope="module")

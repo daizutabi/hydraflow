@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.parametrize("file", ["hydraflow.yaml", "hydraflow.yml"])
 def test_find_config(file, chdir):
-    from hydraflow.jobs.io import find_config_file
+    from hydraflow.executor.io import find_config_file
 
     Path(file).touch()
     assert find_config_file() == Path(file)
@@ -13,6 +13,6 @@ def test_find_config(file, chdir):
 
 
 def test_find_config_none(chdir):
-    from hydraflow.jobs.io import find_config_file
+    from hydraflow.executor.io import find_config_file
 
     assert find_config_file() is None

@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 from rich.console import Console
 from typer import Argument, Option
 
-from hydraflow.jobs.io import load_config
+from hydraflow.executor.io import load_config
 
 app = typer.Typer(add_completion=False)
 console = Console()
