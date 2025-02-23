@@ -136,6 +136,7 @@ def show(job: Job) -> None:
 
     Args:
         job (Job): The job configuration to show.
+
     """
     it = iter_batches(job)
 
