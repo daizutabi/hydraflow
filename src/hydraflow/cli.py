@@ -2,39 +2,54 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
-from omegaconf import OmegaConf
 from rich.console import Console
 from typer import Argument, Option
 
-from hydraflow.jobs.io import load_config
+from hydraflow.executor.io import load_config
+
+if TYPE_CHECKING:
+    from hydraflow.executor.job import Job
 
 app = typer.Typer(add_completion=False)
 console = Console()
 
 
+def get_job(name: str) -> Job:
+    cfg = load_config()
+    job = cfg.jobs[name]
+
+    if not job.name:
+        job.name = name
+
+    return job
+
+
 @app.command()
 def run(
-    names: Annotated[
-        list[str] | None,
-        Argument(help="Job names.", show_default=False),
-    ] = None,
+    name: Annotated[str, Argument(help="Job name.", show_default=False)],
 ) -> None:
-    """Run jobs."""
-    typer.echo(names)
+    """Run a job."""
+    import mlflow
 
-    cfg = load_config()
-    typer.echo(cfg)
+    from hydraflow.executor.job import multirun
+
+    job = get_job(name)
+    mlflow.set_experiment(job.name)
+    multirun(job)
 
 
 @app.command()
-def show() -> None:
-    """Show the config."""
-    cfg = load_config()
-    code = OmegaConf.to_yaml(cfg)
-    typer.echo(code)
+def show(
+    name: Annotated[str, Argument(help="Job name.", show_default=False)],
+) -> None:
+    """Show a job."""
+    from hydraflow.executor.job import show
+
+    job = get_job(name)
+    show(job)
 
 
 @app.callback(invoke_without_command=True)
