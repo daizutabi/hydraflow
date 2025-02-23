@@ -50,7 +50,7 @@ def iter_args(step: Step) -> Iterator[list[str]]:
     options = [o for o in step.options.split(" ") if o]
 
     for batch in expand(step.batch):
-        yield [*options, *batch, *args]
+        yield [*options, *sorted([*batch, *args])]
 
 
 def iter_batches(job: Job) -> Iterator[list[str]]:

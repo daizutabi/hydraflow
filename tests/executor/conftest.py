@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture(scope="module")
-def config(experiment_name):
+def config(chdir):
     from hydraflow.executor.io import load_config
 
     def config(text: str):

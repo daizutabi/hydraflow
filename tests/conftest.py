@@ -8,15 +8,20 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def experiment_name(tmp_path_factory: pytest.TempPathFactory):
+def chdir(tmp_path_factory: pytest.TempPathFactory):
     cwd = Path.cwd()
     name = str(uuid.uuid4())
 
     os.chdir(tmp_path_factory.mktemp(name, numbered=False))
 
-    yield name
+    yield
 
     os.chdir(cwd)
+
+
+@pytest.fixture(scope="module")
+def experiment_name(chdir):
+    return Path.cwd().name
 
 
 @pytest.fixture(scope="module")

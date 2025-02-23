@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.fixture(scope="module", autouse=True)
-def setup(experiment_name):
+def setup(chdir):
     src = Path(__file__).parent / "hydraflow.yaml"
     copy(src, src.name)
     src = Path(__file__).parent / "app.py"

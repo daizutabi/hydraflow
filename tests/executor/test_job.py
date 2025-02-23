@@ -11,10 +11,10 @@ def test_iter_args():
 
     step = Step(args="a=1:3", batch="b=3,4 c=5,6")
     it = iter_args(step)
-    assert next(it) == ["b=3", "c=5", "a=1,2,3"]
-    assert next(it) == ["b=3", "c=6", "a=1,2,3"]
-    assert next(it) == ["b=4", "c=5", "a=1,2,3"]
-    assert next(it) == ["b=4", "c=6", "a=1,2,3"]
+    assert next(it) == ["a=1,2,3", "b=3", "c=5"]
+    assert next(it) == ["a=1,2,3", "b=3", "c=6"]
+    assert next(it) == ["a=1,2,3", "b=4", "c=5"]
+    assert next(it) == ["a=1,2,3", "b=4", "c=6"]
 
 
 def test_iter_args_pipe():
@@ -22,8 +22,8 @@ def test_iter_args_pipe():
 
     step = Step(args="a=1:3", batch="b=3,4|c=5:7")
     it = iter_args(step)
-    assert next(it) == ["b=3,4", "a=1,2,3"]
-    assert next(it) == ["c=5,6,7", "a=1,2,3"]
+    assert next(it) == ["a=1,2,3", "b=3,4"]
+    assert next(it) == ["a=1,2,3", "c=5,6,7"]
 
 
 def test_iter_args_with_options():
@@ -31,8 +31,8 @@ def test_iter_args_with_options():
 
     step = Step(args="a=1:3", batch="b=3,4", options="--opt1 --opt2")
     it = iter_args(step)
-    assert next(it) == ["--opt1", "--opt2", "b=3", "a=1,2,3"]
-    assert next(it) == ["--opt1", "--opt2", "b=4", "a=1,2,3"]
+    assert next(it) == ["--opt1", "--opt2", "a=1,2,3", "b=3"]
+    assert next(it) == ["--opt1", "--opt2", "a=1,2,3", "b=4"]
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def test_job_name(batches):
 
 @pytest.mark.parametrize(("i", "x"), [(0, "b=5"), (1, "b=6"), (2, "c=7"), (3, "c=8")])
 def test_batch_args(batches, i, x):
-    assert batches[i][-2] == x
+    assert batches[i][-1] == x
 
 
 @pytest.mark.parametrize(
@@ -67,7 +67,7 @@ def test_batch_args(batches, i, x):
     [(0, "a=1,2"), (1, "a=1,2"), (2, "a=3,4"), (3, "a=3,4")],
 )
 def test_sweep_args(batches, i, x):
-    assert batches[i][-1] == x
+    assert batches[i][-2] == x
 
 
 def test_multirun_run(job: Job, tmp_path: Path):
@@ -78,7 +78,7 @@ def test_multirun_run(job: Job, tmp_path: Path):
 
     job.run = f"{sys.executable} {file.as_posix()} {path.as_posix()}"
     multirun(job)
-    assert path.read_text() == "b=5 a=1,2 b=6 a=1,2 c=7 a=3,4 c=8 a=3,4"
+    assert path.read_text() == "a=1,2 b=5 a=1,2 b=6 a=3,4 c=7 a=3,4 c=8"
 
 
 def test_multirun_run_error(job: Job):

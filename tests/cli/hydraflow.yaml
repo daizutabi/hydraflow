@@ -9,5 +9,5 @@ jobs:
     steps:
       - args: count=1,2
         batch: name=a,b
-      - args: name=c,d
-        batch: count=10:11
+      - args: count=100
+        batch: name=c,d|e,f
