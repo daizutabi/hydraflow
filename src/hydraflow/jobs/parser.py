@@ -10,18 +10,6 @@ from __future__ import annotations
 
 from itertools import chain
 
-SUFFIX_EXPONENT = {
-    "T": "e12",
-    "G": "e9",
-    "M": "e6",
-    "k": "e3",
-    "m": "e-3",
-    "u": "e-6",
-    "n": "e-9",
-    "p": "e-12",
-    "f": "e-15",
-}
-
 
 def to_number(x: str) -> int | float:
     """Convert a string to an integer or float.
@@ -35,17 +23,27 @@ def to_number(x: str) -> int | float:
     Returns:
         int | float: The converted number as an integer or float.
 
+    Examples:
+        >>> type(to_number("1"))
+        <class 'int'>
+        >>> type(to_number("1.2"))
+        <class 'float'>
+        >>> to_number("")
+        0
+        >>> to_number("1e-3")
+        0.001
+
     """
     if not x:
         return 0
 
-    if "." in x:
+    if "." in x or "e" in x.lower():
         return float(x)
 
     return int(x)
 
 
-def num_point(x: str) -> int:
+def count_decimal_places(x: str) -> int:
     """Count decimal places in a string.
 
     Examine a string representing a number and returns the count
@@ -58,11 +56,86 @@ def num_point(x: str) -> int:
     Returns:
         int: The number of decimal places.
 
+    Examples:
+        >>> count_decimal_places("1")
+        0
+        >>> count_decimal_places("-1.2")
+        1
+        >>> count_decimal_places("1.234")
+        3
+        >>> count_decimal_places("-1.234e-10")
+        3
+
     """
     if "." not in x:
         return 0
 
-    return len(x.split(".")[-1])
+    decimal_part = x.split(".")[1]
+    if "e" in decimal_part.lower():
+        decimal_part = decimal_part.split("e")[0]
+
+    return len(decimal_part)
+
+
+def is_number(x: str) -> bool:
+    """Check if a string is a number.
+
+    Args:
+        x (str): The string to check.
+
+    Returns:
+        bool: True if the string is a number, False otherwise.
+
+    """
+    try:
+        float(x)
+    except ValueError:
+        return False
+    return True
+
+
+SUFFIX_EXPONENT = {
+    "T": "e12",
+    "G": "e9",
+    "M": "e6",
+    "k": "e3",
+    "m": "e-3",
+    "u": "e-6",
+    "n": "e-9",
+    "p": "e-12",
+    "f": "e-15",
+}
+
+
+def convert_suffix_to_exponent(arg: str) -> str:
+    """Convert engineering notation suffix to exponential notation.
+
+    Args:
+        arg (str): Input string with optional engineering suffix (e.g., '1k', '2M')
+
+    Returns:
+        str: String with suffix converted to exponential notation (e.g., '1e3', '2e6')
+
+    Examples:
+        >>> convert_suffix_to_exponent('1k')
+        '1e3'
+        >>> convert_suffix_to_exponent('-2.5M')
+        '-2.5e6'
+        >>> convert_suffix_to_exponent('invalid')
+        'invalid'
+
+    """
+    if len(arg) < 2:
+        return arg
+
+    prefix, suffix = arg[:-1], arg[-1]
+    if suffix not in SUFFIX_EXPONENT:
+        return arg
+
+    if is_number(prefix):
+        return prefix + SUFFIX_EXPONENT[suffix]
+
+    return arg
 
 
 def _get_range(arg: str) -> tuple[float, float, float]:
@@ -96,40 +169,52 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
 
 
 def split_suffix(arg: str) -> tuple[str, str]:
-    """Split a string into a numeric range and a suffix.
+    """Split a string into prefix and suffix.
 
     Args:
         arg (str): The string to split.
 
     Returns:
-        tuple[str, str]: A tuple containing the numeric range and the suffix.
+        tuple[str, str]: A tuple containing the prefix and suffix.
+
+    Examples:
+        >>> split_suffix("1:2:k")
+        ('1:2', 'e3')
+        >>> split_suffix("1:2:M")
+        ('1:2', 'e6')
+        >>> split_suffix(":1:2:M")
+        (':1:2', 'e6')
 
     """
-    if ":" not in arg:
+    if len(arg) < 3 or ":" not in arg:
         return arg, ""
 
-    rng, suffix = arg.rsplit(":", 1)
-    if all(char.isdigit() or char in ".+-" for char in suffix):
+    prefix, suffix = arg.rsplit(":", 1)
+
+    if suffix.lower().startswith("e"):
+        return prefix, suffix
+
+    if suffix not in SUFFIX_EXPONENT:
         return arg, ""
 
-    return rng, SUFFIX_EXPONENT.get(suffix, suffix)
+    return prefix, SUFFIX_EXPONENT[suffix]
 
 
-def add_suffix(value: str, suffix: str) -> str:
-    """Append a suffix to a value string.
+def add_exponent(value: str, exponent: str) -> str:
+    """Append an exponent to a value string.
 
     Args:
         value (str): The value to modify.
-        suffix (str): The suffix to append.
+        exponent (str): The exponent to append.
 
     Returns:
-        str: The value with the suffix added.
+        str: The value with the exponent added.
 
     """
-    if value in ["0", "0.", "0.0"] or not suffix:
+    if value in ["0", "0.", "0.0"] or not exponent:
         return value
 
-    return f"{value}{suffix}"
+    return f"{value}{exponent}"
 
 
 def collect_values(arg: str) -> list[str]:
@@ -148,22 +233,19 @@ def collect_values(arg: str) -> list[str]:
 
     """
     if ":" not in arg:
-        return [arg]
+        return [convert_suffix_to_exponent(arg)]
 
-    arg, suffix = split_suffix(arg)
-
-    if ":" not in arg:
-        return [add_suffix(arg, suffix)]
+    arg, exponent = split_suffix(arg)
 
     rng = _get_range(arg)
 
     if all(isinstance(x, int) for x in rng):
-        values = [str(x) for x in _arange(*rng)]  # type: ignore
+        values = [str(x) for x in _arange(*rng)]
     else:
-        n = max(*(num_point(x) for x in arg.split(":")))
+        n = max(*(count_decimal_places(x) for x in arg.split(":")))
         values = [str(round(x, n)) for x in _arange(*rng)]
 
-    return [add_suffix(x, suffix) for x in values]
+    return [add_exponent(x, exponent) for x in values]
 
 
 def split(arg: str) -> list[str]:

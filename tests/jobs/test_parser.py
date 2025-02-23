@@ -10,12 +10,36 @@ def test_to_number(s, x):
 
 @pytest.mark.parametrize(
     ("s", "x"),
-    [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0)],
+    [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0), ("1.234e-10", 3)],
 )
-def test_num_point(s, x):
-    from hydraflow.jobs.parser import num_point
+def test_count_decimal_places(s, x):
+    from hydraflow.jobs.parser import count_decimal_places
 
-    assert num_point(s) == x
+    assert count_decimal_places(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [("1k", "1e3"), ("1.2M", "1.2e6"), ("", ""), ("1", "1"), ("ab", "ab")],
+)
+def test_convert_suffix_to_exponent(s, x):
+    from hydraflow.jobs.parser import convert_suffix_to_exponent
+
+    assert convert_suffix_to_exponent(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        ("1:2", (1, 1, 2)),
+        (":2", (0, 1, 2)),
+        ("0.1:0.1:0.4", (0.1, 0.1, 0.4)),
+    ],
+)
+def test_get_range(s, x):
+    from hydraflow.jobs.parser import _get_range
+
+    assert _get_range(s) == x
 
 
 @pytest.mark.parametrize(
@@ -38,19 +62,23 @@ def test_get_range_errors(arg, expected_exception, expected_message):
 @pytest.mark.parametrize(
     ("s", "x"),
     [
-        ("1:2:3:suffix", ("1:2:3", "suffix")),
-        ("1:2:3:s1", ("1:2:3", "s1")),
+        ("1:2:3:suffix", ("1:2:3:suffix", "")),
         ("1:2:3", ("1:2:3", "")),
         ("1.23", ("1.23", "")),
-        ("1.23:s1", ("1.23", "s1")),
-        ("1.23:s1:s2", ("1.23:s1", "s2")),
-        ("1.23:s1:s2:s3", ("1.23:s1:s2", "s3")),
-        ("1.23:s1:s2:s3:s4", ("1.23:s1:s2:s3", "s4")),
         ("1:2:3:M", ("1:2:3", "e6")),
         ("1:2:3:k", ("1:2:3", "e3")),
         ("1:2:3:m", ("1:2:3", "e-3")),
         ("1:2:3:n", ("1:2:3", "e-9")),
         ("1:2:3:p", ("1:2:3", "e-12")),
+        ("1:k", ("1", "e3")),
+        ("1:2:k", ("1:2", "e3")),
+        ("1:2:M", ("1:2", "e6")),
+        (":1:2:M", (":1:2", "e6")),
+        ("1:2:3:e-3", ("1:2:3", "e-3")),
+        ("1:2:3:E8", ("1:2:3", "E8")),
+        ("", ("", "")),
+        ("1", ("1", "")),
+        ("ab", ("ab", "")),
     ],
 )
 def test_split_suffix(s, x):
@@ -63,6 +91,8 @@ def test_split_suffix(s, x):
     ("s", "x"),
     [
         ("1", ["1"]),
+        ("1k", ["1e3"]),
+        ("0.234p", ["0.234e-12"]),
         ("1:3", ["1", "2", "3"]),
         ("0:0.25:1", ["0", "0.25", "0.5", "0.75", "1.0"]),
         (":3", ["0", "1", "2", "3"]),
@@ -76,10 +106,11 @@ def test_split_suffix(s, x):
         ("4.5:-1.5:2", ["4.5", "3.0"]),
         ("4.5:-1.5:1.5", ["4.5", "3.0", "1.5"]),
         ("4.5:-1.5:-4.5", ["4.5", "3.0", "1.5", "0.0", "-1.5", "-3.0", "-4.5"]),
-        ("1:k", ["1e3"]),
         ("1:2:u", ["1e-6", "2e-6"]),
         ("1:.25:2:n", ["1e-9", "1.25e-9", "1.5e-9", "1.75e-9", "2.0e-9"]),
         ("1:2:e2", ["1e2", "2e2"]),
+        (":2:e2", ["0", "1e2", "2e2"]),
+        ("-2:2:k", ["-2e3", "-1e3", "0", "1e3", "2e3"]),
     ],
 )
 def test_collect_value(s, x):
@@ -97,6 +128,7 @@ def test_collect_value(s, x):
         ("3", ["3"]),
         ("3k", ["3e3"]),
         ("1:2:k,3:2:7:M", ["1e3", "2e3", "3e6", "5e6", "7e6"]),
+        ("1M,3:2:7:M", ["1e6", "3e6", "5e6", "7e6"]),
         ("[1,2],[3,4]", ["[1,2]", "[3,4]"]),
         ("'1,2','3,4'", ["'1,2'", "'3,4'"]),
         ('"1,2","3,4"', ['"1,2"', '"3,4"']),
