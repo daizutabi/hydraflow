@@ -8,7 +8,11 @@ ranges, and expand values from string arguments.
 
 from __future__ import annotations
 
-from itertools import chain
+from itertools import chain, product
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def to_number(x: str) -> int | float:
@@ -318,14 +322,84 @@ def expand_values(arg: str) -> list[str]:
     return list(chain.from_iterable(collect_values(x) for x in split(arg)))
 
 
-def parse(arg: str) -> str:
-    """Parse a string argument into a comma-separated string.
+def collect_arg(arg: str) -> str:
+    """Collect a string of expanded key-value pairs.
+
+    Take a key-value pair argument and concatenates all expanded values with commas,
+    returning a single string suitable for command-line usage.
+
+    Args:
+        arg (str): The argument to collect.
+
+    Returns:
+        str: A string of the collected key and values.
+
+    """
+    key, arg = arg.split("=")
+    arg = ",".join(expand_values(arg))
+    return f"{key}={arg}"
+
+
+def expand_arg(arg: str) -> Iterator[str]:
+    """Parse a string argument into a list of values.
+
+    Responsible for parsing a string that may contain multiple
+    arguments separated by pipes ("|") and returns a list of all
+    expanded arguments.
 
     Args:
         arg (str): The argument to parse.
 
     Returns:
-        str: A comma-separated string of the parsed values.
+       list[str]: A list of the parsed arguments.
 
     """
-    return ",".join(expand_values(arg))
+    if "|" not in arg:
+        key, value = arg.split("=")
+
+        key, value = arg.split("=")
+        for v in expand_values(value):
+            yield f"{key}={v}"
+
+        return
+
+    args = arg.split("|")
+    key = ""
+
+    for arg_ in args:
+        if "=" in arg_:
+            key, value = arg_.split("=")
+        elif key:
+            value = arg_
+        else:
+            msg = f"Invalid argument: {arg_}"
+            raise ValueError(msg)
+
+        value = ",".join(expand_values(value))
+        yield f"{key}={value}"
+
+
+def collect(args: list[str]) -> list[str]:
+    """Collect a list of arguments into a list of strings.
+
+    Args:
+        args (list[str]): The arguments to collect.
+
+    Returns:
+        list[str]: A list of the collected arguments.
+
+    """
+    return [collect_arg(arg) for arg in args]
+
+
+def expand(args: list[str]) -> list[list[str]]:
+    """Expand a list of arguments into a list of lists of strings.
+
+    Args:
+        args (list[str]): The arguments to expand.
+
+    Returns:
+        list[list[str]]: A list of the expanded arguments.
+
+    """
+    return [list(x) for x in product(*(expand_arg(arg) for arg in args))]

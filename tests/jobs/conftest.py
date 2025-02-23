@@ -1,10 +1,12 @@
 import os
 import uuid
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-from hydraflow.jobs.conf import HydraflowConf
+if TYPE_CHECKING:
+    from hydraflow.jobs.conf import HydraflowConf
 
 
 @pytest.fixture(scope="module")

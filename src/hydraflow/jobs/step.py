@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Self
 
-from .parser import parse
+# from .parser import parse
 
 
 @dataclass

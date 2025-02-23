@@ -135,7 +135,91 @@ def test_collect_value(s, x):
     ],
 )
 def test_expand_value(s, x):
-    from hydraflow.jobs.parser import expand_values, parse
+    from hydraflow.jobs.parser import expand_values
 
     assert expand_values(s) == x
-    assert parse(s) == ",".join(x)
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        ("a=1", "a=1"),
+        ("a=1,2", "a=1,2"),
+        ("a=1:2", "a=1,2"),
+        ("a=:2:3", "a=0,2"),
+        ("a=1:3:k", "a=1e3,2e3,3e3"),
+        ("a=1:3:k,2:4:M", "a=1e3,2e3,3e3,2e6,3e6,4e6"),
+    ],
+)
+def test_collect_arg(s, x):
+    from hydraflow.jobs.parser import collect_arg
+
+    assert collect_arg(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        ("a=1", ["a=1"]),
+        ("a=1,2", ["a=1", "a=2"]),
+        ("a=1:2", ["a=1", "a=2"]),
+        ("a=:2:3", ["a=0", "a=2"]),
+        ("a=1:3:k", ["a=1e3", "a=2e3", "a=3e3"]),
+        ("a=1:3:k,2:4:M", ["a=1e3", "a=2e3", "a=3e3", "a=2e6", "a=3e6", "a=4e6"]),
+        ("a=1,2|3,4", ["a=1,2", "a=3,4"]),
+        ("a=1:4|3:5:m", ["a=1,2,3,4", "a=3e-3,4e-3,5e-3"]),
+        ("a=1,2|b=3,4|c=5,6", ["a=1,2", "b=3,4", "c=5,6"]),
+    ],
+)
+def test_expand_arg(s, x):
+    from hydraflow.jobs.parser import expand_arg
+
+    assert list(expand_arg(s)) == x
+
+
+def test_expand_arg_error():
+    from hydraflow.jobs.parser import expand_arg
+
+    with pytest.raises(ValueError):
+        list(expand_arg("1,2|3,4|"))
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        (["a=1"], ["a=1"]),
+        (["a=1:3"], ["a=1,2,3"]),
+        (["a=1:3", "b=4:6"], ["a=1,2,3", "b=4,5,6"]),
+    ],
+)
+def test_collect(s, x):
+    from hydraflow.jobs.parser import collect
+
+    assert collect(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        (["a=1"], [["a=1"]]),
+        (["a=1,2"], [["a=1"], ["a=2"]]),
+        (
+            ["a=1,2", "b=3,4"],
+            [["a=1", "b=3"], ["a=1", "b=4"], ["a=2", "b=3"], ["a=2", "b=4"]],
+        ),
+        (["a=1:2|3,4"], [["a=1,2"], ["a=3,4"]]),
+        (
+            ["a=1:2|3,4", "b=5:6|c=7,8"],
+            [
+                ["a=1,2", "b=5,6"],
+                ["a=1,2", "c=7,8"],
+                ["a=3,4", "b=5,6"],
+                ["a=3,4", "c=7,8"],
+            ],
+        ),
+    ],
+)
+def test_expand(s, x):
+    from hydraflow.jobs.parser import expand
+
+    assert expand(s) == x
