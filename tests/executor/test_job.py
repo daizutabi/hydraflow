@@ -111,3 +111,13 @@ def test_multirun_call_error(job: Job):
     job.call = "typer.echo"
     with pytest.raises(RuntimeError):
         multirun(job)
+
+
+def test_show(job: Job, capsys):
+    from hydraflow.executor.job import show
+
+    job.call = "typer.echo"
+    show(job)
+    out, _ = capsys.readouterr()
+    assert "call: typer.echo\n" in out
+    assert "'hydra.job.name=test', 'a=3,4', 'c=8']" in out

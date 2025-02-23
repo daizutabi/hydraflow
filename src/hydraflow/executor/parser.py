@@ -91,6 +91,14 @@ def is_number(x: str) -> bool:
     Returns:
         bool: True if the string is a number, False otherwise.
 
+    Examples:
+        >>> is_number("1")
+        True
+        >>> is_number("-1.2")
+        True
+        >>> is_number("1.2.3")
+        False
+
     """
     try:
         float(x)
@@ -110,37 +118,6 @@ SUFFIX_EXPONENT = {
     "p": "e-12",
     "f": "e-15",
 }
-
-
-def convert_suffix_to_exponent(arg: str) -> str:
-    """Convert engineering notation suffix to exponential notation.
-
-    Args:
-        arg (str): Input string with optional engineering suffix (e.g., '1k', '2M')
-
-    Returns:
-        str: String with suffix converted to exponential notation (e.g., '1e3', '2e6')
-
-    Examples:
-        >>> convert_suffix_to_exponent('1k')
-        '1e3'
-        >>> convert_suffix_to_exponent('-2.5M')
-        '-2.5e6'
-        >>> convert_suffix_to_exponent('invalid')
-        'invalid'
-
-    """
-    if len(arg) < 2:
-        return arg
-
-    prefix, suffix = arg[:-1], arg[-1]
-    if suffix not in SUFFIX_EXPONENT:
-        return arg
-
-    if is_number(prefix):
-        return prefix + SUFFIX_EXPONENT[suffix]
-
-    return arg
 
 
 def _get_range(arg: str) -> tuple[float, float, float]:
@@ -240,7 +217,7 @@ def collect_values(arg: str) -> list[str]:
 
     """
     if ":" not in arg:
-        return [convert_suffix_to_exponent(arg)]
+        return [arg]
 
     arg, exponent = split_suffix(arg)
 
