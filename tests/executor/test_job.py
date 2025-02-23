@@ -70,6 +70,10 @@ def test_sweep_args(batches, i, x):
     assert batches[i][-2] == x
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows does not support this test",
+)
 def test_multirun_run(job: Job, tmp_path: Path):
     from hydraflow.executor.job import multirun
 
