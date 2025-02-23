@@ -1,0 +1,596 @@
+
+"""Provide a set of functions to facilitate the submission of Hydra applications.
+
+Generate and manage multirun sweep directories, handle job submissions, and capture
+the output of the processes. The module leverages the `hydra` and `gaia` libraries
+to construct command-line arguments for Hydra's multirun feature, submit jobs to Slurm
+with appropriate configurations.
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING, TypeVar
+
+import ulid
+
+from gaia.args import iter_args, quote
+from gaia.slurm import Command, build_batch
+from gaia.tools import get_envs
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+    from subprocess import CompletedProcess
+
+
+T = TypeVar("T")
+
+
+def launcher_args(jobs: int) -> list[str]:
+    """Generate Hydra launcher arguments for parallel job execution.
+
+    This function creates command-line arguments for Hydra's joblib launcher
+    based on the specified number of jobs to run in parallel, which is useful
+    for multirun configurations.
+
+    Args:
+        jobs (int): The number of parallel jobs to configure.
+
+    Returns:
+        list[str]: A list of string arguments containing the Hydra launcher arguments.
+
+    """
+    if jobs:
+        return [f"hydra.launcher.n_jobs={jobs}", "hydra/launcher=joblib"]
+
+    return []
+
+
+def multirun(
+    func: Callable[[list[str]], T],
+    python: str,
+    file: str,
+    args: list[str],
+    jobs: int = 0,
+    *,
+    rootdir: str = "multirun",
+    name: str = "",
+    local: bool,
+) -> Iterator[T]:
+    """Execute a function over multiple argument sets for Hydra multirun.
+
+    This orchestrates the execution of a callable function with different
+    argument combinations generated for a Hydra multirun, creating a sweep
+    directory for each run and yielding the function's results.
+
+    Args:
+        func (Callable[[list[str]], T]): The function to execute.
+        python (str): The Python interpreter path.
+        file (str): The file path or module name to run.
+        args (list[str]): The list of Hydra arguments for the application.
+        jobs (int): Number of jobs for parallel execution.
+        rootdir (str): Root directory for sweep outputs. Defaults to "multirun".
+        name (str): Name for the Hydra job. Defaults to "".
+        local (bool): Flag to run the job locally or not. If True, runs the job on the
+            local machine.
+
+    Yields:
+        T: the returned values from the function.
+
+    """
+    files = [file] if Path(file).exists() else ["-m", file]
+    launcher = launcher_args(jobs)
+    job_name = [f"hydra.job.name={name}"] if name else []
+
+    for args_ in iter_args(args):
+        sweep_dir = f"hydra.sweep.dir={rootdir}/{ulid.ULID()}"
+        args = args_ if local else quote(args_)
+        args = [python, *files, "--multirun", sweep_dir, *job_name, *args, *launcher]
+        yield func(args)
+
+
+def submit_local(
+    file: str,
+    args: list[str],
+    jobs: int = 0,
+    *,
+    rootdir: str = "multirun",
+    name: str = "",
+    show: bool = False,
+    capture_output: bool = False,
+) -> Iterator[CompletedProcess]:
+    """Submit Hydra multirun jobs locally and yield process results.
+
+    This function handles the local submission of Hydra multirun jobs,
+    optionally capturing their output, and can also print the arguments instead
+    of executing if the `show` flag is set.
+
+    Args:
+        file (str): The file containing the Hydra application.
+        args (list[str]): Arguments for the Hydra application.
+        jobs (int): Number of parallel jobs. Defaults to 0.
+        rootdir (str): Root directory for sweep outputs. Defaults to "multirun".
+        name (str): Name for the Hydra job. Defaults to "".
+        show (bool): Flag to print arguments instead of running. If True,
+            the arguments will be printed to the console and
+            the job will not be executed. Defaults to False.
+        capture_output (bool): Flag to capture the command output. Defaults to False.
+
+    Yields:
+        CompletedProcess: A `CompletedProcess` object with information about the job
+        submission, including the return code and captured output if requested.
+
+    """
+    if show:
+        print_args(args)
+        return
+
+    def run(args: list[str]) -> CompletedProcess:
+        return subprocess.run(args, check=False, capture_output=capture_output)
+
+    if not name:
+        name = Path(file).stem
+
+    yield from multirun(
+        run,
+        sys.executable,
+        file,
+        args,
+        jobs,
+        rootdir=rootdir,
+        name=name,
+        local=True,
+    )
+
+
+def submit_slurm(
+    file: str,
+    args: list[str],
+    time: int,
+    image: Path,
+    partition: str,
+    jobs: int = 0,
+    *,
+    mps: bool = False,
+    venv: bool = False,
+    wait: bool = False,
+    name: str = "",
+    rootdir: str = "multirun",
+    show: bool = False,
+    capture_output: bool = False,
+) -> Iterator[CompletedProcess | Command]:
+    """Submit Hydra multirun jobs to Slurm and yield command or process results.
+
+    This function is responsible for submitting Hydra multirun jobs to a Slurm
+    cluster, with support for various Slurm configurations and the option to
+    capture output or wait for job completion. It can enable NVIDIA Multi-Process
+    Service (MPS) for improved GPU utilization and activate a Python virtual
+    environment before running the job.
+
+    Args:
+        file (str): The file containing the Hydra application.
+        args (list[str]): Arguments for the Hydra application.
+        time (int): Time limit for the Slurm job.
+        image (Path): Container image path for the job.
+        partition (str): Slurm partition for job submission.
+        jobs (int): Number of parallel jobs. Defaults to 0.
+        mps (bool): Enable NVIDIA Multi-Process Service (MPS) for the job. MPS allows
+            multiple CUDA applications to share a single GPU, improving utilization.
+            Defaults to False.
+        venv (bool): Activate a Python virtual environment before running the job.
+            This is useful when specific Python dependencies are required.
+            Defaults to False.
+        wait (bool): Wait for job completion. Defaults to False.
+        name (str): Name for the Hydra job. Defaults to "".
+        rootdir (str): Root directory for sweep outputs. Defaults to "multirun".
+        show (bool): Flag to print arguments instead of running.
+            If True, the arguments will be printed to the console and the job
+            will not be executed. Defaults to False.
+        capture_output (bool): Flag to capture the command output. Defaults to False.
+
+    Yields:
+        CompletedProcess | Command: If `show` is False, yield a `CompletedProcess`
+        object with information about the job submission, including the return code
+        and captured output if requested. If `show` is True, yield a `Command` object
+        with the generated command.
+
+    """
+    if show:
+        print_args(args)
+
+    if not name:
+        name = Path(file).stem
+
+    batch = build_batch(
+        name,
+        time,
+        image,
+        partition,
+        envs=get_envs(),
+        mps=mps,
+        venv=venv,
+        wait=wait,
+        show=show,
+        capture_output=capture_output,
+    )
+
+    yield from multirun(
+        batch,
+        "python",
+        file,
+        args,
+        jobs,
+        rootdir=rootdir,
+        name=name,
+        local=False,
+    )
+
+
+def print_args(args: list[str]) -> None:
+    """Print argument sets for each run in a multirun sweep.
+
+    This utility function is used for visualizing the different argument
+    combinations that will be used in a Hydra multirun sweep,
+    displaying them in a formatted panel.
+
+    Args:
+        args (list[str]): The list of arguments for the Hydra application.
+
+    """
+    from rich import print
+    from rich.panel import Panel
+
+    lines = []
+    for i, args_ in enumerate(iter_args(args)):
+        line = f"#{i}: " + " ".join(args_)
+        lines.append(line)
+
+    panel = Panel.fit(
+        "\n".join(lines),
+        title="arguments",
+        title_align="left",
+        border_style="yellow",
+    )
+    print(panel)
+
+---------------
+"""Processes command arguments for the Hydra application.
+
+This module contains functions that assist in parsing and transforming command-line
+arguments for use with the Hydra application. It includes utilities for converting
+strings to numbers, expanding ranges and lists of values, and handling special
+argument formats.
+"""
+
+from __future__ import annotations
+
+from itertools import chain, product
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+
+def to_number(x: str) -> int | float:
+    """Convert a string to an integer or float.
+
+    Attempts to convert a string to an integer or a float, returning 0 if the string
+    is empty or cannot be converted.
+
+    Args:
+        x (str): The string to convert.
+
+    Returns:
+        int | float: The converted number as an integer or float.
+
+    """
+    if not x:
+        return 0
+
+    if "." in x:
+        return float(x)
+
+    return int(x)
+
+
+def num_point(x: str) -> int:
+    """Count decimal places in a string.
+
+    Examine a string representing a number and returns the count of decimal places
+    present after the decimal point. Return 0 if no decimal point is found.
+
+    Args:
+        x (str): The string to check.
+
+    Returns:
+        int: The number of decimal places.
+
+    """
+    if "." not in x:
+        return 0
+
+    return len(x.split(".")[-1])
+
+
+def collect_value(arg: str) -> list[str]:
+    """Collect a list of values from a range argument.
+
+    Collect all individual values within a numeric range represented by a string
+    (e.g., `1:4`) and return them as a list of strings.
+    Support both integer and floating-point ranges.
+
+
+    Args:
+        arg (str): The argument to collect.
+
+    Returns:
+        list[str]: A list of the collected values.
+
+    """
+    if ":" not in arg:
+        return [arg]
+
+    args = [to_number(x) for x in arg.split(":")]
+    if len(args) == 2:  # noqa: PLR2004
+        r = (args[0], args[1] + 1, 1)
+    else:
+        r = (args[0], args[2] + args[1], args[1])
+
+    if all(isinstance(x, int) for x in r):
+        return [str(x) for x in range(*r)]  # type: ignore
+
+    n = max(*(num_point(x) for x in arg.split(":")))
+    r = [round(x, n) for x in _arange(*r)]
+    return [str(x) for x in r if x <= args[2]]
+
+
+def _arange(start: float, stop: float, step: float) -> list[float]:
+    result = []
+    current = start
+
+    while current < stop:
+        result.append(float(current))
+        current += step
+
+    return result
+
+
+def expand_value(arg: str) -> list[str]:
+    """Expand a string argument into a list of values.
+
+    Take a string containing comma-separated values or ranges and return a list
+    of all individual values. Handle numeric ranges and special characters.
+
+    Args:
+        arg (str): The argument to expand.
+
+    Returns:
+        list[str]: A list of the expanded values.
+
+    """
+    if any(x in arg for x in "([])'\""):
+        return [arg]
+
+    return list(chain.from_iterable(collect_value(x) for x in arg.split(",")))
+
+
+def expand_arg(arg: str) -> list[str]:
+    """Expand an argument into a list of key-value pairs in the form of `key=value`.
+
+    Parse a string representing a key-value pair where the value may contain ranges
+    or lists, returning a list of expanded key-value pairs with individual values.
+
+    Args:
+        arg (str): The argument to expand.
+
+    Returns:
+        list[str]: A list of the expanded key-value pairs.
+
+    """
+    key, value = arg.split("=")
+    key, suffix = get_key_suffix(key)
+    return [f"{key}={add_suffix(v, suffix)}" for v in expand_value(value)]
+
+
+def collect_arg(arg: str) -> str:
+    """Collect a string of expanded key-value pairs.
+
+    Take a key-value pair argument and concatenates all expanded values with commas,
+    returning a single string suitable for command-line usage.
+
+    Args:
+        arg (str): The argument to collect.
+
+    Returns:
+        str: A string of the collected key and values.
+
+    """
+    key, value = arg.split("=")
+    key, suffix = get_key_suffix(key)
+    value = ",".join(f"{add_suffix(v, suffix)}" for v in expand_value(value))
+    return f"{key}={value}"
+
+
+def _parse_arg(arg: str) -> Iterator[str]:
+    if "|" not in arg:
+        yield from expand_arg(arg)
+        return
+
+    args = arg.split("|")
+    key = suffix = ""
+    for arg_ in args:
+        if "=" in arg_:
+            key, value = arg_.split("=")
+            key, suffix = get_key_suffix(key)
+        else:
+            value = arg_
+
+        value = ",".join(f"{add_suffix(v, suffix)}" for v in expand_value(value))
+        yield f"{key}={value}"
+
+
+def parse_arg(arg: str) -> list[str]:
+    """Parse a string argument into a list of values.
+
+    Responsible for parsing a string that may contain multiple arguments separated
+    by pipes ("|") and returns a list of all expanded arguments.
+
+    Args:
+        arg (str): The argument to parse.
+
+    Returns:
+       list[str]: A list of the parsed arguments.
+
+    """
+    return list(_parse_arg(arg))
+
+
+def _parse_args(args: list[str]) -> list[list[str]]:
+    return [list(x) for x in product(*(parse_arg(arg) for arg in args))]
+
+
+def split_args(args: list[str]) -> tuple[list[str], list[str]]:
+    """Split a list of arguments into two distinct lists.
+
+    Divide a list of arguments into two separate lists, one for general arguments
+    and another for arguments prefixed with "hydra.", based on a special delimiter "/".
+
+    Args:
+        args (list[str]): The arguments to split.
+
+    Returns:
+        tuple[list[str], list[str]]: The split arguments as two lists.
+
+    """
+    first = []
+    second = []
+    current = first
+    for arg in args:
+        if arg == "/":
+            current = second
+            continue
+
+        if "hydra." in arg:
+            second.append(arg)
+
+        else:
+            current.append(arg)
+
+    return first, second
+
+
+def iter_args(args: list[str]) -> Iterator[list[str]]:
+    """Iterate over combinations generated from parsed arguments.
+
+    Generate all possible combinations of arguments by parsing and expanding each one,
+    yielding them as an iterator.
+
+    Args:
+        args (list[str]): The arguments to parse.
+
+    Yields:
+        list[str]: a list of the parsed argument combinations.
+
+    """
+    first, second = split_args(args)
+    second = [collect_arg(x) for x in second]
+    for first_ in _parse_args(first):
+        yield [*first_, *second]
+
+
+def _quote(arg: str) -> str:
+    if any(x in arg for x in "[({|"):
+        return f"{arg!r}"
+
+    return arg
+
+
+def quote(args: list[str]) -> list[str]:
+    """Quote arguments that contain special characters.
+
+    Take a list of arguments and return a new list where arguments containing special
+    characters such as brackets or pipes are quoted.
+
+    Args:
+        args (list[str]): The arguments to quote.
+
+    Returns:
+        list[str]: A list of quoted arguments.
+
+    """
+    return [_quote(arg) for arg in args]
+
+
+def get_key_suffix(key: str) -> tuple[str, str]:
+    """Extract the key and suffix from a string.
+
+    Separate a string into a key and a suffix, if present after a "/", and return
+    them as a tuple. The suffix is used for unit conversion.
+
+    Args:
+        key (str): The key to process.
+
+    Returns:
+        tuple[str, str]: A tuple of the key and its suffix.
+
+    """
+    if "/" in key:
+        key, prefix = key.split("/")
+        return key, suffix_from_prefix(prefix)
+
+    return key, ""
+
+
+def suffix_from_prefix(prefix: str) -> str:
+    """Convert a prefix to a numeric suffix.
+
+    Given a unit prefix, return the corresponding numeric suffix as a string, which
+    can be appended to a value.
+
+    Args:
+        prefix (str): The prefix to convert.
+
+    Returns:
+        str: The corresponding suffix.
+
+    """
+    prefix_suffix = {
+        "G": "e9",
+        "M": "e6",
+        "k": "e3",
+        "m": "e-3",
+        "u": "e-6",
+        "n": "e-9",
+        "p": "e-12",
+        "f": "e-15",
+        "Gi": str(2**30),
+        "Mi": str(2**20),
+        "ki": str(2**10),
+    }
+    return prefix_suffix.get(prefix, "")
+
+
+def add_suffix(value: str, suffix: str) -> str:
+    """Append a suffix to a value string.
+
+    Take a value and a suffix and return a new string with the suffix appended. If
+    the suffix represents a power of ten, it is appended directly; otherwise, the value
+    is multiplied by the suffix.
+
+    Args:
+        value (str): The value to modify.
+        suffix (str): The suffix to append.
+
+    Returns:
+        str: The value with the suffix added.
+
+    """
+    if value == "0" or not suffix:
+        return value
+
+    if suffix.startswith("e"):
+        return f"{value}{suffix}"
+
+    return str(int(value) * int(suffix))

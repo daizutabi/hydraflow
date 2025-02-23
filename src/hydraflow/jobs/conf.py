@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
-@dataclass
-class Step:
-    run: str = ""
-    args: str = ""
-    batch: str = ""
+from .step import Step
 
 
 @dataclass

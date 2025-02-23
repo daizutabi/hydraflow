@@ -10,6 +10,18 @@ from __future__ import annotations
 
 from itertools import chain
 
+SUFFIX_EXPONENT = {
+    "T": "e12",
+    "G": "e9",
+    "M": "e6",
+    "k": "e3",
+    "m": "e-3",
+    "u": "e-6",
+    "n": "e-9",
+    "p": "e-12",
+    "f": "e-15",
+}
+
 
 def to_number(x: str) -> int | float:
     """Convert a string to an integer or float.
@@ -83,19 +95,6 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
     return result
 
 
-SUFFIX_EXPONENT = {
-    "T": "e12",
-    "G": "e9",
-    "M": "e6",
-    "k": "e3",
-    "m": "e-3",
-    "u": "e-6",
-    "n": "e-9",
-    "p": "e-12",
-    "f": "e-15",
-}
-
-
 def split_suffix(arg: str) -> tuple[str, str]:
     """Split a string into a numeric range and a suffix.
 
@@ -167,6 +166,60 @@ def collect_values(arg: str) -> list[str]:
     return [add_suffix(x, suffix) for x in values]
 
 
+def split(arg: str) -> list[str]:
+    r"""Split a string by top-level commas.
+
+    Splits a string by commas while respecting nested structures.
+    Commas inside brackets and quotes are ignored, only splitting
+    at the top-level commas.
+
+    Args:
+        arg (str): The string to split.
+
+    Returns:
+        list[str]: A list of split strings.
+
+    Examples:
+        >>> split("[a,1],[b,2]")
+        ['[a,1]', '[b,2]']
+        >>> split('"x,y",z')
+        ['"x,y"', 'z']
+        >>> split("'p,q',r")
+        ["'p,q'", 'r']
+
+    """
+    result = []
+    current = []
+    bracket_count = 0
+    in_single_quote = False
+    in_double_quote = False
+
+    for char in arg:
+        if char == "'" and not in_double_quote:
+            in_single_quote = not in_single_quote
+        elif char == '"' and not in_single_quote:
+            in_double_quote = not in_double_quote
+        elif char == "[" and not (in_single_quote or in_double_quote):
+            bracket_count += 1
+        elif char == "]" and not (in_single_quote or in_double_quote):
+            bracket_count -= 1
+        elif (
+            char == ","
+            and bracket_count == 0
+            and not in_single_quote
+            and not in_double_quote
+        ):
+            result.append("".join(current))
+            current = []
+            continue
+        current.append(char)
+
+    if current:
+        result.append("".join(current))
+
+    return result
+
+
 def expand_values(arg: str) -> list[str]:
     """Expand a string argument into a list of values.
 
@@ -180,7 +233,7 @@ def expand_values(arg: str) -> list[str]:
         list[str]: A list of the expanded values.
 
     """
-    return list(chain.from_iterable(collect_values(x) for x in arg.split(",")))
+    return list(chain.from_iterable(collect_values(x) for x in split(arg)))
 
 
 def parse(arg: str) -> str:

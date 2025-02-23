@@ -44,6 +44,7 @@ addopts = [
   "--cov=hydraflow",
   "--cov-report=lcov:lcov.info",
   "--dist=loadgroup",
+  "--doctest-modules",
   "-n8",
 ]
 filterwarnings = [
@@ -89,5 +90,5 @@ ignore = [
 "apps/*.py" = ["D", "G", "INP"]
 "src/hydraflow/cli.py" = ["ANN", "D"]
 "src/hydraflow/core/main.py" = ["ANN201", "D401"]
-"src/hydraflow/jobs/conf.py" = ["ANN", "D"]
+"src/hydraflow/jobs/conf.py" = ["ANN", "D", "TC001"]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]

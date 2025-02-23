@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.parametrize(("s", "x"), [("1", 1), ("1.2", 1.2), ("", 0)])
 def test_to_number(s, x):
-    from hydraflow.jobs.sweeper import to_number
+    from hydraflow.jobs.parser import to_number
 
     assert to_number(s) == x
 
@@ -13,7 +13,7 @@ def test_to_number(s, x):
     [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0)],
 )
 def test_num_point(s, x):
-    from hydraflow.jobs.sweeper import num_point
+    from hydraflow.jobs.parser import num_point
 
     assert num_point(s) == x
 
@@ -28,7 +28,7 @@ def test_num_point(s, x):
     ],
 )
 def test_get_range_errors(arg, expected_exception, expected_message):
-    from hydraflow.jobs.sweeper import _get_range
+    from hydraflow.jobs.parser import _get_range
 
     with pytest.raises(expected_exception) as excinfo:
         _get_range(arg)
@@ -54,7 +54,7 @@ def test_get_range_errors(arg, expected_exception, expected_message):
     ],
 )
 def test_split_suffix(s, x):
-    from hydraflow.jobs.sweeper import split_suffix
+    from hydraflow.jobs.parser import split_suffix
 
     assert split_suffix(s) == x
 
@@ -83,7 +83,7 @@ def test_split_suffix(s, x):
     ],
 )
 def test_collect_value(s, x):
-    from hydraflow.jobs.sweeper import collect_values
+    from hydraflow.jobs.parser import collect_values
 
     assert collect_values(s) == x
 
@@ -95,11 +95,15 @@ def test_collect_value(s, x):
         ("1:3,5:6", ["1", "2", "3", "5", "6"]),
         ("0:0.25:1,2.0", ["0", "0.25", "0.5", "0.75", "1.0", "2.0"]),
         ("3", ["3"]),
+        ("3k", ["3e3"]),
         ("1:2:k,3:2:7:M", ["1e3", "2e3", "3e6", "5e6", "7e6"]),
+        ("[1,2],[3,4]", ["[1,2]", "[3,4]"]),
+        ("'1,2','3,4'", ["'1,2'", "'3,4'"]),
+        ('"1,2","3,4"', ['"1,2"', '"3,4"']),
     ],
 )
 def test_expand_value(s, x):
-    from hydraflow.jobs.sweeper import expand_values, parse
+    from hydraflow.jobs.parser import expand_values, parse
 
     assert expand_values(s) == x
     assert parse(s) == ",".join(x)

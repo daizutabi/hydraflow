@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from hydraflow.jobs.conf import HydraflowConf
+
 
 @pytest.fixture(scope="module")
 def chdir(tmp_path_factory: pytest.TempPathFactory):
@@ -28,3 +30,13 @@ def config(chdir):
         return cfg
 
     return config
+
+
+@pytest.fixture(scope="module")
+def args(config):
+    def args(text: str):
+        text = f"jobs:\n  a:\n    steps:\n      - args: {text}\n"
+        cfg: HydraflowConf = config(text)
+        return cfg.jobs["a"].steps[0].args
+
+    return args
