@@ -8,6 +8,7 @@ ranges, and expand values from string arguments.
 
 from __future__ import annotations
 
+import re
 from itertools import chain, product
 from typing import TYPE_CHECKING
 
@@ -357,7 +358,6 @@ def expand_arg(arg: str) -> Iterator[str]:
     if "|" not in arg:
         key, value = arg.split("=")
 
-        key, value = arg.split("=")
         for v in expand_values(value):
             yield f"{key}={v}"
 
@@ -379,7 +379,7 @@ def expand_arg(arg: str) -> Iterator[str]:
         yield f"{key}={value}"
 
 
-def collect(args: list[str]) -> list[str]:
+def collect(args: str | list[str]) -> list[str]:
     """Collect a list of arguments into a list of strings.
 
     Args:
@@ -389,10 +389,15 @@ def collect(args: list[str]) -> list[str]:
         list[str]: A list of the collected arguments.
 
     """
+    if isinstance(args, str):
+        args = re.split(r"\s+", args.strip())
+
+    args = [arg for arg in args if "=" in arg]
+
     return [collect_arg(arg) for arg in args]
 
 
-def expand(args: list[str]) -> list[list[str]]:
+def expand(args: str | list[str]) -> list[list[str]]:
     """Expand a list of arguments into a list of lists of strings.
 
     Args:
@@ -402,4 +407,9 @@ def expand(args: list[str]) -> list[list[str]]:
         list[list[str]]: A list of the expanded arguments.
 
     """
+    if isinstance(args, str):
+        args = re.split(r"\s+", args.strip())
+
+    args = [arg for arg in args if "=" in arg]
+
     return [list(x) for x in product(*(expand_arg(arg) for arg in args))]

@@ -13,5 +13,4 @@ class Job:
 
 @dataclass
 class HydraflowConf:
-    run: str = ""
     jobs: dict[str, Job] = field(default_factory=dict)
