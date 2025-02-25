@@ -205,7 +205,7 @@ def iter_artifacts_dirs(
     experiment_names: str | list[str] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifacts directories in the run directory."""
+    """Iterate over the artifacts directories in the root directory."""
     for path in iter_run_dirs(experiment_names, root_dir):
         yield path / "artifacts"
 
@@ -215,6 +215,6 @@ def iter_artifact_paths(
     experiment_names: str | list[str] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifacts directories in the run directory."""
+    """Iterate over the artifact paths in the root directory."""
     for path in iter_artifacts_dirs(experiment_names, root_dir):
         yield path / artifact_path

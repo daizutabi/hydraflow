@@ -81,3 +81,10 @@ def test_list_run_paths(experiment: Experiment):
 
     dirs = list_run_paths(experiment.name, "artifacts")
     assert all(d.is_dir() for d in dirs)
+
+
+@pytest.mark.parametrize("uri", [None, "test_mlflow"])
+def test_root_dir(experiment, uri):
+    from hydraflow.core.io import get_root_dir
+
+    assert get_root_dir(uri) == Path.cwd() / "test_mlflow"
