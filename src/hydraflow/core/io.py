@@ -15,7 +15,7 @@ from mlflow.entities import Run
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Iterator
 
 
 def file_uri_to_path(uri: str) -> Path:
@@ -147,3 +147,74 @@ def remove_run(run: Run | Iterable[Run]) -> None:
         return
 
     shutil.rmtree(get_artifact_dir(run).parent)
+
+
+def get_root_dir(uri: str | Path | None = None) -> Path:
+    """Get the root directory for the MLflow tracking server."""
+    if uri is not None:
+        return Path(uri).absolute()
+
+    uri = mlflow.get_tracking_uri()
+
+    if uri.startswith("file:"):
+        return file_uri_to_path(uri)
+
+    return Path(uri).absolute()
+
+
+def get_experiment_name(path: Path) -> str | None:
+    """Get the experiment name from the meta file."""
+    metafile = path / "meta.yaml"
+    if not metafile.exists():
+        return None
+    lines = metafile.read_text().splitlines()
+    for line in lines:
+        if line.startswith("name:"):
+            return line.split(":")[1].strip()
+    return None
+
+
+def iter_experiment_dirs(
+    experiment_names: str | list[str] | None = None,
+    root_dir: str | Path | None = None,
+) -> Iterator[Path]:
+    """Iterate over the experiment directories in the root directory."""
+    if isinstance(experiment_names, str):
+        experiment_names = [experiment_names]
+
+    root_dir = get_root_dir(root_dir)
+    for path in root_dir.iterdir():
+        if path.is_dir() and path.name not in [".trash", "0"]:
+            if name := get_experiment_name(path):
+                if experiment_names is None or name in experiment_names:
+                    yield path
+
+
+def iter_run_dirs(
+    experiment_names: str | list[str] | None = None,
+    root_dir: str | Path | None = None,
+) -> Iterator[Path]:
+    """Iterate over the run directories in the root directory."""
+    for experiment_dir in iter_experiment_dirs(experiment_names, root_dir):
+        for path in experiment_dir.iterdir():
+            if path.is_dir() and (path / "artifacts").exists():
+                yield path
+
+
+def iter_artifacts_dirs(
+    experiment_names: str | list[str] | None = None,
+    root_dir: str | Path | None = None,
+) -> Iterator[Path]:
+    """Iterate over the artifacts directories in the root directory."""
+    for path in iter_run_dirs(experiment_names, root_dir):
+        yield path / "artifacts"
+
+
+def iter_artifact_paths(
+    artifact_path: str | Path,
+    experiment_names: str | list[str] | None = None,
+    root_dir: str | Path | None = None,
+) -> Iterator[Path]:
+    """Iterate over the artifact paths in the root directory."""
+    for path in iter_artifacts_dirs(experiment_names, root_dir):
+        yield path / artifact_path
