@@ -71,7 +71,7 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     for step in job.steps:
         for args in iter_args(step):
-            sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ulid()}"
+            sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
             yield ["--multirun", sweep_dir, job_name, *args]
 
 
