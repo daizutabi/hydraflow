@@ -51,6 +51,7 @@ def batches(job: Job):
 
 def test_sweep_dir(batches):
     assert all(x[1].startswith("hydra.sweep.dir=multirun/") for x in batches)
+    assert all(len(x[1].split("/")[-1]) == 26 for x in batches)
 
 
 def test_job_name(batches):
