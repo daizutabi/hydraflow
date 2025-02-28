@@ -362,26 +362,27 @@ def expand_arg(arg: str) -> Iterator[str]:
 
     """
     if "|" not in arg:
-        key, value = arg.split("=")
+        key, suffix, value = split_arg(arg)
 
-        for v in expand_values(value):
+        for v in expand_values(value, suffix):
             yield f"{key}={v}"
 
         return
 
     args = arg.split("|")
     key = ""
+    suffix = ""
 
     for arg_ in args:
         if "=" in arg_:
-            key, value = arg_.split("=")
+            key, suffix, value = split_arg(arg_)
         elif key:
             value = arg_
         else:
             msg = f"Invalid argument: {arg_}"
             raise ValueError(msg)
 
-        value = ",".join(expand_values(value))
+        value = ",".join(expand_values(value, suffix))
         yield f"{key}={value}"
 
 
