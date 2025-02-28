@@ -8,7 +8,7 @@ ranges, and expand values from string arguments.
 
 from __future__ import annotations
 
-import re
+import shlex
 from itertools import chain, product
 from typing import TYPE_CHECKING
 
@@ -372,7 +372,7 @@ def collect(args: str | list[str]) -> list[str]:
 
     """
     if isinstance(args, str):
-        args = re.split(r"\s+", args.strip())
+        args = shlex.split(args)
 
     args = [arg for arg in args if "=" in arg]
 
@@ -390,7 +390,7 @@ def expand(args: str | list[str]) -> list[list[str]]:
 
     """
     if isinstance(args, str):
-        args = re.split(r"\s+", args.strip())
+        args = shlex.split(args)
 
     args = [arg for arg in args if "=" in arg]
 
