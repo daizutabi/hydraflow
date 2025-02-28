@@ -116,7 +116,7 @@ class RunCollection:
             but not in the other.
 
         """
-        runs = [run for run in self._runs if run not in other._runs]  # noqa: SLF001
+        runs = [run for run in self._runs if run not in other._runs]
         return self.__class__(runs)
 
     @property

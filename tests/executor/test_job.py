@@ -94,6 +94,33 @@ def test_multirun_run_error(job: Job):
         multirun(job)
 
 
+def test_multirun_call(job: Job, capsys: pytest.CaptureFixture):
+    from hydraflow.executor.job import multirun
+
+    job.call = "typer.echo"
+    multirun(job)
+    out, _ = capsys.readouterr()
+    assert "'a=1,2', 'b=5'" in out
+    assert "'a=3,4', 'c=8'" in out
+
+
+def test_multirun_call_args(job: Job, capsys: pytest.CaptureFixture):
+    from hydraflow.executor.job import multirun
+
+    job.call = "typer.echo a 'b c'"
+    multirun(job)
+    out, _ = capsys.readouterr()
+    assert "['a', 'b c', '--multirun'," in out
+
+
+def test_multirun_call_error(job: Job):
+    from hydraflow.executor.job import multirun
+
+    job.call = "hydraflow.executor.job.multirun"
+    with pytest.raises(RuntimeError):
+        multirun(job)
+
+
 def test_multirun_call_invalid(job: Job):
     from hydraflow.executor.job import multirun
 
@@ -107,14 +134,6 @@ def test_multirun_call_not_found(job: Job):
 
     job.call = "hydraflow.invalid"
     with pytest.raises(ValueError):
-        multirun(job)
-
-
-def test_multirun_call_error(job: Job):
-    from hydraflow.executor.job import multirun
-
-    job.call = "typer.echo"
-    with pytest.raises(RuntimeError):
         multirun(job)
 
 

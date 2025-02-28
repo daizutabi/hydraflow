@@ -99,6 +99,7 @@ def multirun(job: Job) -> None:
 
     if job.run:
         base_cmds = shlex.split(job.run)
+
         for args in it:
             cmds = [*base_cmds, *args]
             try:
@@ -108,22 +109,24 @@ def multirun(job: Job) -> None:
                 raise RuntimeError(msg) from e
 
     elif job.call:
-        if "." not in job.call:
-            msg = f"Invalid function path: {job.call}."
+        call_name, *base_args = shlex.split(job.call)
+
+        if "." not in call_name:
+            msg = f"Invalid function path: {call_name}."
             msg += " Expected format: 'package.module.function'"
             raise ValueError(msg)
 
         try:
-            module_name, func_name = job.call.rsplit(".", 1)
+            module_name, func_name = call_name.rsplit(".", 1)
             module = importlib.import_module(module_name)
             func = getattr(module, func_name)
         except (ImportError, AttributeError, ModuleNotFoundError) as e:
-            msg = f"Failed to import or find function: {job.call}"
+            msg = f"Failed to import or find function: {call_name}"
             raise ValueError(msg) from e
 
         for args in it:
             try:
-                func(*args)
+                func([*base_args, *args])
             except Exception as e:  # noqa: PERF203
                 msg = f"Function call '{job.call}' failed with args: {args}"
                 raise RuntimeError(msg) from e
