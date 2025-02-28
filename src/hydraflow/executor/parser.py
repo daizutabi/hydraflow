@@ -8,7 +8,7 @@ ranges, and expand values from string arguments.
 
 from __future__ import annotations
 
-import re
+import shlex
 from itertools import chain, product
 from typing import TYPE_CHECKING
 
@@ -289,7 +289,7 @@ def split(arg: str) -> list[str]:
     return result
 
 
-def expand_values(arg: str) -> list[str]:
+def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
     """Expand a string argument into a list of values.
 
     Take a string containing comma-separated values or ranges and return a list
@@ -297,12 +297,36 @@ def expand_values(arg: str) -> list[str]:
 
     Args:
         arg (str): The argument to expand.
+        suffix (str): The suffix to append to each value.
 
     Returns:
-        list[str]: A list of the expanded values.
+        Iterator[str]: An iterator of the expanded values.
 
     """
-    return list(chain.from_iterable(collect_values(x) for x in split(arg)))
+    if suffix in SUFFIX_EXPONENT:
+        suffix = SUFFIX_EXPONENT[suffix]
+
+    for value in chain.from_iterable(collect_values(x) for x in split(arg)):
+        yield f"{value}{suffix}"
+
+
+def split_arg(arg: str) -> tuple[str, str, str]:
+    """Split an argument into a key, suffix, and value.
+
+    Args:
+        arg (str): The argument to split.
+
+    Returns:
+        tuple[str, str, str]: A tuple containing the key, suffix, and value.
+
+    """
+    key, value = arg.split("=")
+
+    if "/" in key:
+        key, suffix = key.split("/", 1)
+        return key, suffix, value
+
+    return key, "", value
 
 
 def collect_arg(arg: str) -> str:
@@ -318,9 +342,9 @@ def collect_arg(arg: str) -> str:
         str: A string of the collected key and values.
 
     """
-    key, arg = arg.split("=")
-    arg = ",".join(expand_values(arg))
-    return f"{key}={arg}"
+    key, suffix, value = split_arg(arg)
+    value = ",".join(expand_values(value, suffix))
+    return f"{key}={value}"
 
 
 def expand_arg(arg: str) -> Iterator[str]:
@@ -338,26 +362,27 @@ def expand_arg(arg: str) -> Iterator[str]:
 
     """
     if "|" not in arg:
-        key, value = arg.split("=")
+        key, suffix, value = split_arg(arg)
 
-        for v in expand_values(value):
+        for v in expand_values(value, suffix):
             yield f"{key}={v}"
 
         return
 
     args = arg.split("|")
     key = ""
+    suffix = ""
 
     for arg_ in args:
         if "=" in arg_:
-            key, value = arg_.split("=")
+            key, suffix, value = split_arg(arg_)
         elif key:
             value = arg_
         else:
             msg = f"Invalid argument: {arg_}"
             raise ValueError(msg)
 
-        value = ",".join(expand_values(value))
+        value = ",".join(expand_values(value, suffix))
         yield f"{key}={value}"
 
 
@@ -372,7 +397,7 @@ def collect(args: str | list[str]) -> list[str]:
 
     """
     if isinstance(args, str):
-        args = re.split(r"\s+", args.strip())
+        args = shlex.split(args)
 
     args = [arg for arg in args if "=" in arg]
 
@@ -390,7 +415,7 @@ def expand(args: str | list[str]) -> list[list[str]]:
 
     """
     if isinstance(args, str):
-        args = re.split(r"\s+", args.strip())
+        args = shlex.split(args)
 
     args = [arg for arg in args if "=" in arg]
 

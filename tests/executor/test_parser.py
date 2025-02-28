@@ -129,18 +129,37 @@ def test_collect_value(s, x):
 def test_expand_value(s, x):
     from hydraflow.executor.parser import expand_values
 
-    assert expand_values(s) == x
+    assert list(expand_values(s)) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        ("1,2,3", ["1e3", "2e3", "3e3"]),
+        ("1:3,5:6", ["1e3", "2e3", "3e3", "5e3", "6e3"]),
+        ("0:0.25:1,2.0", ["0e3", "0.25e3", "0.5e3", "0.75e3", "1.0e3", "2.0e3"]),
+        ("3", ["3e3"]),
+    ],
+)
+def test_expand_value_suffix(s, x):
+    from hydraflow.executor.parser import expand_values
+
+    assert list(expand_values(s, "k")) == x
 
 
 @pytest.mark.parametrize(
     ("s", "x"),
     [
         ("a=1", "a=1"),
+        ("a/M=1", "a=1e6"),
         ("a=1,2", "a=1,2"),
+        ("a/n=1,2", "a=1e-9,2e-9"),
         ("a=1:2", "a=1,2"),
+        ("a/M=1:2", "a=1e6,2e6"),
         ("a=:2:3", "a=0,2"),
         ("a=1:3:k", "a=1e3,2e3,3e3"),
         ("a=1:3:k,2:4:M", "a=1e3,2e3,3e3,2e6,3e6,4e6"),
+        ("a/m=1:3,8:10", "a=1e-3,2e-3,3e-3,8e-3,9e-3,10e-3"),
     ],
 )
 def test_collect_arg(s, x):
@@ -154,13 +173,17 @@ def test_collect_arg(s, x):
     [
         ("a=1", ["a=1"]),
         ("a=1,2", ["a=1", "a=2"]),
+        ("a/M=1,2", ["a=1e6", "a=2e6"]),
         ("a=1:2", ["a=1", "a=2"]),
+        ("a/n=1:2", ["a=1e-9", "a=2e-9"]),
         ("a=:2:3", ["a=0", "a=2"]),
         ("a=1:3:k", ["a=1e3", "a=2e3", "a=3e3"]),
         ("a=1:3:k,2:4:M", ["a=1e3", "a=2e3", "a=3e3", "a=2e6", "a=3e6", "a=4e6"]),
         ("a=1,2|3,4", ["a=1,2", "a=3,4"]),
+        ("a/G=1,2|3,4", ["a=1e9,2e9", "a=3e9,4e9"]),
         ("a=1:4|3:5:m", ["a=1,2,3,4", "a=3e-3,4e-3,5e-3"]),
         ("a=1,2|b=3,4|c=5,6", ["a=1,2", "b=3,4", "c=5,6"]),
+        ("a/k=1,2|b/m=3,4|c/u=5,6", ["a=1e3,2e3", "b=3e-3,4e-3", "c=5e-6,6e-6"]),
     ],
 )
 def test_expand_arg(s, x):
@@ -179,14 +202,14 @@ def test_expand_arg_error():
 @pytest.mark.parametrize(
     ("s", "x"),
     [
-        (["a=1"], ["a=1"]),
+        (["a=1", "b"], ["a=1"]),
         (["a=1:3"], ["a=1,2,3"]),
+        (["a/m=1:3"], ["a=1e-3,2e-3,3e-3"]),
         (["a=1:3", "b=4:6"], ["a=1,2,3", "b=4,5,6"]),
-        ("a=1:3\nb=4:6", ["a=1,2,3", "b=4,5,6"]),
-        ("", []),
+        (["a/k=1:3", "b/m=4:6"], ["a=1e3,2e3,3e3", "b=4e-3,5e-3,6e-3"]),
     ],
 )
-def test_collect(s, x):
+def test_collect_list(s, x):
     from hydraflow.executor.parser import collect
 
     assert collect(s) == x
@@ -195,13 +218,29 @@ def test_collect(s, x):
 @pytest.mark.parametrize(
     ("s", "x"),
     [
-        (["a=1"], [["a=1"]]),
-        (["a=1,2"], [["a=1"], ["a=2"]]),
+        ("a=1:3\nb=4:6", ["a=1,2,3", "b=4,5,6"]),
+        ("a/k=1:3 b=4:6", ["a=1e3,2e3,3e3", "b=4,5,6"]),
+        ("a/n=4,5 b=c,d", ["a=4e-9,5e-9", "b=c,d"]),
+        ("", []),
+    ],
+)
+def test_collect_str(s, x):
+    from hydraflow.executor.parser import collect
+
+    assert collect(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        (["a=1", "b"], [["a=1"]]),
+        (["a/k=1,2"], [["a=1e3"], ["a=2e3"]]),
         (
             " a=1,2\n b=3,4\n",
             [["a=1", "b=3"], ["a=1", "b=4"], ["a=2", "b=3"], ["a=2", "b=4"]],
         ),
         (["a=1:2|3,4"], [["a=1,2"], ["a=3,4"]]),
+        (["a/k=1:2|3,4"], [["a=1e3,2e3"], ["a=3e3,4e3"]]),
         (
             ["a=1:2|3,4", "b=5:6|c=7,8"],
             [
@@ -211,10 +250,39 @@ def test_collect(s, x):
                 ["a=3,4", "c=7,8"],
             ],
         ),
+        (
+            ["a/m=1:2|3,4", "b/k=5:6|c/u=7,8"],
+            [
+                ["a=1e-3,2e-3", "b=5e3,6e3"],
+                ["a=1e-3,2e-3", "c=7e-6,8e-6"],
+                ["a=3e-3,4e-3", "b=5e3,6e3"],
+                ["a=3e-3,4e-3", "c=7e-6,8e-6"],
+            ],
+        ),
+    ],
+)
+def test_expand_list(s, x):
+    from hydraflow.executor.parser import expand
+
+    assert expand(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        (
+            "a/m=1:2|3,4 b/k=5:6|c=7,8",
+            [
+                ["a=1e-3,2e-3", "b=5e3,6e3"],
+                ["a=1e-3,2e-3", "c=7,8"],
+                ["a=3e-3,4e-3", "b=5e3,6e3"],
+                ["a=3e-3,4e-3", "c=7,8"],
+            ],
+        ),
         ("", [[]]),
     ],
 )
-def test_expand(s, x):
+def test_expand_str(s, x):
     from hydraflow.executor.parser import expand
 
     assert expand(s) == x
