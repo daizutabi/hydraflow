@@ -310,6 +310,25 @@ def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
         yield f"{value}{suffix}"
 
 
+def split_arg(arg: str) -> tuple[str, str, str]:
+    """Split an argument into a key, suffix, and value.
+
+    Args:
+        arg (str): The argument to split.
+
+    Returns:
+        tuple[str, str, str]: A tuple containing the key, suffix, and value.
+
+    """
+    key, value = arg.split("=")
+
+    if "/" in key:
+        key, suffix = key.split("/", 1)
+        return key, suffix, value
+
+    return key, "", value
+
+
 def collect_arg(arg: str) -> str:
     """Collect a string of expanded key-value pairs.
 
@@ -323,9 +342,9 @@ def collect_arg(arg: str) -> str:
         str: A string of the collected key and values.
 
     """
-    key, arg = arg.split("=")
-    arg = ",".join(expand_values(arg))
-    return f"{key}={arg}"
+    key, suffix, value = split_arg(arg)
+    value = ",".join(expand_values(value, suffix))
+    return f"{key}={value}"
 
 
 def expand_arg(arg: str) -> Iterator[str]:
