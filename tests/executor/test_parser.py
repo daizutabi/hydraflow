@@ -129,7 +129,22 @@ def test_collect_value(s, x):
 def test_expand_value(s, x):
     from hydraflow.executor.parser import expand_values
 
-    assert expand_values(s) == x
+    assert list(expand_values(s)) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
+        ("1,2,3", ["1e3", "2e3", "3e3"]),
+        ("1:3,5:6", ["1e3", "2e3", "3e3", "5e3", "6e3"]),
+        ("0:0.25:1,2.0", ["0e3", "0.25e3", "0.5e3", "0.75e3", "1.0e3", "2.0e3"]),
+        ("3", ["3e3"]),
+    ],
+)
+def test_expand_value_suffix(s, x):
+    from hydraflow.executor.parser import expand_values
+
+    assert list(expand_values(s, "k")) == x
 
 
 @pytest.mark.parametrize(
@@ -182,11 +197,22 @@ def test_expand_arg_error():
         (["a=1", "b"], ["a=1"]),
         (["a=1:3"], ["a=1,2,3"]),
         (["a=1:3", "b=4:6"], ["a=1,2,3", "b=4,5,6"]),
+    ],
+)
+def test_collect_list(s, x):
+    from hydraflow.executor.parser import collect
+
+    assert collect(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
         ("a=1:3\nb=4:6", ["a=1,2,3", "b=4,5,6"]),
         ("", []),
     ],
 )
-def test_collect(s, x):
+def test_collect_str(s, x):
     from hydraflow.executor.parser import collect
 
     assert collect(s) == x
@@ -211,10 +237,21 @@ def test_collect(s, x):
                 ["a=3,4", "c=7,8"],
             ],
         ),
+    ],
+)
+def test_expand_list(s, x):
+    from hydraflow.executor.parser import expand
+
+    assert expand(s) == x
+
+
+@pytest.mark.parametrize(
+    ("s", "x"),
+    [
         ("", [[]]),
     ],
 )
-def test_expand(s, x):
+def test_expand_str(s, x):
     from hydraflow.executor.parser import expand
 
     assert expand(s) == x

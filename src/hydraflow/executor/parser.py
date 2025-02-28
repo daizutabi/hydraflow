@@ -289,7 +289,7 @@ def split(arg: str) -> list[str]:
     return result
 
 
-def expand_values(arg: str) -> list[str]:
+def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
     """Expand a string argument into a list of values.
 
     Take a string containing comma-separated values or ranges and return a list
@@ -297,12 +297,17 @@ def expand_values(arg: str) -> list[str]:
 
     Args:
         arg (str): The argument to expand.
+        suffix (str): The suffix to append to each value.
 
     Returns:
-        list[str]: A list of the expanded values.
+        Iterator[str]: An iterator of the expanded values.
 
     """
-    return list(chain.from_iterable(collect_values(x) for x in split(arg)))
+    if suffix in SUFFIX_EXPONENT:
+        suffix = SUFFIX_EXPONENT[suffix]
+
+    for value in chain.from_iterable(collect_values(x) for x in split(arg)):
+        yield f"{value}{suffix}"
 
 
 def collect_arg(arg: str) -> str:
