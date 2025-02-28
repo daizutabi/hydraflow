@@ -61,4 +61,4 @@ def test_load_overrides(run: Run):
     from hydraflow.core.io import load_overrides
 
     overrides = load_overrides(run)
-    assert overrides == ["name=a", "age=10"]
+    assert overrides == ["age=10", "name=a"]
