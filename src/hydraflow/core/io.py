@@ -136,7 +136,7 @@ def load_overrides(run: Run) -> ListConfig:
 
     """
     path = get_artifact_dir(run) / ".hydra/overrides.yaml"
-    return OmegaConf.load(path)  # type: ignore
+    return sorted(OmegaConf.load(path))  # type: ignore
 
 
 def remove_run(run: Run | Iterable[Run]) -> None:

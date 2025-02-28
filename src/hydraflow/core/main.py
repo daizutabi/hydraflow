@@ -154,11 +154,15 @@ def equals(run_dir: Path, config: Any, overrides: list[str] | None) -> bool:
     """
     if overrides is None:
         path = run_dir / "artifacts/.hydra/config.yaml"
-    else:
-        path = run_dir / "artifacts/.hydra/overrides.yaml"
-        config = overrides
+
+        if not path.exists():
+            return False
+
+        return OmegaConf.load(path) == config
+
+    path = run_dir / "artifacts/.hydra/overrides.yaml"
 
     if not path.exists():
         return False
 
-    return OmegaConf.load(path) == config
+    return sorted(OmegaConf.load(path)) == sorted(overrides)
