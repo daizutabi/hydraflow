@@ -103,6 +103,7 @@ def test_split_suffix(s, x):
         ("1:2:e2", ["1e2", "2e2"]),
         (":2:e2", ["0", "1e2", "2e2"]),
         ("-2:2:k", ["-2e3", "-1e3", "0", "1e3", "2e3"]),
+        ("(1:3,5:2:9,20)k", ["1e3", "2e3", "3e3", "5e3", "7e3", "9e3", "20e3"]),
     ],
 )
 def test_collect_value(s, x):
@@ -124,6 +125,8 @@ def test_collect_value(s, x):
         ("[1,2],[3,4]", ["[1,2]", "[3,4]"]),
         ("'1,2','3,4'", ["'1,2'", "'3,4'"]),
         ('"1,2","3,4"', ['"1,2"', '"3,4"']),
+        ("(1,4)k,(6,8)M", ["1e3", "4e3", "6e6", "8e6"]),
+        ("(1:3)e-2,(5:7)e-3", ["1e-2", "2e-2", "3e-2", "5e-3", "6e-3", "7e-3"]),
     ],
 )
 def test_expand_value(s, x):
@@ -147,6 +150,13 @@ def test_expand_value_suffix(s, x):
     assert list(expand_values(s, "k")) == x
 
 
+def test_split_arg_error():
+    from hydraflow.executor.parser import split_arg
+
+    with pytest.raises(ValueError):
+        split_arg("1,2,3")
+
+
 @pytest.mark.parametrize(
     ("s", "x"),
     [
@@ -157,6 +167,7 @@ def test_expand_value_suffix(s, x):
         ("a=1:2", "a=1,2"),
         ("a/M=1:2", "a=1e6,2e6"),
         ("a=:2:3", "a=0,2"),
+        ("a=(2,4)m,2,3", "a=2e-3,4e-3,2,3"),
         ("a=1:3:k", "a=1e3,2e3,3e3"),
         ("a=1:3:k,2:4:M", "a=1e3,2e3,3e3,2e6,3e6,4e6"),
         ("a/m=1:3,8:10", "a=1e-3,2e-3,3e-3,8e-3,9e-3,10e-3"),
@@ -177,6 +188,7 @@ def test_collect_arg(s, x):
         ("a=1:2", ["a=1", "a=2"]),
         ("a/n=1:2", ["a=1e-9", "a=2e-9"]),
         ("a=:2:3", ["a=0", "a=2"]),
+        ("a=(0.1:0.1:0.4)k", ["a=0.1e3", "a=0.2e3", "a=0.3e3", "a=0.4e3"]),
         ("a=1:3:k", ["a=1e3", "a=2e3", "a=3e3"]),
         ("a=1:3:k,2:4:M", ["a=1e3", "a=2e3", "a=3e3", "a=2e6", "a=3e6", "a=4e6"]),
         ("a=1,2|3,4", ["a=1,2", "a=3,4"]),
@@ -202,7 +214,7 @@ def test_expand_arg_error():
 @pytest.mark.parametrize(
     ("s", "x"),
     [
-        (["a=1", "b"], ["a=1"]),
+        (["a=1"], ["a=1"]),
         (["a=1:3"], ["a=1,2,3"]),
         (["a/m=1:3"], ["a=1e-3,2e-3,3e-3"]),
         (["a=1:3", "b=4:6"], ["a=1,2,3", "b=4,5,6"]),
@@ -233,7 +245,7 @@ def test_collect_str(s, x):
 @pytest.mark.parametrize(
     ("s", "x"),
     [
-        (["a=1", "b"], [["a=1"]]),
+        (["a=1"], [["a=1"]]),
         (["a/k=1,2"], [["a=1e3"], ["a=2e3"]]),
         (
             " a=1,2\n b=3,4\n",
