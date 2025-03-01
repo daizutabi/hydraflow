@@ -135,24 +135,31 @@ def multirun(job: Job) -> None:
                 raise RuntimeError(msg) from e
 
 
-def show(job: Job) -> None:
-    """Show the job configuration.
+def to_text(job: Job) -> str:
+    """Convert the job configuration to a string.
 
-    This function shows the job configuration for a given job.
+    This function returns the job configuration for a given job.
 
     Args:
         job (Job): The job configuration to show.
 
+    Returns:
+        str: The job configuration.
+
     """
+    text = ""
+
     it = iter_batches(job)
 
     if job.run:
         base_cmds = shlex.split(job.run)
         for args in it:
             cmds = " ".join([*base_cmds, *args])
-            print(cmds)  # noqa: T201
+            text += f"{cmds}\n"
 
     elif job.call:
-        print(f"call: {job.call}")  # noqa: T201
+        text = f"call: {job.call}\n"
         for args in it:
-            print(f"args: {args}")  # noqa: T201
+            text += f"args: {args}\n"
+
+    return text

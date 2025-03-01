@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from omegaconf import OmegaConf
 
 from .conf import HydraflowConf
+
+if TYPE_CHECKING:
+    from .job import Job
 
 
 def find_config_file() -> Path | None:
@@ -32,3 +36,14 @@ def load_config() -> HydraflowConf:
     cfg = OmegaConf.load(path)
 
     return OmegaConf.merge(schema, cfg)  # type: ignore
+
+
+def get_job(name: str) -> Job:
+    """Get a job from the config."""
+    cfg = load_config()
+    job = cfg.jobs[name]
+
+    if not job.name:
+        job.name = name
+
+    return job

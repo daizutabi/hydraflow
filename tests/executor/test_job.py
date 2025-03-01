@@ -133,11 +133,10 @@ def test_multirun_call_not_found(job: Job):
         multirun(job)
 
 
-def test_show(job: Job, capsys):
-    from hydraflow.executor.job import show
+def test_to_text(job: Job):
+    from hydraflow.executor.job import to_text
 
     job.call = "typer.echo"
-    show(job)
-    out, _ = capsys.readouterr()
-    assert "call: typer.echo\n" in out
-    assert "'hydra.job.name=test', 'a=3,4', 'c=8']" in out
+    text = to_text(job)
+    assert "call: typer.echo\n" in text
+    assert "'hydra.job.name=test', 'a=3,4', 'c=8']" in text
