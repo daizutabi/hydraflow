@@ -71,17 +71,13 @@ def test_sweep_args(batches, i, x):
     assert batches[i][-2] == x
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Windows does not support this test",
-)
 def test_multirun_run(job: Job, tmp_path: Path):
     from hydraflow.executor.job import multirun
 
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "echo.py"
 
-    job.run = f"{sys.executable} {file.as_posix()} {path.as_posix()}"
+    job.run = f"python {file.as_posix()} {path.as_posix()}"
     multirun(job)
     assert path.read_text() == "a=1,2 b=5 a=1,2 b=6 a=3,4 c=7 a=3,4 c=8"
 
@@ -89,7 +85,7 @@ def test_multirun_run(job: Job, tmp_path: Path):
 def test_multirun_run_error(job: Job):
     from hydraflow.executor.job import multirun
 
-    job.run = "false"
+    job.run = "cmd /c exit 1" if sys.platform == "win32" else "false"
     with pytest.raises(RuntimeError):
         multirun(job)
 
