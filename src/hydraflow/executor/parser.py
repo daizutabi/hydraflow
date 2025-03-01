@@ -216,7 +216,7 @@ def collect_values(arg: str) -> list[str]:
         list[str]: A list of the collected values.
 
     """
-    if arg.startswith("("):
+    if "(" in arg:
         return collect_parentheses(arg)
 
     if ":" not in arg:
@@ -238,6 +238,36 @@ def collect_values(arg: str) -> list[str]:
     return [add_exponent(x, exponent) for x in values]
 
 
+def split_parentheses(arg: str) -> Iterator[str]:
+    """Split a string with parentheses into a list of strings.
+
+    Args:
+        arg (str): The string to split.
+
+    Returns:
+        Iterator[str]: An iterator of the split strings.
+
+    Examples:
+        >>> list(split_parentheses("a(b,c)m(e:f)k"))
+        ['a', 'b,c', 'e-3', 'e:f', 'e3']
+        >>> list(split_parentheses("(b,c)d(e:f)"))
+        ['b,c', 'd', 'e:f']
+
+    """
+    current = ""
+
+    for char in arg:
+        if char in ("(", ")"):
+            if current:
+                yield SUFFIX_EXPONENT.get(current, current)
+                current = ""
+        else:
+            current += char
+
+    if current:
+        yield SUFFIX_EXPONENT.get(current, current)
+
+
 def collect_parentheses(arg: str) -> list[str]:
     """Collect values from a string with parentheses.
 
@@ -250,11 +280,14 @@ def collect_parentheses(arg: str) -> list[str]:
     Examples:
         >>> collect_parentheses("(1:3,5:2:9,20)k")
         ['1e3', '2e3', '3e3', '5e3', '7e3', '9e3', '20e3']
+        >>> collect_parentheses("2e(-1,-2,-3)")
+        ['2e-1', '2e-2', '2e-3']
+        >>> collect_parentheses("(1:3)e(3,5)")
+        ['1e3', '2e3', '3e3', '1e5', '2e5', '3e5']
 
     """
-    index = arg.index(")")
-    values, suffix = arg[1:index], arg[index + 1 :]
-    return list(expand_values(values, suffix))
+    it = [expand_values(x) for x in split_parentheses(arg)]
+    return ["".join(x[::-1]) for x in product(*it[::-1])]
 
 
 def split(arg: str) -> list[str]:
@@ -333,8 +366,7 @@ def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
         Iterator[str]: An iterator of the expanded values.
 
     """
-    if suffix in SUFFIX_EXPONENT:
-        suffix = SUFFIX_EXPONENT[suffix]
+    suffix = SUFFIX_EXPONENT.get(suffix, suffix)
 
     for value in chain.from_iterable(collect_values(x) for x in split(arg)):
         yield f"{value}{suffix}"
