@@ -1,5 +1,5 @@
 *.db
-.coverage
+.coverage*
 .env
 .venv/
 __pycache__/

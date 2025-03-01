@@ -30,26 +30,38 @@ def get_job(name: str) -> Job:
 @app.command()
 def run(
     name: Annotated[str, Argument(help="Job name.", show_default=False)],
+    *,
+    dry_run: Annotated[
+        bool,
+        Option("--dry-run", help="Perform a dry run"),
+    ] = False,
 ) -> None:
     """Run a job."""
     import mlflow
 
-    from hydraflow.executor.job import multirun
+    from hydraflow.executor.job import multirun, show
 
     job = get_job(name)
-    mlflow.set_experiment(job.name)
-    multirun(job)
+    if dry_run:
+        show(job)
+    else:
+        mlflow.set_experiment(job.name)
+        multirun(job)
 
 
 @app.command()
 def show(
-    name: Annotated[str, Argument(help="Job name.", show_default=False)],
+    name: Annotated[str, Argument(help="Job name.", show_default=False)] = "",
 ) -> None:
-    """Show a job."""
-    from hydraflow.executor.job import show
+    """Show the hydraflow config."""
+    from omegaconf import OmegaConf
 
-    job = get_job(name)
-    show(job)
+    if name:
+        cfg = get_job(name)
+    else:
+        cfg = load_config()
+
+    typer.echo(OmegaConf.to_yaml(cfg))
 
 
 @app.callback(invoke_without_command=True)
