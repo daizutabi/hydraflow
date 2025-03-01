@@ -30,5 +30,5 @@ def test_job(config):
 
 
 def test_step(config):
-    cfg = config("jobs:\n  a:\n    steps:\n      - options: --opt1 --opt2\n")
-    assert cfg.jobs["a"].steps[0].options == "--opt1 --opt2"
+    cfg = config("jobs:\n  a:\n    steps:\n      - configs: --opt1 --opt2\n")
+    assert cfg.jobs["a"].steps[0].configs == "--opt1 --opt2"
