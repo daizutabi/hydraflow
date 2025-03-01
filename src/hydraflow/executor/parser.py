@@ -216,6 +216,9 @@ def collect_values(arg: str) -> list[str]:
         list[str]: A list of the collected values.
 
     """
+    if "(" in arg:
+        return collect_parentheses(arg)
+
     if ":" not in arg:
         return [arg]
 
@@ -233,6 +236,58 @@ def collect_values(arg: str) -> list[str]:
         values = [str(round(x, n)) for x in _arange(*rng)]
 
     return [add_exponent(x, exponent) for x in values]
+
+
+def split_parentheses(arg: str) -> Iterator[str]:
+    """Split a string with parentheses into a list of strings.
+
+    Args:
+        arg (str): The string to split.
+
+    Returns:
+        Iterator[str]: An iterator of the split strings.
+
+    Examples:
+        >>> list(split_parentheses("a(b,c)m(e:f)k"))
+        ['a', 'b,c', 'e-3', 'e:f', 'e3']
+        >>> list(split_parentheses("(b,c)d(e:f)"))
+        ['b,c', 'd', 'e:f']
+
+    """
+    current = ""
+
+    for char in arg:
+        if char in ("(", ")"):
+            if current:
+                yield SUFFIX_EXPONENT.get(current, current)
+                current = ""
+        else:
+            current += char
+
+    if current:
+        yield SUFFIX_EXPONENT.get(current, current)
+
+
+def collect_parentheses(arg: str) -> list[str]:
+    """Collect values from a string with parentheses.
+
+    Args:
+        arg (str): The string to collect values from.
+
+    Returns:
+        list[str]: A list of the collected values.
+
+    Examples:
+        >>> collect_parentheses("(1:3,5:2:9,20)k")
+        ['1e3', '2e3', '3e3', '5e3', '7e3', '9e3', '20e3']
+        >>> collect_parentheses("2e(-1,-2,-3)")
+        ['2e-1', '2e-2', '2e-3']
+        >>> collect_parentheses("(1:3)e(3,5)")
+        ['1e3', '2e3', '3e3', '1e5', '2e5', '3e5']
+
+    """
+    it = [expand_values(x) for x in split_parentheses(arg)]
+    return ["".join(x[::-1]) for x in product(*it[::-1])]
 
 
 def split(arg: str) -> list[str]:
@@ -255,11 +310,14 @@ def split(arg: str) -> list[str]:
         ['"x,y"', 'z']
         >>> split("'p,q',r")
         ["'p,q'", 'r']
+        >>> split("(a,b)m,(1,2:4)k")
+        ['(a,b)m', '(1,2:4)k']
 
     """
     result = []
     current = []
     bracket_count = 0
+    paren_count = 0
     in_single_quote = False
     in_double_quote = False
 
@@ -272,9 +330,14 @@ def split(arg: str) -> list[str]:
             bracket_count += 1
         elif char == "]" and not (in_single_quote or in_double_quote):
             bracket_count -= 1
+        elif char == "(" and not (in_single_quote or in_double_quote):
+            paren_count += 1
+        elif char == ")" and not (in_single_quote or in_double_quote):
+            paren_count -= 1
         elif (
             char == ","
             and bracket_count == 0
+            and paren_count == 0
             and not in_single_quote
             and not in_double_quote
         ):
@@ -303,8 +366,7 @@ def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
         Iterator[str]: An iterator of the expanded values.
 
     """
-    if suffix in SUFFIX_EXPONENT:
-        suffix = SUFFIX_EXPONENT[suffix]
+    suffix = SUFFIX_EXPONENT.get(suffix, suffix)
 
     for value in chain.from_iterable(collect_values(x) for x in split(arg)):
         yield f"{value}{suffix}"
@@ -320,6 +382,10 @@ def split_arg(arg: str) -> tuple[str, str, str]:
         tuple[str, str, str]: A tuple containing the key, suffix, and value.
 
     """
+    if "=" not in arg:
+        msg = f"Invalid argument: {arg}"
+        raise ValueError(msg)
+
     key, value = arg.split("=")
 
     if "/" in key:
@@ -399,8 +465,6 @@ def collect(args: str | list[str]) -> list[str]:
     if isinstance(args, str):
         args = shlex.split(args)
 
-    args = [arg for arg in args if "=" in arg]
-
     return [collect_arg(arg) for arg in args]
 
 
@@ -416,7 +480,5 @@ def expand(args: str | list[str]) -> list[list[str]]:
     """
     if isinstance(args, str):
         args = shlex.split(args)
-
-    args = [arg for arg in args if "=" in arg]
 
     return [list(x) for x in product(*(expand_arg(arg) for arg in args))]
