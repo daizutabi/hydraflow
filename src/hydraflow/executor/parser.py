@@ -389,7 +389,7 @@ def split_arg(arg: str) -> tuple[str, str, str]:
     key, value = arg.split("=")
 
     if "/" in key:
-        key, suffix = key.split("/", 1)
+        key, suffix = key.split("/")
         return key, suffix, value
 
     return key, "", value
