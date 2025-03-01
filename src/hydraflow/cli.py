@@ -2,29 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer
 from rich.console import Console
 from typer import Argument, Option
 
-from hydraflow.executor.io import load_config
-
-if TYPE_CHECKING:
-    from hydraflow.executor.job import Job
+from hydraflow.executor.io import get_job, load_config
 
 app = typer.Typer(add_completion=False)
 console = Console()
-
-
-def get_job(name: str) -> Job:
-    cfg = load_config()
-    job = cfg.jobs[name]
-
-    if not job.name:
-        job.name = name
-
-    return job
 
 
 @app.command()
@@ -39,11 +26,11 @@ def run(
     """Run a job."""
     import mlflow
 
-    from hydraflow.executor.job import multirun, show
+    from hydraflow.executor.job import multirun, to_text
 
     job = get_job(name)
     if dry_run:
-        show(job)
+        typer.echo(to_text(job))
     else:
         mlflow.set_experiment(job.name)
         multirun(job)
