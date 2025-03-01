@@ -7,7 +7,16 @@ jobs:
   batch:
     run: python app.py
     steps:
-      - args: count=1,2
-        batch: name=a,b
-      - args: count=100
-        batch: name=c,d|e,f
+      - batch: name=a,b
+        args: count=1,2
+      - batch: name=c,d|e,f
+        args: count=100
+  parallel:
+    run: python app.py
+    configs: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    steps:
+      - batch: name=a
+        args: count=1:4
+      - batch: name=b
+        args: count=11:14
+        configs: hydra/launcher=joblib hydra.launcher.n_jobs=4

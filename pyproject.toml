@@ -38,6 +38,7 @@ hydraflow = "hydraflow.cli:app"
 
 [dependency-groups]
 dev = [
+  "hydra-joblib-launcher",
   "pytest-clarity",
   "pytest-cov",
   "pytest-order",

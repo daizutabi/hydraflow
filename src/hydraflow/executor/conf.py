@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Step:
-    args: str = ""
     batch: str = ""
-    options: str = ""
+    args: str = ""
+    configs: str = ""
 
 
 @dataclass
@@ -15,6 +15,7 @@ class Job:
     name: str = ""
     run: str = ""
     call: str = ""
+    configs: str = ""
     steps: list[Step] = field(default_factory=list)
 
 

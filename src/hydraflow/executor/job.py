@@ -12,7 +12,7 @@ The module supports two execution modes:
 2. Python function calls
 
 Each job can consist of multiple steps, and each step can have its own
-arguments and options that will be expanded into multiple runs.
+arguments and configurations that will be expanded into multiple runs.
 """
 
 from __future__ import annotations
@@ -31,27 +31,27 @@ from .parser import collect, expand
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from .conf import Job, Step
+    from .conf import Job
 
 
-def iter_args(step: Step) -> Iterator[list[str]]:
+def iter_args(batch: str, args: str) -> Iterator[list[str]]:
     """Iterate over combinations generated from parsed arguments.
 
     Generate all possible combinations of arguments by parsing and
     expanding each one, yielding them as an iterator.
 
     Args:
-        step (Step): The step to parse.
+        batch (str): The batch to parse.
+        args (str): The arguments to parse.
 
     Yields:
         list[str]: a list of the parsed argument combinations.
 
     """
-    args = collect(step.args)
-    options = [o for o in step.options.split(" ") if o]
+    args_ = collect(args)
 
-    for batch in expand(step.batch):
-        yield [*options, *sorted([*batch, *args])]
+    for batch_ in expand(batch):
+        yield [*batch_, *args_]
 
 
 def iter_batches(job: Job) -> Iterator[list[str]]:
@@ -69,11 +69,14 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     """
     job_name = f"hydra.job.name={job.name}"
+    job_configs = shlex.split(job.configs)
 
     for step in job.steps:
-        for args in iter_args(step):
+        configs = shlex.split(step.configs) or job_configs
+
+        for args in iter_args(step.batch, step.args):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
-            yield ["--multirun", sweep_dir, job_name, *args]
+            yield ["--multirun", *args, job_name, sweep_dir, *configs]
 
 
 def multirun(job: Job) -> None:
@@ -162,4 +165,4 @@ def to_text(job: Job) -> str:
         for args in it:
             text += f"args: {args}\n"
 
-    return text
+    return text.rstrip()
