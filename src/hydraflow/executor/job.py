@@ -20,6 +20,7 @@ from __future__ import annotations
 import importlib
 import shlex
 import subprocess
+import sys
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
@@ -99,6 +100,8 @@ def multirun(job: Job) -> None:
 
     if job.run:
         base_cmds = shlex.split(job.run)
+        if base_cmds[0] == "python" and sys.platform == "win32":
+            base_cmds[0] = sys.executable
 
         for args in it:
             cmds = [*base_cmds, *args]
