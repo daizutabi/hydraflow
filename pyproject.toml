@@ -101,3 +101,6 @@ ignore = [
 "src/hydraflow/core/main.py" = ["ANN201", "D401"]
 "src/hydraflow/executor/conf.py" = ["ANN", "D"]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
+
+[tool.pyright]
+include = ["src", "tests"]
