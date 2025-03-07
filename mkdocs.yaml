@@ -53,4 +53,4 @@ nav:
   - Home: index.md
   - Usage:
       - usage/quickstart.md
-  - Reference: $api/hydraflow.**
+  - Reference: $api/hydraflow.***
