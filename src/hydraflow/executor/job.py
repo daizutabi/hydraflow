@@ -69,10 +69,10 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     """
     job_name = f"hydra.job.name={job.name}"
-    job_configs = shlex.split(job.configs)
+    job_configs = shlex.split(job.with_)
 
     for step in job.steps:
-        configs = shlex.split(step.configs) or job_configs
+        configs = shlex.split(step.with_) or job_configs
 
         for args in iter_args(step.batch, step.args):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"

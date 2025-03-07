@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from .conf import HydraflowConf
 
@@ -35,7 +35,26 @@ def load_config() -> HydraflowConf:
 
     cfg = OmegaConf.load(path)
 
-    return OmegaConf.merge(schema, cfg)  # type: ignore
+    if not isinstance(cfg, DictConfig):
+        return schema
+
+    rename_with(cfg)
+
+    return OmegaConf.merge(schema, cfg)  # type: ignore[return-value]
+
+
+def rename_with(cfg: DictConfig) -> None:
+    """Rename the `with` field to `with_`."""
+    if "with" in cfg:
+        cfg["with_"] = cfg.pop("with")
+
+    for key in list(cfg.keys()):
+        if isinstance(cfg[key], DictConfig):
+            rename_with(cfg[key])
+        elif isinstance(cfg[key], ListConfig):
+            for item in cfg[key]:
+                if isinstance(item, DictConfig):
+                    rename_with(item)
 
 
 def get_job(name: str) -> Job:
