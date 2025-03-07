@@ -16,6 +16,7 @@ used to wrap experiment entry points. This decorator handles:
 
 Example:
     ```python
+    import hydraflow
     from dataclasses import dataclass
     from mlflow.entities import Run
 
@@ -24,7 +25,7 @@ Example:
         learning_rate: float
         batch_size: int
 
-    @main(Config)
+    @hydraflow.main(Config)
     def train(run: Run, config: Config):
         # Your training code here
         pass
