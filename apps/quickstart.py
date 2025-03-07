@@ -26,8 +26,8 @@ cs.store(name="config", node=Config)
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config) -> None:
-    print(run.info.run_id)
-    print(cfg)
+    log.info(run.info.run_id)
+    log.info(cfg)
 
 
 if __name__ == "__main__":
