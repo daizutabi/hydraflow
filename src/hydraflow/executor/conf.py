@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 class Step:
     batch: str = ""
     args: str = ""
-    configs: str = ""
+    with_: str = ""
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Job:
     name: str = ""
     run: str = ""
     call: str = ""
-    configs: str = ""
+    with_: str = ""
     steps: list[Step] = field(default_factory=list)
 
 
