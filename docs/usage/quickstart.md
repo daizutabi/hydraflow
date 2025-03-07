@@ -73,17 +73,17 @@ returns the first and last run in the collection.
 >>> print(type(run))
 ```
 
+```pycon exec="1" source="console" session="quickstart"
+>>> run = rc.last()
+>>> cfg = hydraflow.load_config(run)
+>>> print(cfg)
+```
+
 The `load_config` function loads the Hydra configuration from the run.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> cfg = hydraflow.load_config(run)
 >>> print(type(cfg))
->>> print(cfg)
-```
-
-```pycon exec="1" source="console" session="quickstart"
->>> run = rc.last()
->>> cfg = hydraflow.load_config(run)
 >>> print(cfg)
 ```
 
