@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-import hydra
-import mlflow
 from hydra.core.config_store import ConfigStore
-from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
+
+if TYPE_CHECKING:
+    from mlflow.entities import Run
 
 log = logging.getLogger(__name__)
 
@@ -21,13 +24,10 @@ cs = ConfigStore.instance()
 cs.store(name="config", node=Config)
 
 
-@hydra.main(config_name="config", version_base=None)
-def app(cfg: Config) -> None:
-    hc = HydraConfig.get()
-    mlflow.set_experiment(hc.job.name)
-
-    with hydraflow.start_run(cfg):
-        log.info(f"{cfg.width=}, {cfg.height=}")
+@hydraflow.main(Config)
+def app(run: Run, cfg: Config) -> None:
+    print(run.info.run_id)
+    print(cfg)
 
 
 if __name__ == "__main__":

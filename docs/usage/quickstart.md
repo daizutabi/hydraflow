@@ -2,24 +2,20 @@
 
 ## Hydra application
 
-The following example demonstrates how to use Hydraflow with a Hydra application.
-There are two main steps to using Hydraflow:
+The following example demonstrates how to use a Hydraflow application.
 
-1. Set the MLflow experiment using the Hydra job name.
-2. Start a new MLflow run that logs the Hydra configuration.
-
-```python title="apps/quickstart.py" linenums="1" hl_lines="24 26"
+```python title="apps/quickstart.py" linenums="1"
 --8<-- "apps/quickstart.py"
 ```
 
-### Start a new MLflow run
+### Hydraflow's `main` decorator
 
-[`hydraflow.start_run`][] starts a new MLflow run that logs the Hydra configuration.
-It returns the started run so that it can be used to log metrics, parameters, and artifacts
-within the context of the run.
+[`hydraflow.main`][] starts a new MLflow run that logs the Hydra configuration.
+The decorated function must have two arguments: `Run` and `Config`.
 
 ```python
-with hydraflow.start_run(cfg) as run:
+@hydraflow.main(Config)
+def app(run: Run, cfg: Config) -> None:
     pass
 ```
 
@@ -31,7 +27,7 @@ rm -rf mlruns outputs multirun
 
 ### Single-run
 
-Run the Hydra application as a normal Python script.
+Run the Hydraflow application as a normal Python script.
 
 ```console exec="1" source="console"
 $ python apps/quickstart.py
@@ -113,4 +109,8 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.data.config)
+```
+
+```bash exec="on"
+rm -rf mlruns outputs multirun
 ```
