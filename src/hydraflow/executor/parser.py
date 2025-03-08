@@ -151,8 +151,8 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
         stop (float): The end value (inclusive).
 
     Returns:
-        list[float]: A list of floating point numbers from start to stop
-        (inclusive) with the given step.
+        list[float]: A list of floating point numbers from
+        start to stop (inclusive) with the given step.
 
     """
     if step == 0:
@@ -415,8 +415,9 @@ def split(arg: str) -> list[str]:
 def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
     """Expand a string argument into a list of values.
 
-    Take a string containing comma-separated values or ranges and return a list
-    of all individual values. Handle numeric ranges and special characters.
+    Take a string containing comma-separated values or ranges
+    and return a list of all individual values.
+    Handle numeric ranges and special characters.
 
     Args:
         arg (str): The argument to expand.
@@ -439,7 +440,8 @@ def split_arg(arg: str) -> tuple[str, str, str]:
         arg (str): The argument to split.
 
     Returns:
-        tuple[str, str, str]: A tuple containing the key, suffix, and value.
+        tuple[str, str, str]: A tuple containing the key,
+        suffix, and value.
 
     """
     if "=" not in arg:
@@ -458,8 +460,9 @@ def split_arg(arg: str) -> tuple[str, str, str]:
 def collect_arg(arg: str) -> str:
     """Collect a string of expanded key-value pairs.
 
-    Take a key-value pair argument and concatenates all expanded values with commas,
-    returning a single string suitable for command-line usage.
+    Take a key-value pair argument and concatenates all expanded
+    values with commas, returning a single string suitable for
+    command-line usage.
 
     Args:
         arg (str): The argument to collect.
