@@ -23,8 +23,6 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import TYPE_CHECKING, Any, overload
 
-from mlflow.entities import RunStatus
-
 import hydraflow.core.param
 from hydraflow.core.config import iter_params, select_config, select_overrides
 from hydraflow.core.io import load_config
@@ -560,6 +558,8 @@ def filter_runs_by_status(
         A list of runs that match the specified status.
 
     """
+    from mlflow.entities import RunStatus
+
     if isinstance(status, str):
         if status.startswith("!"):
             status = status[1:].lower()
@@ -575,6 +575,8 @@ def filter_runs_by_status(
 
 
 def _to_lower(status: str | int) -> str:
+    from mlflow.entities import RunStatus
+
     if isinstance(status, str):
         return status.lower()
 

@@ -39,13 +39,11 @@ from functools import wraps
 from typing import TYPE_CHECKING, TypeVar
 
 import hydra
-import mlflow
 from hydra.core.config_store import ConfigStore
 from hydra.core.hydra_config import HydraConfig
-from mlflow.entities import RunStatus
 from omegaconf import OmegaConf
 
-import hydraflow
+from hydraflow.core.context import start_run
 from hydraflow.core.io import file_uri_to_path
 
 if TYPE_CHECKING:
@@ -55,7 +53,6 @@ if TYPE_CHECKING:
 
     from mlflow.entities import Run
 
-FINISHED = RunStatus.to_string(RunStatus.FINISHED)
 
 T = TypeVar("T")
 
@@ -88,6 +85,10 @@ def main(
             False.
 
     """
+    import mlflow
+    from mlflow.entities import RunStatus
+
+    finished = RunStatus.to_string(RunStatus.FINISHED)
 
     def decorator(app: Callable[[Run, T], None]) -> Callable[[], None]:
         ConfigStore.instance().store(config_name, node)
@@ -107,10 +108,10 @@ def main(
 
                 if run_id and not rerun_finished:
                     run = mlflow.get_run(run_id)
-                    if run.info.status == FINISHED:
+                    if run.info.status == finished:
                         return
 
-            with hydraflow.start_run(config, run_id=run_id, chdir=chdir) as run:
+            with start_run(config, run_id=run_id, chdir=chdir) as run:
                 app(run, config)
 
         return inner_decorator

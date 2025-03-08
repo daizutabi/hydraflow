@@ -8,8 +8,6 @@ import typer
 from rich.console import Console
 from typer import Argument, Option
 
-from hydraflow.executor.io import get_job, load_config
-
 app = typer.Typer(add_completion=False)
 console = Console()
 
@@ -24,16 +22,20 @@ def run(
     ] = False,
 ) -> None:
     """Run a job."""
-    import mlflow
 
+    from hydraflow.executor.io import get_job
     from hydraflow.executor.job import multirun, to_text
 
     job = get_job(name)
+
     if dry_run:
         typer.echo(to_text(job))
-    else:
-        mlflow.set_experiment(job.name)
-        multirun(job)
+        raise typer.Exit
+
+    import mlflow
+
+    mlflow.set_experiment(job.name)
+    multirun(job)
 
 
 @app.command()
@@ -42,6 +44,8 @@ def show(
 ) -> None:
     """Show the hydraflow config."""
     from omegaconf import OmegaConf
+
+    from hydraflow.executor.io import get_job, load_config
 
     if name:
         cfg = get_job(name)

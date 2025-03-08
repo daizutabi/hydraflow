@@ -8,14 +8,13 @@ import urllib.request
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import mlflow
-import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
-from mlflow.entities import Run
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
+
+    from mlflow.entities import Run
 
 
 def file_uri_to_path(uri: str) -> Path:
@@ -39,6 +38,8 @@ def get_artifact_dir(run: Run | None = None) -> Path:
         The local path to the directory where the artifacts are downloaded.
 
     """
+    import mlflow
+
     if run is None:
         uri = mlflow.get_artifact_uri()
     else:
@@ -141,6 +142,8 @@ def load_overrides(run: Run) -> ListConfig:
 
 def remove_run(run: Run | Iterable[Run]) -> None:
     """Remove the given run from the MLflow tracking server."""
+    from mlflow.entities import Run
+
     if not isinstance(run, Run):
         for r in run:
             remove_run(r)
@@ -151,6 +154,8 @@ def remove_run(run: Run | Iterable[Run]) -> None:
 
 def get_root_dir(uri: str | Path | None = None) -> Path:
     """Get the root directory for the MLflow tracking server."""
+    import mlflow
+
     if uri is not None:
         return Path(uri).absolute()
 
