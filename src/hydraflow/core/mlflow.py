@@ -10,8 +10,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import joblib
-import mlflow
-import mlflow.artifacts
 
 from hydraflow.core.io import file_uri_to_path, get_artifact_dir
 from hydraflow.entities.run_collection import RunCollection
@@ -36,6 +34,8 @@ def log_params(config: Any, *, synchronous: bool | None = None) -> None:
             Defaults to None.
 
     """
+    import mlflow
+
     for key, value in iter_params(config):
         mlflow.log_param(key, value, synchronous=synchronous)
 
@@ -50,6 +50,8 @@ def log_text(from_dir: Path, pattern: str = "*.log") -> None:
         pattern (str): The pattern to match the logs.
 
     """
+    import mlflow
+
     artifact_dir = get_artifact_dir()
 
     for file in from_dir.glob(pattern):
@@ -88,6 +90,8 @@ def list_run_paths(
         list[Path]: A list of run paths for the specified experiments.
 
     """
+    import mlflow
+
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
@@ -155,6 +159,8 @@ def list_runs(
         specified experiments.
 
     """
+    import mlflow
+
     run_ids = list_run_ids(experiment_names)
 
     if n_jobs == 0:

@@ -8,8 +8,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import mlflow
-import mlflow.artifacts
 from hydra.core.hydra_config import HydraConfig
 
 from hydraflow.core.io import get_artifact_dir
@@ -52,6 +50,8 @@ def log_run(
         ```
 
     """
+    import mlflow
+
     if config:
         log_params(config, synchronous=synchronous)
 
@@ -114,6 +114,8 @@ def start_run(
         Run: An MLflow Run object representing the started run.
 
     """
+    import mlflow
+
     with (
         mlflow.start_run(
             run_id=run_id,

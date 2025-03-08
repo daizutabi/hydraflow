@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pandas import DataFrame
-
 from hydraflow.core.config import iter_params
 from hydraflow.core.io import load_config
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any
+
+    from pandas import DataFrame
 
     from .run_collection import RunCollection
 
@@ -40,6 +40,8 @@ class RunCollectionData:
             A DataFrame containing the runs' configurations.
 
         """
+        from pandas import DataFrame
+
         values = [dict(iter_params(load_config(r))) for r in self._runs]
         return DataFrame(values)
 
