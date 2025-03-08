@@ -83,7 +83,7 @@ def count_decimal_places(x: str) -> int:
 
 
 def is_number(x: str) -> bool:
-    """Check if a string is a number.
+    """Check if a string represents a valid number.
 
     Args:
         x (str): The string to check.
@@ -140,18 +140,54 @@ def _get_range(arg: str) -> tuple[float, float, float]:
 
 
 def _arange(start: float, step: float, stop: float) -> list[float]:
+    """Generate a range of floating point numbers.
+
+    This function generates a range of floating point numbers
+    with protection against rounding errors.
+
+    Args:
+        start (float): The starting value.
+        step (float): The step size.
+        stop (float): The end value (inclusive).
+
+    Returns:
+        list[float]: A list of floating point numbers from start to stop
+        (inclusive) with the given step.
+
+    """
+    if step == 0:
+        raise ValueError("Step cannot be zero")
+
+    epsilon = 1e-10
+
+    decimal_places = max(
+        count_decimal_places(str(start)),
+        count_decimal_places(str(step)),
+        count_decimal_places(str(stop)),
+    )
+
     result = []
     current = start
 
-    while current <= stop if step > 0 else current >= stop:
-        result.append(current)
-        current += step
+    if step > 0:
+        while current <= stop + epsilon:
+            rounded = round(current, decimal_places)
+            result.append(rounded)
+            current += step
+    else:
+        while current >= stop - epsilon:
+            rounded = round(current, decimal_places)
+            result.append(rounded)
+            current += step
 
     return result
 
 
 def split_suffix(arg: str) -> tuple[str, str]:
-    """Split a string into prefix and suffix.
+    """Split a string into the prefix and suffix.
+
+    The suffix is the part of the string that starts with a colon (:).
+    The prefix is the part of the string that precedes the suffix.
 
     Args:
         arg (str): The string to split.
@@ -194,48 +230,21 @@ def add_exponent(value: str, exponent: str) -> str:
     Returns:
         str: The value with the exponent added.
 
+    Examples:
+        >>> add_exponent("1", "e3")
+        '1e3'
+        >>> add_exponent("1", "")
+        '1'
+        >>> add_exponent("0", "e-3")
+        '0'
+        >>> add_exponent("0.0", "e-3")
+        '0.0'
+
     """
     if value in ["0", "0.", "0.0"] or not exponent:
         return value
 
     return f"{value}{exponent}"
-
-
-def collect_values(arg: str) -> list[str]:
-    """Collect a list of values from a range argument.
-
-    Collect all individual values within a numeric range
-    represented by a string (e.g., `1:4`) and return them
-    as a list of strings.
-    Support both integer and floating-point ranges.
-
-    Args:
-        arg (str): The argument to collect.
-
-    Returns:
-        list[str]: A list of the collected values.
-
-    """
-    if "(" in arg:
-        return collect_parentheses(arg)
-
-    if ":" not in arg:
-        return [arg]
-
-    arg, exponent = split_suffix(arg)
-
-    if ":" not in arg:
-        return [f"{arg}{exponent}"]
-
-    rng = _get_range(arg)
-
-    if all(isinstance(x, int) for x in rng):
-        values = [str(x) for x in _arange(*rng)]
-    else:
-        n = max(*(count_decimal_places(x) for x in arg.split(":")))
-        values = [str(round(x, n)) for x in _arange(*rng)]
-
-    return [add_exponent(x, exponent) for x in values]
 
 
 def split_parentheses(arg: str) -> Iterator[str]:
@@ -290,8 +299,59 @@ def collect_parentheses(arg: str) -> list[str]:
     return ["".join(x[::-1]) for x in product(*it[::-1])]
 
 
+def collect_values(arg: str) -> list[str]:
+    """Collect a list of values from a range argument.
+
+    Collect all individual values within a numeric range
+    represented by a string (e.g., `1:4`) and return them
+    as a list of strings.
+    Support both integer and floating-point ranges.
+
+    Args:
+        arg (str): The argument to collect.
+
+    Returns:
+        list[str]: A list of the collected values.
+
+    Examples:
+        >>> collect_values("1:4")
+        ['1', '2', '3', '4']
+        >>> collect_values("1.2:0.1:1.4:k")
+        ['1.2e3', '1.3e3', '1.4e3']
+        >>> collect_values("0.1")
+        ['0.1']
+        >>> collect_values("4:M")
+        ['4e6']
+        >>> collect_values("(1:3,5:7)M")
+        ['1e6', '2e6', '3e6', '5e6', '6e6', '7e6']
+        >>> collect_values("(1,5)e-(1:3)")
+        ['1e-1', '5e-1', '1e-2', '5e-2', '1e-3', '5e-3']
+
+    """
+    if "(" in arg:
+        return collect_parentheses(arg)
+
+    if ":" not in arg:
+        return [arg]
+
+    arg, exponent = split_suffix(arg)
+
+    if ":" not in arg:
+        return [f"{arg}{exponent}"]
+
+    rng = _get_range(arg)
+
+    if all(isinstance(x, int) for x in rng):
+        values = [str(x) for x in _arange(*rng)]
+    else:
+        n = max(*(count_decimal_places(x) for x in arg.split(":")))
+        values = [str(round(x, n)) for x in _arange(*rng)]
+
+    return [add_exponent(x, exponent) for x in values]
+
+
 def split(arg: str) -> list[str]:
-    r"""Split a string by top-level commas.
+    """Split a string by top-level commas.
 
     Splits a string by commas while respecting nested structures.
     Commas inside brackets and quotes are ignored, only splitting
