@@ -24,6 +24,7 @@ def test_count_decimal_places(s, x):
         ("1:2", (1, 1, 2)),
         (":2", (0, 1, 2)),
         ("0.1:0.1:0.4", (0.1, 0.1, 0.4)),
+        ("1.2:0.1:1.4", (1.2, 0.1, 1.4)),
     ],
 )
 def test_get_range(s, x):
@@ -47,6 +48,28 @@ def test_get_range_errors(arg, expected_exception, expected_message):
     with pytest.raises(expected_exception) as excinfo:
         _get_range(arg)
     assert str(excinfo.value) == expected_message
+
+
+@pytest.mark.parametrize(
+    ("start", "step", "stop", "expected"),
+    [
+        (1.0, 2.0, 5.0, [1.0, 3.0, 5.0]),
+        (1.2, 0.1, 1.4, [1.2, 1.3, 1.4]),
+        (1.4, -0.1, 1.2, [1.4, 1.3, 1.2]),
+        (1.02e-3, 0.01e-3, 1.04e-3, [0.00102, 0.00103, 0.00104]),
+    ],
+)
+def test_arange(start, step, stop, expected):
+    from hydraflow.executor.parser import _arange
+
+    assert _arange(start, step, stop) == expected
+
+
+def test_arange_error():
+    from hydraflow.executor.parser import _arange
+
+    with pytest.raises(ValueError):
+        _arange(1.0, 0.0, 1.0)
 
 
 @pytest.mark.parametrize(
@@ -100,6 +123,7 @@ def test_split_suffix(s, x):
         ("4.5:-1.5:-4.5", ["4.5", "3.0", "1.5", "0.0", "-1.5", "-3.0", "-4.5"]),
         ("1:2:u", ["1e-6", "2e-6"]),
         ("1:.25:2:n", ["1e-9", "1.25e-9", "1.5e-9", "1.75e-9", "2.0e-9"]),
+        ("1.2:0.1:1.4:k", ["1.2e3", "1.3e3", "1.4e3"]),
         ("1:2:e2", ["1e2", "2e2"]),
         (":2:e2", ["0", "1e2", "2e2"]),
         ("-2:2:k", ["-2e3", "-1e3", "0", "1e3", "2e3"]),
