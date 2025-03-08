@@ -48,7 +48,7 @@ def to_number(x: str) -> int | float:
     return int(x)
 
 
-def count_decimal_places(x: str) -> int:
+def count_decimal_digits(x: str) -> int:
     """Count decimal places in a string.
 
     Examine a string representing a number and returns the count
@@ -62,13 +62,13 @@ def count_decimal_places(x: str) -> int:
         int: The number of decimal places.
 
     Examples:
-        >>> count_decimal_places("1")
+        >>> count_decimal_digits("1")
         0
-        >>> count_decimal_places("-1.2")
+        >>> count_decimal_digits("-1.2")
         1
-        >>> count_decimal_places("1.234")
+        >>> count_decimal_digits("1.234")
         3
-        >>> count_decimal_places("-1.234e-10")
+        >>> count_decimal_digits("-1.234e-10")
         3
 
     """
@@ -80,6 +80,50 @@ def count_decimal_places(x: str) -> int:
         decimal_part = decimal_part.split("e")[0]
 
     return len(decimal_part)
+
+
+def count_integer_digits(num_str: str) -> int:
+    """Count the number of digits in the integer part of a number.
+
+    Consider only the integer part of a number, even if it is in
+    scientific notation.
+
+    Args:
+        num_str (str): The string representing a number.
+
+    Returns:
+        int: The number of digits in the integer part of a number.
+        (excluding the sign)
+
+    Examples:
+        >>> count_integer_digits("123")
+        3
+        >>> count_integer_digits("-123.45")
+        3
+        >>> count_integer_digits("+0.00123")
+        1
+        >>> count_integer_digits("-1.200")
+        1
+        >>> count_integer_digits("+1.20e3")
+        1
+        >>> count_integer_digits("-0.120e-3")
+        1
+        >>> count_integer_digits(".123")
+        0
+
+    """
+    if num_str.startswith(("+", "-")):
+        num_str = num_str[1:]
+
+    if "e" in num_str.lower():
+        num_str = num_str.lower().split("e")[0]
+
+    if "." in num_str:
+        int_part = num_str.split(".")[0]
+        if not int_part:
+            return 0
+        return len(int_part)
+    return len(num_str)
 
 
 def is_number(x: str) -> bool:
@@ -151,33 +195,25 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
         stop (float): The end value (inclusive).
 
     Returns:
-        list[float]: A list of floating point numbers from
-        start to stop (inclusive) with the given step.
+        list[float]: A list of floating point numbers from start to stop
+        (inclusive) with the given step.
 
     """
     if step == 0:
         raise ValueError("Step cannot be zero")
 
-    epsilon = 1e-10
-
-    decimal_places = max(
-        count_decimal_places(str(start)),
-        count_decimal_places(str(step)),
-        count_decimal_places(str(stop)),
-    )
+    epsilon = min(abs(start), abs(stop)) * 1e-5
 
     result = []
     current = start
 
     if step > 0:
         while current <= stop + epsilon:
-            rounded = round(current, decimal_places)
-            result.append(rounded)
+            result.append(current)
             current += step
     else:
         while current >= stop - epsilon:
-            rounded = round(current, decimal_places)
-            result.append(rounded)
+            result.append(current)
             current += step
 
     return result
@@ -344,8 +380,9 @@ def collect_values(arg: str) -> list[str]:
     if all(isinstance(x, int) for x in rng):
         values = [str(x) for x in _arange(*rng)]
     else:
-        n = max(*(count_decimal_places(x) for x in arg.split(":")))
-        values = [str(round(x, n)) for x in _arange(*rng)]
+        n = max(*(count_integer_digits(x) for x in arg.split(":")))
+        m = max(*(count_decimal_digits(x) for x in arg.split(":")))
+        values = [f"{x:.{n + m}g}" for x in _arange(*rng)]
 
     return [add_exponent(x, exponent) for x in values]
 
