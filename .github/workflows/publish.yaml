@@ -33,6 +33,6 @@ jobs:
       - name: Install the project
         run: uv sync
       - name: Build the project
-        run: uv run build --no-sources
+        run: uv build --no-sources
       - name: Upload the project to PyPI
-        run: uv run publish
+        run: uv publish
