@@ -12,7 +12,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Callable, Iterable, Iterator
 
     from mlflow.entities import Run
 
@@ -179,8 +179,29 @@ def get_experiment_name(path: Path) -> str | None:
     return None
 
 
+def predicate_experiment_dir(
+    path: Path,
+    experiment_names: list[str] | Callable[[str], bool] | None = None,
+) -> bool:
+    """Predicate an experiment directory based on the path and experiment names."""
+    if not path.is_dir() or path.name in [".trash", "0"]:
+        return False
+
+    name = get_experiment_name(path)
+    if not name:
+        return False
+
+    if experiment_names is None:
+        return True
+
+    if isinstance(experiment_names, list):
+        return name in experiment_names
+
+    return experiment_names(name)
+
+
 def iter_experiment_dirs(
-    experiment_names: str | list[str] | None = None,
+    experiment_names: str | list[str] | Callable[[str], bool] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the experiment directories in the root directory."""
@@ -189,14 +210,12 @@ def iter_experiment_dirs(
 
     root_dir = get_root_dir(root_dir)
     for path in root_dir.iterdir():
-        if path.is_dir() and path.name not in [".trash", "0"]:
-            if name := get_experiment_name(path):
-                if experiment_names is None or name in experiment_names:
-                    yield path
+        if predicate_experiment_dir(path, experiment_names):
+            yield path
 
 
 def iter_run_dirs(
-    experiment_names: str | list[str] | None = None,
+    experiment_names: str | list[str] | Callable[[str], bool] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the run directories in the root directory."""
@@ -207,7 +226,7 @@ def iter_run_dirs(
 
 
 def iter_artifacts_dirs(
-    experiment_names: str | list[str] | None = None,
+    experiment_names: str | list[str] | Callable[[str], bool] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifacts directories in the root directory."""
@@ -217,7 +236,7 @@ def iter_artifacts_dirs(
 
 def iter_artifact_paths(
     artifact_path: str | Path,
-    experiment_names: str | list[str] | None = None,
+    experiment_names: str | list[str] | Callable[[str], bool] | None = None,
     root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifact paths in the root directory."""
