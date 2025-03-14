@@ -17,11 +17,11 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-      - name: Set up Python 3.11
+      - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.13
       - name: Install package
-        run: pip install -e . mkapi markdown-exec[ansi]
+        run: pip install . mkapi markdown-exec[ansi]
       - name: Deploy documentation
         run: mkdocs gh-deploy --force
