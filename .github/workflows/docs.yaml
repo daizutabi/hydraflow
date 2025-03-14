@@ -1,14 +1,16 @@
 name: Documentation
+
 on:
   push:
-    branches: [main]
-    tags: ["*"]
-permissions:
-  contents: write
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
 jobs:
-  deploy:
+  publish-docs:
     name: Documentation
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Configure Git Credentials
