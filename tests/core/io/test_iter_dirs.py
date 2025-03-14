@@ -49,6 +49,19 @@ def test_iter_experiment_dirs_filter():
     assert [get_experiment_name(p) for p in it] == ["e1"]
 
 
+def test_iter_experiment_dirs_filter_callable():
+    from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
+
+    it = iter_experiment_dirs(lambda name: name == "e2")
+    assert [get_experiment_name(p) for p in it] == ["e2"]
+
+
+def test_predicate_experiment_dir():
+    from hydraflow.core.io import predicate_experiment_dir
+
+    assert predicate_experiment_dir(Path()) is False
+
+
 def test_get_experiment_name_none(root_dir: Path):
     from hydraflow.core.io import get_experiment_name
 
