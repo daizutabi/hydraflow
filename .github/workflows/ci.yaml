@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: actions/cache@v3
         with:
-          path: ${{ env.LOCALAPPDATA }}\uv\cache
+          path: C:\Users\runneradmin\AppData\Local\uv\cache
           key: ${{ runner.os }}-python-${{ matrix.python-version }}-uv-${{ hashFiles('pyproject.toml', 'requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-python-${{ matrix.python-version }}-uv-
