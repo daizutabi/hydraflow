@@ -14,7 +14,7 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
-  run:
+  ci:
     name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
       - name: Install uv and ruff
         run: pip install uv ruff
       - name: Install the project
