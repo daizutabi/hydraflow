@@ -3,7 +3,8 @@ name: Documentation
 on:
   push:
     branches: [main]
-    tags: ["*"]
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   docs:
@@ -20,7 +21,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.13
-      - name: Install package
-        run: pip install . mkapi markdown-exec[ansi]
+      - name: Install uv
+        run: pip install uv
+      - name: Install the project
+        run: uv sync --group docs
       - name: Deploy documentation
-        run: mkdocs gh-deploy --force
+        run: uv run mkdocs gh-deploy --force
