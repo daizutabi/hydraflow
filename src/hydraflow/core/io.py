@@ -153,21 +153,6 @@ def remove_run(run: Run | Iterable[Run]) -> None:
     shutil.rmtree(get_artifact_dir(run).parent)
 
 
-def get_root_dir(uri: str | Path | None = None) -> Path:
-    """Get the root directory for the MLflow tracking server."""
-    import mlflow
-
-    if uri is not None:
-        return Path(uri).absolute()
-
-    uri = mlflow.get_tracking_uri()
-
-    if uri.startswith("file:"):
-        return file_uri_to_path(uri)
-
-    return Path(uri).absolute()
-
-
 def get_experiment_name(path: Path) -> str | None:
     """Get the experiment name from the meta file."""
     metafile = path / "meta.yaml"
