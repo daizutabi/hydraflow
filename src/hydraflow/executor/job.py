@@ -132,6 +132,16 @@ def iter_calls(
         yield Call(total, completed, result)
 
 
+def submit(
+    funcname: str,
+    args: list[str],
+    iterable: Iterable[list[str]],
+) -> Any:
+    """Submit entire job using Python functions."""
+    func = get_callable(funcname)
+    return func([[*args, *a] for a in iterable])
+
+
 def get_callable(name: str) -> Callable:
     """Get a callable from a function name."""
     if "." not in name:
@@ -172,6 +182,11 @@ def to_text(job: Job) -> str:
 
     elif job.call:
         text = f"call: {job.call}\n"
+        for args in it:
+            text += f"args: {args}\n"
+
+    elif job.submit:
+        text = f"submit: {job.submit}\n"
         for args in it:
             text += f"args: {args}\n"
 
