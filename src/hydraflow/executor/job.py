@@ -82,22 +82,24 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
 
 @dataclass
-class Task:
-    """An executed task."""
+class Run:
+    """An executed run."""
+
+    total: int
+    completed: int
+    result: CompletedProcess
+
+
+@dataclass
+class Call:
+    """An executed call."""
 
     total: int
     completed: int
     result: Any
 
 
-@dataclass
-class Run(Task):
-    """An executed run."""
-
-    result: CompletedProcess
-
-
-def multirun(
+def iter_runs(
     executable: str,
     args: list[str],
     iterable: Iterable[list[str]],
@@ -114,11 +116,11 @@ def multirun(
         yield Run(total, completed, result)
 
 
-def multicall(
+def iter_calls(
     funcname: str,
     args: list[str],
     iterable: Iterable[list[str]],
-) -> Iterator[Task]:
+) -> Iterator[Call]:
     """Execute multiple calls of a job using Python functions."""
     func = get_callable(funcname)
 
@@ -127,7 +129,7 @@ def multicall(
 
     for completed, args_ in enumerate(iterable, 1):
         result = func([*args, *args_])
-        yield Task(total, completed, result)
+        yield Call(total, completed, result)
 
 
 def get_callable(name: str) -> Callable:
