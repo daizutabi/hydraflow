@@ -97,6 +97,17 @@ def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture):
     assert "['a', 'b c', '--multirun'," in out
 
 
+def test_submit(job: Job, capsys: pytest.CaptureFixture):
+    from hydraflow.executor.job import iter_batches, submit
+
+    submit("typer.echo", ["a"], iter_batches(job))
+    out, _ = capsys.readouterr()
+    assert out.startswith("[['a', '--multirun', 'b=5', 'a=1,2', 'hydra.job.name=test'")
+    assert "], ['a', '--multirun', 'b=6', 'a=1,2', 'hydra" in out
+    assert "], ['a', '--multirun', 'c=7', 'a=3,4', 'hydra" in out
+    assert "], ['a', '--multirun', 'c=8', 'a=3,4', 'hydra" in out
+
+
 def test_get_callable_error():
     from hydraflow.executor.job import get_callable
 
