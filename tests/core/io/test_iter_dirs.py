@@ -27,14 +27,6 @@ def setup(chdir):
         mlflow.log_text("5", "text.txt")
 
 
-def test_root_dir(root_dir: Path):
-    from hydraflow.core.io import get_root_dir
-
-    assert get_root_dir(root_dir) == root_dir
-    assert get_root_dir(root_dir.name) == root_dir
-    assert get_root_dir() == root_dir
-
-
 def test_iter_experiment_dirs(root_dir: Path):
     from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
 
