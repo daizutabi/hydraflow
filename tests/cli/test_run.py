@@ -61,3 +61,23 @@ def test_run_parallel():
     assert result.exit_code == 0
     run_ids = hydraflow.list_run_ids("parallel")
     assert len(run_ids) == 8
+
+
+@pytest.mark.xdist_group(name="group4")
+def test_run_echo():
+    result = runner.invoke(app, ["run", "echo"])
+    assert result.exit_code == 0
+    out = result.stdout
+    lines = out.splitlines()
+    assert len(lines) == 5
+    assert "['a', 'b', 'c', '--multirun', 'name=a', 'count=1,2,3'" in lines[1]
+    assert "['a', 'b', 'c', '--multirun', 'name=b', 'count=1,2,3'" in lines[2]
+    assert "['a', 'b', 'c', '--multirun', 'name=c', 'count=4,5,6'" in lines[3]
+    assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[4]
+
+
+@pytest.mark.xdist_group(name="group5")
+def test_run_error():
+    result = runner.invoke(app, ["run", "error"])
+    assert result.exit_code == 1
+    assert "No run or call found in job: error." in result.stdout

@@ -21,7 +21,7 @@ import importlib
 import shlex
 import subprocess
 import sys
-from subprocess import CalledProcessError
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import ulid
@@ -29,7 +29,9 @@ import ulid
 from .parser import collect, expand
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterable, Iterator
+    from subprocess import CompletedProcess
+    from typing import Any
 
     from .conf import Job
 
@@ -79,63 +81,69 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
             yield ["--multirun", *args, job_name, sweep_dir, *configs]
 
 
-def multirun(job: Job) -> None:
-    """Execute multiple runs of a job using either shell commands or Python functions.
+@dataclass
+class Task:
+    """An executed task."""
 
-    This function processes a job configuration and executes it in one of two modes:
+    total: int
+    completed: int
+    result: Any
 
-    1. Shell command mode (job.run): Executes shell commands with the generated
-       arguments
-    2. Python function mode (job.call): Calls a Python function with the generated
-       arguments
 
-    Args:
-        job (Job): The job configuration containing run parameters and steps.
+@dataclass
+class Run(Task):
+    """An executed run."""
 
-    Raises:
-        RuntimeError: If a shell command fails or if a function call encounters
-            an error.
-        ValueError: If the Python function path is invalid or the function cannot
-            be imported.
+    result: CompletedProcess
 
-    """
-    it = iter_batches(job)
 
-    if job.run:
-        base_cmds = shlex.split(job.run)
-        if base_cmds[0] == "python" and sys.platform == "win32":
-            base_cmds[0] = sys.executable
+def multirun(
+    executable: str,
+    args: list[str],
+    iterable: Iterable[list[str]],
+) -> Iterator[Run]:
+    """Execute multiple runs of a job using shell commands."""
+    if executable == "python" and sys.platform == "win32":
+        executable = sys.executable
 
-        for args in it:
-            cmds = [*base_cmds, *args]
-            try:
-                subprocess.run(cmds, check=True)
-            except CalledProcessError as e:
-                msg = f"Command failed with exit code {e.returncode}"
-                raise RuntimeError(msg) from e
+    iterable = list(iterable)
+    total = len(iterable)
 
-    elif job.call:
-        call_name, *base_args = shlex.split(job.call)
+    for completed, args_ in enumerate(iterable, 1):
+        result = subprocess.run([executable, *args, *args_], check=False)
+        yield Run(total, completed, result)
 
-        if "." not in call_name:
-            msg = f"Invalid function path: {call_name}."
-            msg += " Expected format: 'package.module.function'"
-            raise ValueError(msg)
 
-        try:
-            module_name, func_name = call_name.rsplit(".", 1)
-            module = importlib.import_module(module_name)
-            func = getattr(module, func_name)
-        except (ImportError, AttributeError, ModuleNotFoundError) as e:
-            msg = f"Failed to import or find function: {call_name}"
-            raise ValueError(msg) from e
+def multicall(
+    funcname: str,
+    args: list[str],
+    iterable: Iterable[list[str]],
+) -> Iterator[Task]:
+    """Execute multiple calls of a job using Python functions."""
+    func = get_callable(funcname)
 
-        for args in it:
-            try:
-                func([*base_args, *args])
-            except Exception as e:  # noqa: PERF203
-                msg = f"Function call '{job.call}' failed with args: {args}"
-                raise RuntimeError(msg) from e
+    iterable = list(iterable)
+    total = len(iterable)
+
+    for completed, args_ in enumerate(iterable, 1):
+        result = func([*args, *args_])
+        yield Task(total, completed, result)
+
+
+def get_callable(name: str) -> Callable:
+    """Get a callable from a function name."""
+    if "." not in name:
+        msg = f"Invalid function path: {name}."
+        raise ValueError(msg)
+
+    try:
+        module_name, func_name = name.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        return getattr(module, func_name)
+
+    except (ImportError, AttributeError, ModuleNotFoundError) as e:
+        msg = f"Failed to import or find function: {name}"
+        raise ValueError(msg) from e
 
 
 def to_text(job: Job) -> str:
