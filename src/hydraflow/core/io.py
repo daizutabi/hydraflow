@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import shutil
 import urllib.parse
 import urllib.request
@@ -195,50 +196,49 @@ def predicate_experiment_dir(
         return True
 
     if isinstance(experiment_names, list):
-        return name in experiment_names
+        return any(fnmatch.fnmatch(name, e) for e in experiment_names)
 
     return experiment_names(name)
 
 
 def iter_experiment_dirs(
+    root_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
-    root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the experiment directories in the root directory."""
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
-    root_dir = get_root_dir(root_dir)
-    for path in root_dir.iterdir():
+    for path in Path(root_dir).iterdir():
         if predicate_experiment_dir(path, experiment_names):
             yield path
 
 
 def iter_run_dirs(
+    root_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
-    root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the run directories in the root directory."""
-    for experiment_dir in iter_experiment_dirs(experiment_names, root_dir):
+    for experiment_dir in iter_experiment_dirs(root_dir, experiment_names):
         for path in experiment_dir.iterdir():
             if path.is_dir() and (path / "artifacts").exists():
                 yield path
 
 
 def iter_artifacts_dirs(
+    root_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
-    root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifacts directories in the root directory."""
-    for path in iter_run_dirs(experiment_names, root_dir):
+    for path in iter_run_dirs(root_dir, experiment_names):
         yield path / "artifacts"
 
 
 def iter_artifact_paths(
+    root_dir: str | Path,
     artifact_path: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
-    root_dir: str | Path | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifact paths in the root directory."""
-    for path in iter_artifacts_dirs(experiment_names, root_dir):
+    for path in iter_artifacts_dirs(root_dir, experiment_names):
         yield path / artifact_path
