@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from typing import Annotated
 
 import typer
@@ -24,7 +25,7 @@ def run(
     """Run a job."""
 
     from hydraflow.executor.io import get_job
-    from hydraflow.executor.job import multirun, to_text
+    from hydraflow.executor.job import iter_batches, iter_calls, iter_runs, to_text
 
     job = get_job(name)
 
@@ -35,7 +36,19 @@ def run(
     import mlflow
 
     mlflow.set_experiment(job.name)
-    multirun(job)
+
+    if job.run:
+        executable, *args = shlex.split(job.run)
+        it = iter_runs(executable, args, iter_batches(job))
+    elif job.call:
+        funcname, *args = shlex.split(job.call)
+        it = iter_calls(funcname, args, iter_batches(job))
+    else:
+        typer.echo(f"No run or call found in job: {job.name}.")
+        raise typer.Exit(1)
+
+    for _ in it:
+        pass
 
 
 @app.command()

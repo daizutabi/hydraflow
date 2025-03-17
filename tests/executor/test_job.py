@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 import pytest
@@ -60,66 +59,56 @@ def test_sweep_args(batches, i, x):
     assert batches[i][-3] == x
 
 
-def test_multirun_run(job: Job, tmp_path: Path):
-    from hydraflow.executor.job import multirun
+def test_iter_runs(job: Job, tmp_path: Path):
+    from hydraflow.executor.job import iter_batches, iter_runs
 
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "echo.py"
 
-    job.run = f"python {file.as_posix()} {path.as_posix()}"
-    multirun(job)
+    args = [file.as_posix(), path.as_posix()]
+    x = list(iter_runs("python", args, iter_batches(job)))
     assert path.read_text() == "b=5 a=1,2 b=6 a=1,2 c=7 a=3,4 c=8 a=3,4"
+    assert x[0].completed == 1
+    assert x[0].result.returncode == 0
+    assert x[1].completed == 2
+    assert x[1].result.returncode == 0
+    assert x[2].completed == 3
+    assert x[2].result.returncode == 0
 
 
-def test_multirun_run_error(job: Job):
-    from hydraflow.executor.job import multirun
+def test_iter_calls(job: Job, capsys: pytest.CaptureFixture):
+    from hydraflow.executor.job import iter_batches, iter_calls
 
-    job.run = "cmd /c exit 1" if sys.platform == "win32" else "false"
-    with pytest.raises(RuntimeError):
-        multirun(job)
-
-
-def test_multirun_call(job: Job, capsys: pytest.CaptureFixture):
-    from hydraflow.executor.job import multirun
-
-    job.call = "typer.echo"
-    multirun(job)
+    x = list(iter_calls("typer.echo", [], iter_batches(job)))
     out, _ = capsys.readouterr()
     assert "'b=5', 'a=1,2'" in out
     assert "'c=8', 'a=3,4'" in out
+    assert x[0].completed == 1
+    assert x[1].completed == 2
+    assert x[2].completed == 3
 
 
-def test_multirun_call_args(job: Job, capsys: pytest.CaptureFixture):
-    from hydraflow.executor.job import multirun
+def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture):
+    from hydraflow.executor.job import iter_batches, iter_calls
 
     job.call = "typer.echo a 'b c'"
-    multirun(job)
+    list(iter_calls("typer.echo", ["a", "b c"], iter_batches(job)))
     out, _ = capsys.readouterr()
     assert "['a', 'b c', '--multirun'," in out
 
 
-def test_multirun_call_error(job: Job):
-    from hydraflow.executor.job import multirun
+def test_get_callable_error():
+    from hydraflow.executor.job import get_callable
 
-    job.call = "hydraflow.executor.job.multirun"
-    with pytest.raises(RuntimeError):
-        multirun(job)
-
-
-def test_multirun_call_invalid(job: Job):
-    from hydraflow.executor.job import multirun
-
-    job.call = "print"
     with pytest.raises(ValueError):
-        multirun(job)
+        get_callable("print")
 
 
-def test_multirun_call_not_found(job: Job):
-    from hydraflow.executor.job import multirun
+def test_get_callable_not_found():
+    from hydraflow.executor.job import get_callable
 
-    job.call = "hydraflow.invalid"
     with pytest.raises(ValueError):
-        multirun(job)
+        get_callable("hydraflow.invalid")
 
 
 def test_to_text(job: Job):
