@@ -76,8 +76,18 @@ def test_run_echo():
     assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[4]
 
 
+@pytest.mark.xdist_group(name="group4")
+def test_run_submit():
+    result = runner.invoke(app, ["run", "submit"])
+    assert result.exit_code == 0
+    out = result.stdout
+    lines = out.splitlines()
+    assert len(lines) == 2
+    assert "[['--multirun', 'name=a', 'count=1,3', 'hydra.job.name=submit'" in lines[1]
+
+
 @pytest.mark.xdist_group(name="group5")
 def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1
-    assert "No run or call found in job: error." in result.stdout
+    assert "No command found in job: error." in result.stdout
