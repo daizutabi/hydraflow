@@ -10,7 +10,7 @@ def main():
     file = Path(sys.argv[-1])
     for line in file.read_text().splitlines():
         args = shlex.split(line)
-        subprocess.run(["python", "app.py", *args], check=False)
+        subprocess.run([sys.executable, "app.py", *args], check=False)
 
 
 if __name__ == "__main__":
