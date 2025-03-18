@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import shlex
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from typer import Argument, Exit, Option
 
-from hydraflow.executor.conf import Job
+if TYPE_CHECKING:
+    from hydraflow.executor.conf import Job
 
 app = typer.Typer(add_completion=False)
 
