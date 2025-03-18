@@ -11,8 +11,8 @@ def test_run_args_dry_run():
     result = runner.invoke(app, ["run", "args", "--dry-run"])
     assert result.exit_code == 0
     out = result.stdout
-    assert "python app.py --multirun count=1,2,3 name=a,b" in out
-    assert "python app.py --multirun count=4,5,6 name=c,d" in out
+    assert "app.py --multirun count=1,2,3 name=a,b" in out
+    assert "app.py --multirun count=4,5,6 name=c,d" in out
     assert out.count("hydra.job.name=args") == 2
 
 
@@ -43,7 +43,7 @@ def test_run_parallel_dry_run_extra_args():
     args = ["run", "parallel", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
-    assert result.stdout.count("python app.py a --b --dry-run --multirun") == 2
+    assert result.stdout.count("app.py a --b --dry-run --multirun") == 2
 
 
 def test_run_echo_dry_run():
@@ -57,7 +57,7 @@ def test_submit_dry_run():
     args = ["submit", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
-    assert result.stdout.count("python submit.py a --b --dry-run --multirun") == 4
+    assert result.stdout.count("submit.py a --b --dry-run --multirun") == 4
 
 
 @pytest.mark.xdist_group(name="group1")
