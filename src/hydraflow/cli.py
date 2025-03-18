@@ -34,27 +34,36 @@ def run(
     args = args or []
     job = get_job(name)
 
+    if not dry_run:
+        import mlflow
+
+        mlflow.set_experiment(job.name)
+
     if job.submit:
         submit(job, args, dry_run=dry_run)
         raise Exit
 
     if job.run:
         args = [*shlex.split(job.run), *args]
-        it = iter_runs(args, iter_batches(job), dry_run=dry_run)
+
+        if not dry_run:
+            from hydraflow.executor import aio
+
+            aio.run(iter_runs(args, iter_batches(job)))
+            raise Exit
+
+        it = iter_runs(args, iter_batches(job), dry_run=True)
+
     elif job.call:
         args = [*shlex.split(job.call), *args]
         it = iter_calls(args, iter_batches(job), dry_run=dry_run)
+
     else:
         typer.echo(f"No command found in job: {job.name}.")
         raise Exit(1)
 
-    if not dry_run:
-        import mlflow
-
-        mlflow.set_experiment(job.name)
-
     for task in it:  # jobs will be executed here
-        if job.run and dry_run:
+        if job.run:
             typer.echo(shlex.join(task.args))
         elif job.call and dry_run:
             funcname, *args = task.args
@@ -65,11 +74,6 @@ def run(
 def submit(job: Job, args: list[str], *, dry_run: bool) -> None:
     """Submit a job."""
     from hydraflow.executor.job import iter_batches, submit
-
-    if not dry_run:
-        import mlflow
-
-        mlflow.set_experiment(job.name)
 
     args = [*shlex.split(job.submit), *args]
     result = submit(args, iter_batches(job), dry_run=dry_run)
