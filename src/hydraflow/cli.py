@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 app = typer.Typer(add_completion=False)
 
 
-@app.command(context_settings={"ignore_unknown_options": True})
-def run(
+@app.command("run", context_settings={"ignore_unknown_options": True})
+def _run(
     name: Annotated[str, Argument(help="Job name.", show_default=False)],
     *,
     args: Annotated[
@@ -29,7 +29,6 @@ def run(
 ) -> None:
     """Run a job."""
     from hydraflow.executor.io import get_job
-    from hydraflow.executor.job import iter_batches, iter_calls, iter_runs
 
     args = args or []
     job = get_job(name)
@@ -41,34 +40,50 @@ def run(
 
     if job.submit:
         submit(job, args, dry_run=dry_run)
-        raise Exit
 
-    if job.run:
-        args = [*shlex.split(job.run), *args]
-
-        if not dry_run:
-            from hydraflow.executor import aio
-
-            aio.run(iter_runs(args, iter_batches(job)))
-            raise Exit
-
-        it = iter_runs(args, iter_batches(job), dry_run=True)
+    elif job.run:
+        run(job, args, dry_run=dry_run)
 
     elif job.call:
-        args = [*shlex.split(job.call), *args]
-        it = iter_calls(args, iter_batches(job), dry_run=dry_run)
+        call(job, args, dry_run=dry_run)
 
     else:
         typer.echo(f"No command found in job: {job.name}.")
         raise Exit(1)
 
-    for task in it:  # jobs will be executed here
-        if job.run:
-            typer.echo(shlex.join(task.args))
-        elif job.call and dry_run:
-            funcname, *args = task.args
-            arg = ", ".join(f"{arg!r}" for arg in args)
-            typer.echo(f"{funcname}([{arg}])")
+
+def run(job: Job, args: list[str], *, dry_run: bool) -> None:
+    """Run a job."""
+    from hydraflow.executor import aio
+    from hydraflow.executor.job import iter_batches, iter_tasks
+
+    args = [*shlex.split(job.run), *args]
+    it = iter_tasks(args, iter_batches(job))
+
+    if not dry_run:
+        aio.run(it)
+        raise Exit
+
+    for task in it:
+        typer.echo(shlex.join(task.args))
+
+
+def call(job: Job, args: list[str], *, dry_run: bool) -> None:
+    """Call a job."""
+    from hydraflow.executor.job import iter_batches, iter_calls
+
+    args = [*shlex.split(job.call), *args]
+    it = iter_calls(args, iter_batches(job))
+
+    if not dry_run:
+        for call in it:
+            call.func()
+        raise Exit
+
+    for task in it:
+        funcname, *args = task.args
+        arg = ", ".join(f"{arg!r}" for arg in args)
+        typer.echo(f"{funcname}([{arg}])")
 
 
 def submit(job: Job, args: list[str], *, dry_run: bool) -> None:
