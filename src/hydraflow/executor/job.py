@@ -189,15 +189,21 @@ def submit(
     if executable == "python" and sys.platform == "win32":
         executable = sys.executable
 
-    with NamedTemporaryFile(dir=Path.cwd()) as f:
-        file = Path(f.name)
-        text = "\n".join(shlex.join(args) for args in iterable)
-        file.write_text(text)
-        cmd = [executable, *args, file.as_posix()]
+    temp = NamedTemporaryFile(dir=Path.cwd(), delete=False)  # for Windows
+    file = Path(temp.name)
+    temp.close()
+
+    text = "\n".join(shlex.join(args) for args in iterable)
+    file.write_text(text)
+    cmd = [executable, *args, file.as_posix()]
+
+    try:
         if dry_run:
             return cmd, text
-
         return subprocess.run(cmd, check=False)
+
+    finally:
+        file.unlink(missing_ok=True)
 
 
 def get_callable(name: str) -> Callable:
