@@ -109,7 +109,7 @@ def iter_tasks(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Task]
     iterable = list(iterable)
     total = len(iterable)
 
-    for index, args_ in enumerate(iterable, 1):
+    for index, args_ in enumerate(iterable):
         yield Task([executable, *args, *args_], total, index)
 
 
@@ -121,7 +121,7 @@ def iter_calls(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Call]
     iterable = list(iterable)
     total = len(iterable)
 
-    for index, args_ in enumerate(iterable, 1):
+    for index, args_ in enumerate(iterable):
         cmd = [funcname, *args, *args_]
         yield Call(cmd, total, index, lambda x=cmd[1:]: func(x))
 

@@ -56,7 +56,7 @@ def run(iterable: Iterable[Task]) -> int | None:
             if returncode:
                 return returncode
 
-            progress.update(task_id, completed=task.index)
+            progress.update(task_id, completed=task.index + 1)
 
         return 0
 
