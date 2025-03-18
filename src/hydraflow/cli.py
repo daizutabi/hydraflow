@@ -8,6 +8,8 @@ from typing import Annotated
 import typer
 from typer import Argument, Exit, Option
 
+from hydraflow.executor.conf import Job
+
 app = typer.Typer(add_completion=False)
 
 
@@ -30,6 +32,10 @@ def run(
 
     args = args or []
     job = get_job(name)
+
+    if job.submit:
+        submit(job, args, dry_run=dry_run)
+        raise Exit
 
     if job.run:
         args = [*shlex.split(job.run), *args]
@@ -55,36 +61,16 @@ def run(
             typer.echo(f"{funcname}([{arg}])")
 
 
-@app.command(context_settings={"ignore_unknown_options": True})
-def submit(
-    name: Annotated[str, Argument(help="Job name.", show_default=False)],
-    *,
-    args: Annotated[
-        list[str] | None,
-        Argument(help="Arguments to pass to the job.", show_default=False),
-    ] = None,
-    dry_run: Annotated[
-        bool,
-        Option("--dry-run", help="Perform a dry run."),
-    ] = False,
-) -> None:
+def submit(job: Job, args: list[str], *, dry_run: bool) -> None:
     """Submit a job."""
-    from hydraflow.executor.io import get_job
     from hydraflow.executor.job import iter_batches, submit
-
-    args = args or []
-    job = get_job(name)
-
-    if not job.run:
-        typer.echo(f"No run found in job: {job.name}.")
-        raise Exit(1)
 
     if not dry_run:
         import mlflow
 
         mlflow.set_experiment(job.name)
 
-    args = [*shlex.split(job.run), *args]
+    args = [*shlex.split(job.submit), *args]
     result = submit(args, iter_batches(job), dry_run=dry_run)
 
     if dry_run and isinstance(result, tuple):
