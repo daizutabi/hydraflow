@@ -54,7 +54,7 @@ def test_run_echo_dry_run():
 
 
 def test_submit_dry_run():
-    args = ["submit", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
+    args = ["run", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert result.stdout.count("submit.py a --b --dry-run --multirun") == 4
@@ -99,7 +99,7 @@ def test_run_echo():
 
 @pytest.mark.xdist_group(name="group4")
 def test_submit():
-    result = runner.invoke(app, ["submit", "submit"])
+    result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
     out = result.stdout
     lines = out.splitlines()
@@ -113,10 +113,3 @@ def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1
     assert "No command found in job: error." in result.stdout
-
-
-@pytest.mark.xdist_group(name="group5")
-def test_submit_error():
-    result = runner.invoke(app, ["submit", "error"])
-    assert result.exit_code == 1
-    assert "No run found in job: error." in result.stdout

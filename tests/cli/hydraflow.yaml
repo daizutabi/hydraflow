@@ -28,7 +28,7 @@ jobs:
       - batch: name=c,d
         args: count=4:6
   submit:
-    run: python submit.py
+    submit: python submit.py
     steps:
       - batch: name=a,b
         args: count=1
