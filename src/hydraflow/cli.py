@@ -6,11 +6,9 @@ import shlex
 from typing import Annotated
 
 import typer
-from rich.console import Console
-from typer import Argument, Option
+from typer import Argument, Exit, Option
 
 app = typer.Typer(add_completion=False)
-console = Console()
 
 
 @app.command(context_settings={"ignore_unknown_options": True})
@@ -41,7 +39,7 @@ def run(
         it = iter_calls(args, iter_batches(job), dry_run=dry_run)
     else:
         typer.echo(f"No command found in job: {job.name}.")
-        raise typer.Exit(1)
+        raise Exit(1)
 
     if not dry_run:
         import mlflow
@@ -79,7 +77,7 @@ def submit(
 
     if not job.run:
         typer.echo(f"No run found in job: {job.name}.")
-        raise typer.Exit(1)
+        raise Exit(1)
 
     if not dry_run:
         import mlflow
@@ -124,4 +122,4 @@ def callback(
         import importlib.metadata
 
         typer.echo(f"hydraflow {importlib.metadata.version('hydraflow')}")
-        raise typer.Exit
+        raise Exit
