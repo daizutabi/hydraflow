@@ -24,6 +24,7 @@ dependencies = [
   "mlflow>=2.15",
   "omegaconf>=2.3",
   "python-ulid>=3.0.0",
+  "rich>=13.9",
   "typer>=0.15",
 ]
 

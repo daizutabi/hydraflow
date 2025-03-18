@@ -59,40 +59,36 @@ def test_sweep_args(batches, i, x):
     assert batches[i][-3] == x
 
 
-def test_iter_runs(job: Job, tmp_path: Path):
-    from hydraflow.executor.job import iter_batches, iter_runs
+def test_iter_tasks(job: Job, tmp_path: Path):
+    import subprocess
+
+    from hydraflow.executor.job import iter_batches, iter_tasks
 
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "echo.py"
 
     args = ["python", file.as_posix(), path.as_posix()]
-    x = list(iter_runs(args, iter_batches(job)))
+    for task in iter_tasks(args, iter_batches(job)):
+        subprocess.run(task.args, check=True)
     assert path.read_text() == "b=5 a=1,2 b=6 a=1,2 c=7 a=3,4 c=8 a=3,4"
-    assert x[0].completed == 1
-    assert x[0].result.returncode == 0
-    assert x[1].completed == 2
-    assert x[1].result.returncode == 0
-    assert x[2].completed == 3
-    assert x[2].result.returncode == 0
 
 
 def test_iter_calls(job: Job, capsys: pytest.CaptureFixture):
     from hydraflow.executor.job import iter_batches, iter_calls
 
-    x = list(iter_calls(["typer.echo"], iter_batches(job)))
+    for call in iter_calls(["typer.echo"], iter_batches(job)):
+        call.func()
     out, _ = capsys.readouterr()
     assert "'b=5', 'a=1,2'" in out
     assert "'c=8', 'a=3,4'" in out
-    assert x[0].completed == 1
-    assert x[1].completed == 2
-    assert x[2].completed == 3
 
 
 def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture):
     from hydraflow.executor.job import iter_batches, iter_calls
 
     job.call = "typer.echo a 'b c'"
-    list(iter_calls(["typer.echo", "a", "b c"], iter_batches(job)))
+    for call in iter_calls(["typer.echo", "a", "b c"], iter_batches(job)):
+        call.func()
     out, _ = capsys.readouterr()
     assert "['a', 'b c', '--multirun'," in out
 

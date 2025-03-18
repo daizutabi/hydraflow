@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CompletedProcess
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING
 
 import ulid
 
@@ -86,47 +86,22 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
 @dataclass
 class Task:
-    """An executed task."""
+    """A task to be executed."""
 
     args: list[str]
     total: int
-    completed: int
-
-
-@dataclass
-class Run(Task):
-    """An executed run."""
-
-    result: CompletedProcess
+    index: int
 
 
 @dataclass
 class Call(Task):
-    """An executed call."""
+    """A call to be executed."""
 
-    result: Any
-
-
-@overload
-def iter_runs(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Run]: ...
+    func: Callable[[], Any]
 
 
-@overload
-def iter_runs(
-    args: list[str],
-    iterable: Iterable[list[str]],
-    *,
-    dry_run: bool = False,
-) -> Iterator[Task | Run]: ...
-
-
-def iter_runs(
-    args: list[str],
-    iterable: Iterable[list[str]],
-    *,
-    dry_run: bool = False,
-) -> Iterator[Task | Run]:
-    """Execute multiple runs of a job using shell commands."""
+def iter_tasks(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Task]:
+    """Yield tasks of a job to be executed using a shell command."""
     executable, *args = args
     if executable == "python" and sys.platform == "win32":
         executable = sys.executable
@@ -134,48 +109,21 @@ def iter_runs(
     iterable = list(iterable)
     total = len(iterable)
 
-    for completed, args_ in enumerate(iterable, 1):
-        cmd = [executable, *args, *args_]
-        if dry_run:
-            yield Task(cmd, total, completed)
-        else:
-            result = subprocess.run(cmd, check=False)
-            yield Run(cmd, total, completed, result)
+    for index, args_ in enumerate(iterable):
+        yield Task([executable, *args, *args_], total, index)
 
 
-@overload
-def iter_calls(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Call]: ...
-
-
-@overload
-def iter_calls(
-    args: list[str],
-    iterable: Iterable[list[str]],
-    *,
-    dry_run: bool = False,
-) -> Iterator[Task | Call]: ...
-
-
-def iter_calls(
-    args: list[str],
-    iterable: Iterable[list[str]],
-    *,
-    dry_run: bool = False,
-) -> Iterator[Task | Call]:
-    """Execute multiple calls of a job using Python functions."""
+def iter_calls(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Call]:
+    """Yield calls of a job to be executed using a Python function."""
     funcname, *args = args
     func = get_callable(funcname)
 
     iterable = list(iterable)
     total = len(iterable)
 
-    for completed, args_ in enumerate(iterable, 1):
+    for index, args_ in enumerate(iterable):
         cmd = [funcname, *args, *args_]
-        if dry_run:
-            yield Task(cmd, total, completed)
-        else:
-            result = func([*args, *args_])
-            yield Call(cmd, total, completed, result)
+        yield Call(cmd, total, index, lambda x=cmd[1:]: func(x))
 
 
 def submit(
