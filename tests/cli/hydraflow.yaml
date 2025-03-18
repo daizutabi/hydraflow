@@ -28,12 +28,14 @@ jobs:
       - batch: name=c,d
         args: count=4:6
   submit:
-    submit: typer.echo
+    run: python submit.py
     steps:
-      - batch: name=a
-        args: count=1,3
-      - batch: name=b
-        args: count=5,7
+      - batch: name=a,b
+        args: count=1
+      - batch: name=c
+        args: count=5
+      - batch: name=d
+        args: count=6
   error:
     steps:
       - batch: name=a

@@ -22,7 +22,10 @@ import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from pathlib import Path
+from subprocess import CompletedProcess
+from tempfile import NamedTemporaryFile
+from typing import TYPE_CHECKING, overload
 
 import ulid
 
@@ -82,29 +85,49 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
 
 @dataclass
-class Run:
-    """An executed run."""
+class Task:
+    """An executed task."""
 
+    args: list[str]
     total: int
     completed: int
+
+
+@dataclass
+class Run(Task):
+    """An executed run."""
+
     result: CompletedProcess
 
 
 @dataclass
-class Call:
+class Call(Task):
     """An executed call."""
 
-    total: int
-    completed: int
     result: Any
 
 
+@overload
+def iter_runs(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Run]: ...
+
+
+@overload
 def iter_runs(
-    executable: str,
     args: list[str],
     iterable: Iterable[list[str]],
-) -> Iterator[Run]:
+    *,
+    dry_run: bool = False,
+) -> Iterator[Task | Run]: ...
+
+
+def iter_runs(
+    args: list[str],
+    iterable: Iterable[list[str]],
+    *,
+    dry_run: bool = False,
+) -> Iterator[Task | Run]:
     """Execute multiple runs of a job using shell commands."""
+    executable, *args = args
     if executable == "python" and sys.platform == "win32":
         executable = sys.executable
 
@@ -112,34 +135,75 @@ def iter_runs(
     total = len(iterable)
 
     for completed, args_ in enumerate(iterable, 1):
-        result = subprocess.run([executable, *args, *args_], check=False)
-        yield Run(total, completed, result)
+        cmd = [executable, *args, *args_]
+        if dry_run:
+            yield Task(cmd, total, completed)
+        else:
+            result = subprocess.run(cmd, check=False)
+            yield Run(cmd, total, completed, result)
+
+
+@overload
+def iter_calls(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Call]: ...
+
+
+@overload
+def iter_calls(
+    args: list[str],
+    iterable: Iterable[list[str]],
+    *,
+    dry_run: bool = False,
+) -> Iterator[Task | Call]: ...
 
 
 def iter_calls(
-    funcname: str,
     args: list[str],
     iterable: Iterable[list[str]],
-) -> Iterator[Call]:
+    *,
+    dry_run: bool = False,
+) -> Iterator[Task | Call]:
     """Execute multiple calls of a job using Python functions."""
+    funcname, *args = args
     func = get_callable(funcname)
 
     iterable = list(iterable)
     total = len(iterable)
 
     for completed, args_ in enumerate(iterable, 1):
-        result = func([*args, *args_])
-        yield Call(total, completed, result)
+        cmd = [funcname, *args, *args_]
+        if dry_run:
+            yield Task(cmd, total, completed)
+        else:
+            result = func([*args, *args_])
+            yield Call(cmd, total, completed, result)
 
 
 def submit(
-    funcname: str,
     args: list[str],
     iterable: Iterable[list[str]],
-) -> Any:
-    """Submit entire job using Python functions."""
-    func = get_callable(funcname)
-    return func([[*args, *a] for a in iterable])
+    *,
+    dry_run: bool = False,
+) -> CompletedProcess | tuple[list[str], str]:
+    """Submit entire job using a shell command."""
+    executable, *args = args
+    if executable == "python" and sys.platform == "win32":
+        executable = sys.executable
+
+    temp = NamedTemporaryFile(dir=Path.cwd(), delete=False)  # for Windows
+    file = Path(temp.name)
+    temp.close()
+
+    text = "\n".join(shlex.join(args) for args in iterable)
+    file.write_text(text)
+    cmd = [executable, *args, file.as_posix()]
+
+    try:
+        if dry_run:
+            return cmd, text
+        return subprocess.run(cmd, check=False)
+
+    finally:
+        file.unlink(missing_ok=True)
 
 
 def get_callable(name: str) -> Callable:
@@ -156,38 +220,3 @@ def get_callable(name: str) -> Callable:
     except (ImportError, AttributeError, ModuleNotFoundError) as e:
         msg = f"Failed to import or find function: {name}"
         raise ValueError(msg) from e
-
-
-def to_text(job: Job) -> str:
-    """Convert the job configuration to a string.
-
-    This function returns the job configuration for a given job.
-
-    Args:
-        job (Job): The job configuration to show.
-
-    Returns:
-        str: The job configuration.
-
-    """
-    text = ""
-
-    it = iter_batches(job)
-
-    if job.run:
-        base_cmds = shlex.split(job.run)
-        for args in it:
-            cmds = " ".join([*base_cmds, *args])
-            text += f"{cmds}\n"
-
-    elif job.call:
-        text = f"call: {job.call}\n"
-        for args in it:
-            text += f"args: {args}\n"
-
-    elif job.submit:
-        text = f"submit: {job.submit}\n"
-        for args in it:
-            text += f"args: {args}\n"
-
-    return text.rstrip()

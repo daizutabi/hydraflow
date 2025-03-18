@@ -11,9 +11,9 @@ def test_run_args_dry_run():
     result = runner.invoke(app, ["run", "args", "--dry-run"])
     assert result.exit_code == 0
     out = result.stdout
-    assert "hydra.job.name=args" in out
-    assert "count=1,2,3 name=a,b" in out
-    assert "count=4,5,6 name=c,d" in out
+    assert "app.py --multirun count=1,2,3 name=a,b" in out
+    assert "app.py --multirun count=4,5,6 name=c,d" in out
+    assert out.count("hydra.job.name=args") == 2
 
 
 def test_run_batch_dry_run():
@@ -24,7 +24,7 @@ def test_run_batch_dry_run():
     assert "name=b count=1,2" in out
     assert "name=c,d count=100" in out
     assert "name=e,f count=100" in out
-    assert "hydra.job.name=batch" in out
+    assert out.count("hydra.job.name=batch") == 4
 
 
 def test_run_parallel_dry_run():
@@ -37,6 +37,27 @@ def test_run_parallel_dry_run():
     assert "hydra.launcher.n_jobs=2" in lines[0]
     assert "count=11,12,13,14" in lines[1]
     assert "hydra.launcher.n_jobs=4" in lines[1]
+
+
+def test_run_parallel_dry_run_extra_args():
+    args = ["run", "parallel", "--dry-run", "a", "--b", "--", "--dry-run"]
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0
+    assert result.stdout.count("app.py a --b --dry-run --multirun") == 2
+
+
+def test_run_echo_dry_run():
+    args = ["run", "echo", "--dry-run"]
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0
+    assert result.stdout.count("typer.echo(['a', 'b', 'c', '--multirun',") == 4
+
+
+def test_submit_dry_run():
+    args = ["submit", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0
+    assert result.stdout.count("submit.py a --b --dry-run --multirun") == 4
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -77,13 +98,14 @@ def test_run_echo():
 
 
 @pytest.mark.xdist_group(name="group4")
-def test_run_submit():
-    result = runner.invoke(app, ["run", "submit"])
+def test_submit():
+    result = runner.invoke(app, ["submit", "submit"])
     assert result.exit_code == 0
     out = result.stdout
     lines = out.splitlines()
-    assert len(lines) == 2
-    assert "[['--multirun', 'name=a', 'count=1,3', 'hydra.job.name=submit'" in lines[1]
+    assert len(lines) == 1
+    run_ids = hydraflow.list_run_ids("submit")
+    assert len(run_ids) == 4
 
 
 @pytest.mark.xdist_group(name="group5")
@@ -91,3 +113,10 @@ def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1
     assert "No command found in job: error." in result.stdout
+
+
+@pytest.mark.xdist_group(name="group5")
+def test_submit_error():
+    result = runner.invoke(app, ["submit", "error"])
+    assert result.exit_code == 1
+    assert "No run found in job: error." in result.stdout
