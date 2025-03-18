@@ -83,6 +83,11 @@ def test_run_parallel():
     run_ids = hydraflow.list_run_ids("parallel")
     assert len(run_ids) == 8
 
+    result = runner.invoke(app, ["run", "parallel"])  # skip if already run
+    assert result.exit_code == 0
+    run_ids = hydraflow.list_run_ids("parallel")
+    assert len(run_ids) == 8
+
 
 @pytest.mark.xdist_group(name="group4")
 def test_run_echo():
@@ -104,6 +109,11 @@ def test_submit():
     out = result.stdout
     lines = out.splitlines()
     assert len(lines) == 1
+    run_ids = hydraflow.list_run_ids("submit")
+    assert len(run_ids) == 4
+
+    result = runner.invoke(app, ["run", "submit"])  # skip if already run
+    assert result.exit_code == 0
     run_ids = hydraflow.list_run_ids("submit")
     assert len(run_ids) == 4
 
