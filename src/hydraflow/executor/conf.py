@@ -15,7 +15,6 @@ class Job:
     name: str = ""
     run: str = ""
     call: str = ""
-    submit: str = ""
     with_: str = ""
     steps: list[Step] = field(default_factory=list)
 

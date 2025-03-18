@@ -10,3 +10,5 @@ def setup(chdir):
     copy(src, src.name)
     src = Path(__file__).parent / "app.py"
     copy(src, src.name)
+    src = Path(__file__).parent / "submit.py"
+    copy(src, src.name)
