@@ -57,7 +57,14 @@ def test_submit_dry_run():
     args = ["run", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
-    assert result.stdout.count("submit.py a --b --dry-run --multirun") == 4
+    assert result.stdout.count("submit.py a --b --dry-run") == 1
+    assert result.stdout.count("--multirun") == 4
+    lines = result.stdout.splitlines()
+    assert len(lines) == 5
+    assert "name=a count=1" in lines[1]
+    assert "name=b count=1" in lines[2]
+    assert "name=c count=5" in lines[3]
+    assert "name=d count=6" in lines[4]
 
 
 @pytest.mark.xdist_group(name="group1")

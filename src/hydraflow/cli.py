@@ -94,9 +94,8 @@ def submit(job: Job, args: list[str], *, dry_run: bool) -> None:
     result = submit(args, iter_batches(job), dry_run=dry_run)
 
     if dry_run and isinstance(result, tuple):
-        for line in result[1].splitlines():
-            args = shlex.split(line)
-            typer.echo(shlex.join([*result[0][:-1], *args]))
+        typer.echo(shlex.join(result[0]))
+        typer.echo(result[1])
 
 
 @app.command()
