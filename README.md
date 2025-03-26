@@ -102,8 +102,10 @@ def app(run: Run, cfg: Config):
     3. Track metrics and parameters automatically
 
     Args:
-        run: MLflow run object for experiment tracking
-        cfg: Configuration object containing training parameters
+        run: MLflow run for the experiment corresponding to the Hydra app.
+            This `Run` instance is automatically created by Hydraflow.
+        cfg: Configuration for the experiment's run.
+            This `Config` instance is automatically passed to the app by Hydraflow.
     """
     # Training loop
     for epoch in range(cfg.epochs):
