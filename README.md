@@ -67,17 +67,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class Config:
-    """Configuration for the ML training experiment.
-
-    Attributes:
-        learning_rate: Learning rate for the optimizer
-        batch_size: Number of samples per training batch
-        epochs: Number of training epochs
-        hidden_size: Size of the hidden layer
-        dropout: Dropout rate for regularization
-        train_size: Proportion of data used for training
-        random_seed: Random seed for reproducibility
-    """
+    """Configuration for the ML training experiment."""
     # Training hyperparameters
     learning_rate: float = 0.001
     batch_size: int = 32
