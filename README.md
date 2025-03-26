@@ -97,6 +97,7 @@ def app(run: Run, cfg: Config):
     """Train a model with the given configuration.
 
     This example demonstrates how to:
+
     1. Define a configuration using dataclasses
     2. Use Hydraflow to integrate with MLflow
     3. Track metrics and parameters automatically
