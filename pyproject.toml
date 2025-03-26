@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hydraflow"
-version = "0.14.2"
+version = "0.14.3"
 description = "HydraFlow seamlessly integrates Hydra and MLflow to streamline ML experiment management. It combines Hydra's configuration management with MLflow's tracking capabilities, offering automated experiment tracking, versioning, and a rich CLI interface. Perfect for ML researchers and teams who need reproducibility while scaling experiments."
 readme = "README.md"
 license = { file = "LICENSE" }
