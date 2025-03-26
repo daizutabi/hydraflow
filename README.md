@@ -15,7 +15,7 @@
 [GHAction-link]: https://github.com/daizutabi/hydraflow/actions?query=event%3Apush+branch%3Amain
 [codecov-image]: https://codecov.io/github/daizutabi/hydraflow/coverage.svg?branch=main
 [codecov-link]: https://codecov.io/github/daizutabi/hydraflow?branch=main
-[docs-image]: https://readthedocs.org/projects/hydraflow/badge/?version=latest
+[docs-image]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-link]: https://daizutabi.github.io/hydraflow/
 
 ## Overview
