@@ -147,17 +147,3 @@ We welcome contributions! Please see our [contributing guide](CONTRIBUTING.md) f
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Citation
-
-If you use Hydraflow in your research, please cite it using:
-
-```bibtex
-@software{hydraflow2024,
-  author = {daizutabi},
-  title = {Hydraflow: Seamless Integration of Hydra and MLflow for ML Experiment Management},
-  year = {2024},
-  publisher = {GitHub},
-  url = {https://github.com/daizutabi/hydraflow}
-}
-```
