@@ -105,7 +105,8 @@ def app(run: Run, cfg: Config):
         run: MLflow run for the experiment corresponding to the Hydra app.
             This `Run` instance is automatically created by Hydraflow.
         cfg: Configuration for the experiment's run.
-            This `Config` instance is automatically passed to the app by Hydraflow.
+            This `Config` instance is originally defined by Hydra, and then
+            automatically passed to the app by Hydraflow.
     """
     # Training loop
     for epoch in range(cfg.epochs):
