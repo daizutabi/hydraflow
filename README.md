@@ -4,6 +4,7 @@
 [![Python Version][python-v-image]][python-v-link]
 [![Build Status][GHAction-image]][GHAction-link]
 [![Coverage Status][codecov-image]][codecov-link]
+[![Documentation Status][docs-image]][docs-link]
 
 <!-- Badges -->
 [pypi-v-image]: https://img.shields.io/pypi/v/hydraflow.svg
@@ -14,6 +15,8 @@
 [GHAction-link]: https://github.com/daizutabi/hydraflow/actions?query=event%3Apush+branch%3Amain
 [codecov-image]: https://codecov.io/github/daizutabi/hydraflow/coverage.svg?branch=main
 [codecov-link]: https://codecov.io/github/daizutabi/hydraflow?branch=main
+[docs-image]: https://readthedocs.org/projects/hydraflow/badge/?version=latest
+[docs-link]: https://daizutabi.github.io/hydraflow/
 
 ## Overview
 
@@ -34,6 +37,8 @@ machine learning workflows.
   checkpoints and configuration files, with MLflow.
 - **Seamless Integration**: Easily integrate Hydra and MLflow in your machine learning
   projects with minimal setup.
+- **Rich CLI Interface**: Command-line tools for managing experiments and viewing results.
+- **Cross-Platform Support**: Works consistently across different operating systems.
 
 ## Installation
 
@@ -43,7 +48,7 @@ You can install Hydraflow via pip:
 pip install hydraflow
 ```
 
-## Getting Started
+## Quick Start
 
 Here is a simple example to get you started with Hydraflow:
 
@@ -54,6 +59,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import hydraflow
+import mlflow
 
 if TYPE_CHECKING:
     from mlflow.entities import Run
@@ -61,15 +67,93 @@ if TYPE_CHECKING:
 
 @dataclass
 class Config:
-    count: int = 1
-    name: str = "a"
+    """Configuration for the ML training experiment.
+
+    Attributes:
+        learning_rate: Learning rate for the optimizer
+        batch_size: Number of samples per training batch
+        epochs: Number of training epochs
+        hidden_size: Size of the hidden layer
+        dropout: Dropout rate for regularization
+        train_size: Proportion of data used for training
+        random_seed: Random seed for reproducibility
+    """
+    # Training hyperparameters
+    learning_rate: float = 0.001
+    batch_size: int = 32
+    epochs: int = 10
+
+    # Model architecture parameters
+    hidden_size: int = 128
+    dropout: float = 0.1
+
+    # Dataset parameters
+    train_size: float = 0.8
+    random_seed: int = 42
 
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config):
-    """Your app code here."""
+    """Train a model with the given configuration.
+
+    This example demonstrates how to:
+    1. Define a configuration using dataclasses
+    2. Use Hydraflow to integrate with MLflow
+    3. Track metrics and parameters automatically
+
+    Args:
+        run: MLflow run object for experiment tracking
+        cfg: Configuration object containing training parameters
+    """
+    # Training loop
+    for epoch in range(cfg.epochs):
+        # Simulate training and validation
+        train_loss = 1.0 / (epoch + 1)
+        val_loss = 1.1 / (epoch + 1)
+
+        # Log metrics to MLflow
+        mlflow.log_metrics({
+            "train_loss": train_loss,
+            "val_loss": val_loss
+        }, step=epoch)
+
+        print(f"Epoch {epoch}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
 
 
 if __name__ == "__main__":
     app()
+```
+
+This example demonstrates:
+
+- Configuration management with Hydra
+- Automatic experiment tracking with MLflow
+- Parameter logging and metric tracking
+- Type-safe configuration with dataclasses
+
+## Documentation
+
+For detailed documentation, including advanced usage examples and API reference,
+visit our [documentation site](https://daizutabi.github.io/hydraflow/).
+
+## Contributing
+
+We welcome contributions! Please see our [contributing guide](CONTRIBUTING.md) for details.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use Hydraflow in your research, please cite it using:
+
+```bibtex
+@software{hydraflow2024,
+  author = {daizutabi},
+  title = {Hydraflow: Seamless Integration of Hydra and MLflow for ML Experiment Management},
+  year = {2024},
+  publisher = {GitHub},
+  url = {https://github.com/daizutabi/hydraflow}
+}
 ```

@@ -15,14 +15,38 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Config:
+    """Configuration for the example app.
+
+    Attributes:
+        count: Number of iterations to run
+        name: Identifier for the run
+    """
+
     count: int = 1
     name: str = "a"
 
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config):
+    """Example app demonstrating Hydraflow's basic functionality.
+
+    This app shows how to:
+
+    1. Define a configuration using dataclasses
+    2. Use the Hydraflow decorator to integrate with MLflow
+    3. Access the MLflow run object and configuration
+
+    Args:
+        run: MLflow run object for tracking metrics and parameters
+        cfg: Configuration object containing run parameters
+    """
+    # Start the run
     log.info("start")
+
+    # Simulate some work
     time.sleep(0.2)
+
+    # End the run
     log.info("end")
 
 
