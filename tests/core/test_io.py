@@ -1,9 +1,27 @@
+import sys
 from pathlib import Path
 
 import mlflow
 import pytest
 
 pytestmark = pytest.mark.xdist_group(name="group1")
+
+
+@pytest.mark.parametrize(
+    ("uri", "path"),
+    [("/a/b/c", "/a/b/c"), ("file:///a/b/c", "/a/b/c"), ("file:C:/a/b/c", "C:/a/b/c")],
+)
+def test_file_uri_to_path(uri, path):
+    from hydraflow.core.io import file_uri_to_path
+
+    assert file_uri_to_path(uri).as_posix() == path
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="This test is for Windows")
+def test_file_uri_to_path_win_python_310_311():
+    from hydraflow.core.io import file_uri_to_path
+
+    assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
 @pytest.fixture(scope="module")

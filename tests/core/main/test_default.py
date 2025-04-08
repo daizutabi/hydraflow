@@ -1,63 +1,55 @@
 from pathlib import Path
 
 import pytest
-from mlflow.entities import Run
-
-from hydraflow.entities.run_collection import RunCollection
+from omegaconf import DictConfig
 
 pytestmark = pytest.mark.xdist_group(name="group5")
 
 
 @pytest.fixture(scope="module")
-def rc(collect):
+def results(collect):
     file = Path(__file__).parent / "default.py"
     collect(file, ["-m", "count=1,2"])
     return collect(file, ["-m", "name=a", "count=1,2,3,4"])
 
 
-def test_rc_len(rc: RunCollection):
-    assert len(rc) == 4
+def test_len(results):
+    assert len(results) == 4
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3, 4])
-def run(rc: RunCollection, request: pytest.FixtureRequest):
-    return rc.get(count=request.param)
-
-
-@pytest.fixture(scope="module")
-def count(run: Run):
-    return int(run.data.params["count"])
+@pytest.fixture(scope="module", params=range(4))
+def result(results, request: pytest.FixtureRequest):
+    return results[request.param]
 
 
 @pytest.fixture(scope="module")
-def text(run: Run):
-    from hydraflow.core.io import get_artifact_path
-
-    path = get_artifact_path(run, "a.txt")
-    return path.read_text()
+def path(result):
+    return result[0]
 
 
-def test_run_id(run: Run, text: str):
-    assert text.split(",")[0] == run.info.run_id
+@pytest.fixture(scope="module")
+def cfg(result):
+    return result[1]
+
+
+@pytest.fixture(scope="module")
+def count(cfg: DictConfig):
+    return int(cfg.count)
+
+
+@pytest.fixture(scope="module")
+def text(path: Path):
+    return path.joinpath("a.txt").read_text()
 
 
 def test_count(text: str, count: int):
-    assert text.split(",")[1] == str(count)
+    assert text == str(count)
 
 
 @pytest.fixture(scope="module")
-def cwd(run: Run):
-    from hydraflow.core.io import get_artifact_path
-
-    path = get_artifact_path(run, "b.txt")
-    return Path(path.read_text())
+def cwd(path: Path):
+    return Path(path.joinpath("b.txt").read_text())
 
 
 def test_cwd(cwd: Path, experiment_name: str):
     assert cwd.name == experiment_name
-
-
-def test_equals_invalid():
-    from hydraflow.core.main import equals
-
-    assert equals(Path("test"), {"a": 1}, None) is False

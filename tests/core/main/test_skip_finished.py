@@ -1,50 +1,63 @@
 from pathlib import Path
 
 import pytest
-from mlflow.entities import Run, RunStatus
+from mlflow.entities import RunStatus
 from mlflow.tracking import MlflowClient
-
-from hydraflow.entities.run_collection import RunCollection
+from omegaconf import DictConfig
 
 pytestmark = pytest.mark.xdist_group(name="group4")
 
 
+def get_run_id(results: list[tuple[Path, DictConfig]], count: int) -> str:
+    for path, cfg in results:
+        if cfg.count == count:
+            return path.parent.name
+    raise ValueError
+
+
 @pytest.fixture(scope="module")
-def rc(collect):
+def results(collect):
     client = MlflowClient()
     running = RunStatus.to_string(RunStatus.RUNNING)
 
     file = Path(__file__).parent / "skip_finished.py"
     args = ["-m", "count=1,2,3"]
 
-    rc = collect(file, args)
-    client.set_terminated(rc.get(count=2).info.run_id, status=running)
-    client.set_terminated(rc.get(count=3).info.run_id, status=running)
-    rc = collect(file, args)
-    client.set_terminated(rc.get(count=3).info.run_id, status=running)
+    results = collect(file, args)
+    client.set_terminated(get_run_id(results, 2), status=running)
+    client.set_terminated(get_run_id(results, 3), status=running)
+    results = collect(file, args)
+    client.set_terminated(get_run_id(results, 3), status=running)
     return collect(file, args)
 
 
-def test_rc_len(rc: RunCollection):
-    assert len(rc) == 3
+def test_len(results):
+    assert len(results) == 3
 
 
-@pytest.fixture(scope="module", params=[1, 2, 3])
-def run(rc: RunCollection, request: pytest.FixtureRequest):
-    return rc.get(count=request.param)
-
-
-@pytest.fixture(scope="module")
-def count(run: Run):
-    return int(run.data.params["count"])
+@pytest.fixture(scope="module", params=range(3))
+def result(results, request: pytest.FixtureRequest):
+    return results[request.param]
 
 
 @pytest.fixture(scope="module")
-def text(run: Run):
-    from hydraflow.core.io import get_artifact_path
+def path(result):
+    return result[0]
 
-    path = get_artifact_path(run, "a.txt")
-    return path.read_text()
+
+@pytest.fixture(scope="module")
+def cfg(result):
+    return result[1]
+
+
+@pytest.fixture(scope="module")
+def count(cfg: DictConfig):
+    return cfg.count
+
+
+@pytest.fixture(scope="module")
+def text(path: Path):
+    return path.joinpath("a.txt").read_text()
 
 
 def test_count(text: str, count: int):
@@ -55,6 +68,6 @@ def test_config(text: str, count: int):
     assert int(text.split(" ", maxsplit=1)[0]) == count
 
 
-def test_run(text: str, run: Run):
+def test_run(text: str, path: Path):
     line = text.splitlines()[-1]
-    assert line.split(" ", maxsplit=1)[1] == run.info.run_id
+    assert line.split(" ", maxsplit=1)[1] == path.parent.name

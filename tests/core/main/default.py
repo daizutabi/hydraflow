@@ -18,9 +18,9 @@ class Config:
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config):
-    path = hydraflow.get_artifact_dir() / "a.txt"
-    path.write_text(f"{run.info.run_id},{cfg.count}")
-    path = hydraflow.get_artifact_dir() / "b.txt"
+    path = hydraflow.get_artifact_dir(run) / "a.txt"
+    path.write_text(f"{cfg.count}")
+    path = hydraflow.get_artifact_dir(run) / "b.txt"
     path.write_text(f"{Path.cwd().absolute().as_posix()}")
 
 
