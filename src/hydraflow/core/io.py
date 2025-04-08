@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import fnmatch
-import shutil
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig, ListConfig, OmegaConf
-
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Iterator
+    from collections.abc import Callable, Iterator
 
     from mlflow.entities import Run
 
@@ -27,7 +23,7 @@ def file_uri_to_path(uri: str) -> Path:
     return Path(urllib.request.url2pathname(path))  # for Windows
 
 
-def get_artifact_dir(run: Run | None = None) -> Path:
+def get_artifact_dir(run: Run) -> Path:
     """Retrieve the artifact directory for the given run.
 
     This function uses MLflow to get the artifact directory for the given run.
@@ -39,12 +35,7 @@ def get_artifact_dir(run: Run | None = None) -> Path:
         The local path to the directory where the artifacts are downloaded.
 
     """
-    import mlflow
-
-    if run is None:
-        uri = mlflow.get_artifact_uri()
-    else:
-        uri = run.info.artifact_uri
+    uri = run.info.artifact_uri
 
     if not isinstance(uri, str):
         raise NotImplementedError
@@ -52,105 +43,35 @@ def get_artifact_dir(run: Run | None = None) -> Path:
     return file_uri_to_path(uri)
 
 
-def get_artifact_path(run: Run | None, path: str) -> Path:
-    """Retrieve the artifact path for the given run and path.
+def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
+    """Log text files in the given directory as artifacts.
 
-    This function uses MLflow to get the artifact path for the given run and path.
-
-    Args:
-        run (Run | None): The run object. Defaults to None.
-        path (str): The path to the artifact.
-
-    Returns:
-        The local path to the artifact.
-
-    """
-    return get_artifact_dir(run) / path
-
-
-def get_hydra_output_dir(run: Run | None = None) -> Path:
-    """Retrieve the Hydra output directory for the given run.
-
-    This function returns the Hydra output directory. If no run is provided,
-    it retrieves the output directory from the current Hydra configuration.
-    If a run is provided, it retrieves the artifact path for the run, loads
-    the Hydra configuration from the downloaded artifacts, and returns the
-    output directory specified in that configuration.
+    Append the text files to the existing text file in the artifact directory.
 
     Args:
-        run (Run | None): The run object. Defaults to None.
-
-    Returns:
-        Path: The path to the Hydra output directory.
-
-    Raises:
-        FileNotFoundError: If the Hydra configuration file is not found
-            in the artifacts.
+        run (Run): The run object.
+        from_dir (Path): The directory to find the logs in.
+        pattern (str): The pattern to match the logs.
 
     """
-    if run is None:
-        hc = HydraConfig.get()
-        return Path(hc.runtime.output_dir)
+    import mlflow
 
-    path = get_artifact_dir(run) / ".hydra/hydra.yaml"
+    artifact_dir = get_artifact_dir(run)
 
-    if path.exists():
-        hc = OmegaConf.load(path)
-        return Path(hc.hydra.runtime.output_dir)
+    for file in from_dir.glob(pattern):
+        if not file.is_file():
+            continue
 
-    raise FileNotFoundError
+        file_artifact = artifact_dir / file.name
+        if file_artifact.exists():
+            text = file_artifact.read_text()
+            if not text.endswith("\n"):
+                text += "\n"
+        else:
+            text = ""
 
-
-def load_config(run: Run) -> DictConfig:
-    """Load the configuration for a given run.
-
-    This function loads the configuration for the provided Run instance
-    by downloading the configuration file from the MLflow artifacts and
-    loading it using OmegaConf. It returns an empty config if
-    `.hydra/config.yaml` is not found in the run's artifact directory.
-
-    Args:
-        run (Run): The Run instance for which to load the configuration.
-
-    Returns:
-        The loaded configuration as a DictConfig object. Returns an empty
-        DictConfig if the configuration file is not found.
-
-    """
-    path = get_artifact_dir(run) / ".hydra/config.yaml"
-    return OmegaConf.load(path)  # type: ignore
-
-
-def load_overrides(run: Run) -> ListConfig:
-    """Load the overrides for a given run.
-
-    This function loads the overrides for the provided Run instance
-    by downloading the overrides file from the MLflow artifacts and
-    loading it using OmegaConf. It returns an empty config if
-    `.hydra/overrides.yaml` is not found in the run's artifact directory.
-
-    Args:
-        run (Run): The Run instance for which to load the configuration.
-
-    Returns:
-        The loaded configuration as a DictConfig object. Returns an empty
-        DictConfig if the configuration file is not found.
-
-    """
-    path = get_artifact_dir(run) / ".hydra/overrides.yaml"
-    return sorted(OmegaConf.load(path))  # type: ignore
-
-
-def remove_run(run: Run | Iterable[Run]) -> None:
-    """Remove the given run from the MLflow tracking server."""
-    from mlflow.entities import Run
-
-    if not isinstance(run, Run):
-        for r in run:
-            remove_run(r)
-        return
-
-    shutil.rmtree(get_artifact_dir(run).parent)
+        text += file.read_text()
+        mlflow.log_text(text, file.name)
 
 
 def get_experiment_name(path: Path) -> str | None:

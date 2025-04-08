@@ -24,7 +24,7 @@ def app(cfg: Config):
     hc = HydraConfig.get()
     mlflow.set_experiment(hc.job.name)
 
-    with hydraflow.start_run(cfg, chdir=True):
+    with hydraflow.start_run(chdir=True):
         Path("a.txt").write_text(str(cfg.count))
 
 

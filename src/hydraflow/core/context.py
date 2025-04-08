@@ -10,9 +10,7 @@ from typing import TYPE_CHECKING
 
 from hydra.core.hydra_config import HydraConfig
 
-from hydraflow.core.io import get_artifact_dir
-
-from .mlflow import log_params, log_text
+from .io import get_artifact_dir, log_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -23,11 +21,7 @@ log = logging.getLogger(__name__)
 
 
 @contextmanager
-def log_run(
-    config: object | None,
-    *,
-    synchronous: bool | None = None,
-) -> Iterator[None]:
+def log_run(run: Run) -> Iterator[None]:
     """Log the parameters from the given configuration object.
 
     This context manager logs the parameters from the provided configuration object
@@ -35,25 +29,13 @@ def log_run(
     are logged and the run is properly closed.
 
     Args:
-        config (object): The configuration object to log the parameters from.
-        synchronous (bool | None): Whether to log the parameters synchronously.
-            Defaults to None.
+        run (Run): The run object.
 
     Yields:
         None
 
-    Example:
-        ```python
-        with log_run(config):
-            # Perform operations within the MLflow run context
-            pass
-        ```
-
     """
     import mlflow
-
-    if config:
-        log_params(config, synchronous=synchronous)
 
     hc = HydraConfig.get()
     hydra_dir = Path(hc.runtime.output_dir)
@@ -71,12 +53,11 @@ def log_run(
         raise
 
     finally:
-        log_text(hydra_dir)
+        log_text(run, hydra_dir)
 
 
 @contextmanager
 def start_run(
-    config: object,
     *,
     chdir: bool = False,
     run_id: str | None = None,
@@ -87,7 +68,6 @@ def start_run(
     tags: dict[str, str] | None = None,
     description: str | None = None,
     log_system_metrics: bool | None = None,
-    synchronous: bool | None = None,
 ) -> Iterator[Run]:
     """Start an MLflow run and log parameters using the provided configuration object.
 
@@ -127,7 +107,7 @@ def start_run(
             description=description,
             log_system_metrics=log_system_metrics,
         ) as run,
-        log_run(config if run_id is None else None, synchronous=synchronous),
+        log_run(run),
     ):
         if chdir:
             with chdir_artifact(run):
@@ -137,7 +117,7 @@ def start_run(
 
 
 @contextmanager
-def chdir_artifact(run: Run | None = None) -> Iterator[Path]:
+def chdir_artifact(run: Run) -> Iterator[Path]:
     """Change the current working directory to the artifact directory of the given run.
 
     This context manager changes the current working directory to the artifact

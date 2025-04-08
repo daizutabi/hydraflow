@@ -27,7 +27,7 @@ def app(cfg: Config):
     hc = HydraConfig.get()
     mlflow.set_experiment(hc.job.name)
 
-    with hydraflow.start_run(cfg):
+    with hydraflow.start_run():
         log.info("log.info")
 
         mlflow.log_text("mlflow.log_text", "text.log")

@@ -111,7 +111,7 @@ def main(
                     if run.info.status == finished:
                         return
 
-            with start_run(config, run_id=run_id, chdir=chdir) as run:
+            with start_run(run_id=run_id, chdir=chdir) as run:
                 app(run, config)
 
         return inner_decorator
