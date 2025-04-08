@@ -17,8 +17,6 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -68,9 +66,7 @@ docs = ["markdown-exec[ansi]", "mkapi", "mkdocs-material"]
 addopts = [
   "--cov=hydraflow",
   "--cov-report=lcov:lcov.info",
-  "--dist=loadgroup",
   "--doctest-modules",
-  "-n8",
 ]
 filterwarnings = [
   "ignore:Support for class-based `config` is deprecated",
