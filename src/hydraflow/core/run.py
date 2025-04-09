@@ -56,7 +56,10 @@ class Run[C, I]:
     def cfg(self) -> C:
         """The configuration object loaded from the Hydra configuration file."""
         config_file = self.info.run_dir / "artifacts/.hydra/config.yaml"
-        return OmegaConf.load(config_file)  # type: ignore
+        if config_file.exists():
+            return OmegaConf.load(config_file)  # type: ignore
+
+        return OmegaConf.create()  # type: ignore
 
     @cached_property
     def impl(self) -> I | None:
