@@ -1,7 +1,9 @@
-import pytest
-from omegaconf import DictConfig
+from pathlib import Path
 
-from hydraflow.core.run import _set_default
+import pytest
+from omegaconf import ListConfig
+
+from hydraflow.core.run import Run
 
 
 class Db:
@@ -15,69 +17,122 @@ class Config:
 
 
 @pytest.fixture
-def cfg():
-    return DictConfig({})
+def run():
+    return Run(Path())
 
 
-def test_set_default(cfg: DictConfig):
-    _set_default(None, cfg, "a", 10)
-    assert cfg.a == 10
-    _set_default(None, cfg, "db.name", "abc")
-    assert cfg.db.name == "abc"
-    _set_default(None, cfg, "a", 20)
-    assert cfg.a == 10
-    _set_default(None, cfg, "db.name", "def")
-    assert cfg.db.name == "abc"
-    _set_default(None, cfg, "db.b", 100)
-    assert cfg.db.b == 100
+def test_update_str(run: Run):
+    run.update("a", 10)
+    assert run.get("a") == 10
+    run.update("a", 20)
+    assert run.get("a") == 10
 
 
-def test_run_config_set_default_callable(cfg: DictConfig):
-    _set_default(None, cfg, "db.name", "abc")
-    assert cfg.db.name == "abc"
-    _set_default(None, cfg, "db.b", lambda x: len(cfg.db.name))
-    assert cfg.db.b == 3
-    _set_default(None, cfg, "a", lambda x: cfg.db.b * 10)
-    assert cfg.a == 30
+def test_update_str_force(run: Run):
+    run.update("a", 10)
+    assert run.get("a") == 10
+    run.update("a", 20, force=True)
+    assert run.get("a") == 20
 
 
-def test_run_config_set_default_tuple(cfg: DictConfig):
-    _set_default(None, cfg, ("db.name", "db.b"), ["xyz", 1000])
-    assert cfg.db.name == "xyz"
-    assert cfg.db.b == 1000
-    _set_default(None, cfg, ("db.name", "db.b"), ["XYZ", 2000])
-    assert cfg.db.name == "xyz"
-    assert cfg.db.b == 1000
+def test_update_str_dot(run: Run):
+    run.update("db.name", "abc")
+    assert run.get("db.name") == "abc"
+    run.update("db.name", "def")
+    assert run.get("db.name") == "abc"
 
 
-def test_run_config_set_default_tuple_callable(cfg: DictConfig):
-    _set_default(None, cfg, ("db.name", "db.b"), lambda x: ["a", 1])
-    assert cfg.db.name == "a"
-    assert cfg.db.b == 1
-    _set_default(None, cfg, ("db.name", "db.b"), lambda x: [1 / 0, 1 / 0])
+def test_update_str_dot_force(run: Run):
+    run.update("db.b", 100)
+    assert run.get("db.b") == 100
+    run.update("db.b", 200, force=True)
+    assert run.get("db.b") == 200
 
 
-def test_run_config_set_default_tuple_error(cfg: DictConfig):
+def test_update_callable(run: Run[Config]):
+    run.update("db.name", lambda _: "abc")
+    run.update("db.b", lambda run: len(run.cfg.db.name))
+    assert run.get("db.b") == 3
+    run.update("db.b", lambda run: run.cfg.db.b * 10)
+    assert run.get("db.b") == 3
+
+
+def test_update_tuple(run: Run[Config]):
+    run.update(("db.name", "db.b"), ["xyz", 1000])
+    assert run.get("db.name") == "xyz"
+    assert run.get("db.b") == 1000
+    run.update(("db.name", "a"), ["abc", 1])
+    assert run.get("db.name") == "xyz"
+    assert run.get("a") == 1
+
+
+def test_update_tuple_callable(run: Run[Config]):
+    run.update(("db.name", "db.b"), lambda x: ["a", 1])
+    assert run.get("db.name") == "a"
+    assert run.get("db.b") == 1
+    run.update(("db.name", "a"), lambda x: ["b", 2])
+    assert run.get("db.name") == "a"
+    assert run.get("a") == 2
+    run.update(("db.name", "a"), lambda x: [1 / 0, 1 / 0])
+
+
+def test_update_tuple_error(run: Run[Config]):
     with pytest.raises(TypeError):
-        _set_default(None, cfg, ("db.name", "db.b"), lambda x: "ab")
+        run.update(("db.name", "db.b"), lambda x: "ab")
 
 
-text = """\
-    - cx=5e-09
-    - cz=5e-09
-  job:
-    name: fine_0204
-    chdir: null
-    override_dirname: Bext=-0.008,cx=5e-09,cz=5e-09,width=3e-06
-    id: '0'
-    num: 0
-"""
+def test_get_error(run: Run[Config]):
+    with pytest.raises(AttributeError):
+        run.get("unknown")
 
 
-def test_job_name(tmp_path_factory: pytest.TempPathFactory):
-    from hydraflow.core.run import get_job_name
+def test_get_info(run: Run[Config]):
+    with pytest.raises(AttributeError):
+        run.get("unknown")
 
-    p = tmp_path_factory.mktemp("artifacts", numbered=False)
-    (p / ".hydra").mkdir()
-    (p / ".hydra/hydra.yaml").write_text(text)
-    assert get_job_name(p.parent) == "fine_0204"
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (10, True),
+        (1, False),
+        ([20, 10], True),
+        ([1, 2], False),
+        ((1, 10), True),
+        ((10, 1), False),
+        (ListConfig([10, 20]), True),
+    ],
+)
+def test_predicate(run: Run[Config], value, expected):
+    run.update("a", 10)
+    assert run.predicate("a", value) is expected
+
+
+def test_predicate_list_config(run: Run[Config]):
+    run.update("a", ListConfig([10, 20]))
+    assert run.predicate("a", [10, 20]) is True
+    assert run.predicate("a", ListConfig([10, 20])) is True
+
+
+def test_predicate_callable(run: Run[Config]):
+    run.update("a", 10)
+    assert run.predicate("a", lambda x: x > 5) is True
+    assert run.predicate("a", lambda x: x > 15) is False
+
+
+def test_predicate_tuple(run: Run[Config]):
+    run.update("a", (1, 2))
+    assert run.predicate("a", (1, 2)) is True
+    assert run.predicate("a", (2, 1)) is False
+
+
+class Impl:
+    path: Path
+
+    def __init__(self, path: Path):
+        self.path = path
+
+
+def test_impl():
+    run = Run[Config, Impl](Path(), Impl)
+    assert run.impl.path == Path("artifacts")

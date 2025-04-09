@@ -139,48 +139,12 @@ class Run[C, I = None]:
             if force or OmegaConf.select(cfg, k) is None:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
-    def try_get(self, key: str) -> Any | None:
-        """Try to get a value from the implementation, configuration, or run information.
-
-        The method looks for the key in the following order:
-        1. Implementation object (if available)
-        2. Configuration object
-        3. Run information (if key starts with "info.")
-
-        Args:
-            key: The key to look for. Can use dot notation for nested keys
-                in configuration, or "info." prefix for run information.
-
-        Returns:
-            Any | None: The value associated with the key, or None if the key
-            is not found.
-
-        """  # noqa: E501
-        if self.impl is not None and hasattr(self.impl, key):
-            return getattr(self.impl, key)
-
-        value = OmegaConf.select(self.cfg, key)  # type: ignore
-        if value is not None:
-            return value
-
-        if key.startswith("info."):
-            key = key[len("info.") :]
-            if hasattr(self.info, key):
-                return getattr(self.info, key)
-
-        return None
-
     def get(self, key: str) -> Any:
-        """Get a value from the implementation, configuration, or run information.
-
-        The method looks for the key in the following order:
-        1. Implementation object (if available)
-        2. Configuration object
-        3. Run information (if key starts with "info.")
+        """Get a value from the configuration.
 
         Args:
             key: The key to look for. Can use dot notation for nested keys
-                in configuration, or "info." prefix for run information.
+                in configuration.
 
         Returns:
             Any: The value associated with the key.
@@ -189,7 +153,7 @@ class Run[C, I = None]:
             AttributeError: If the key is not found in any of the components.
 
         """
-        value = self.try_get(key)
+        value = OmegaConf.select(self.cfg, key)  # type: ignore
         if value is not None:
             return value
 
@@ -227,10 +191,20 @@ class Run[C, I = None]:
         if isinstance(value, ListConfig):
             value = list(value)
 
-        if isinstance(value, list | set) and not isinstance(attr, list | set):
+        if isinstance(value, list | set) and not _is_iterable(attr):
             return attr in value
 
-        if isinstance(value, tuple) and len(value) == 2 and not isinstance(attr, tuple):
+        if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
             return value[0] <= attr <= value[1]
 
+        if _is_iterable(value):
+            value = list(value)
+
+        if _is_iterable(attr):
+            attr = list(attr)
+
         return attr == value
+
+
+def _is_iterable(value: Any) -> bool:
+    return isinstance(value, Iterable) and not isinstance(value, str)
