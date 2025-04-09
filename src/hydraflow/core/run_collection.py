@@ -73,18 +73,14 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         self.runs = list(runs)
 
     def __repr__(self) -> str:
-        """Return a string representation of the RunCollection.
-
-        Returns:
-            str: A string representation showing the class name, the type of
-            contained runs (if any), and the number of runs.
-
-        """
+        """Return a string representation of the RunCollection."""
         class_name = self.__class__.__name__
         if not self:
             return f"{class_name}(empty)"
 
-        type_name = self[0].__class__.__name__
+        type_name = repr(self[0])
+        if "(" in type_name:
+            type_name = type_name.split("(", 1)[0]
         return f"{class_name}({type_name}, n={len(self)})"
 
     def __len__(self) -> int:

@@ -21,6 +21,10 @@ def run():
     return Run(Path())
 
 
+def test_repr(run: Run):
+    assert repr(run) == "Run('')"
+
+
 def test_update_str(run: Run):
     run.update("a", 10)
     assert run.get("a") == 10
@@ -153,3 +157,28 @@ class Impl:
 def test_impl():
     run = Run[Config, Impl](Path(), Impl)
     assert run.impl.path == Path("artifacts")
+
+
+def test_repr_impl():
+    run = Run[Config, Impl](Path("a/b/c"), Impl)
+    assert repr(run) == "Run[Impl]('c')"
+
+
+@pytest.fixture(scope="module")
+def results(collect):
+    file = Path(__file__).parent / "run.py"
+    return collect(file, ["count=10", "name=abc", "size.width=1", "size.height=3"])
+
+
+def test_len(results):
+    assert len(results) == 1
+
+
+def test_config(results):
+    run_dir = results[0][0].parent
+    run = Run(run_dir)
+    assert run.get("count") == 10
+    assert run.get("name") == "abc"
+    assert run.get("size.width") == 1
+    assert run.get("size.height") == 3
+    assert run.get("size") == {"width": 1, "height": 3}

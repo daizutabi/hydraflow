@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from omegaconf import DictConfig
+from omegaconf import ListConfig
 from polars import DataFrame
 
 from hydraflow.core.run_collection import Run, RunCollection
@@ -54,6 +54,14 @@ def rc(run_factory):
 
 
 type Rc = RunCollection[Run[Config, Impl]]
+
+
+def test_repr(rc: Rc):
+    assert repr(rc) == "RunCollection(Run[Impl], n=12)"
+
+
+def test_repr_empty():
+    assert repr(RunCollection([])) == "RunCollection(empty)"
 
 
 def test_len(rc: Rc):
@@ -247,100 +255,28 @@ def test_group_by_frame(rc: Rc):
     assert df["x"].to_list() == [3, 3, 3, 3]
 
 
-# # @pytest.fixture(scope="module")
-# # def rc(results: list[tuple[Path, DictConfig]]):
-# #     return results.filter(lambda r: r.cfg.name == "abc")
+def test_to_hashable_list_config():
+    from hydraflow.core.run_collection import to_hashable
+
+    assert to_hashable(ListConfig([1, 2, 3])) == (1, 2, 3)
 
 
-# # class Db:
-# #     name: str
-# #     b: int
+def test_to_hashable_ndarray():
+    from hydraflow.core.run_collection import to_hashable
+
+    assert to_hashable(np.array([1, 2, 3])) == (1, 2, 3)
 
 
-# # class Config:
-# #     a: int
-# #     db: Db
+def test_to_hashable_fallback_str():
+    from hydraflow.core.run_collection import to_hashable
 
+    class C:
+        __hash__ = None  # type: ignore
 
-# # @pytest.fixture
-# # def rc(root_dirs: list[str]):
-# #     return RunConfig[Config].load(root_dirs)
+        def __str__(self) -> str:
+            return "abc"
 
+        def __iter__(self):
+            raise TypeError
 
-# # def test_run_config_len(rc: RunCollection[RunConfig[Config]]):
-# #     assert len(rc) == 5
-
-
-# # def test_run_config_cfg(rc: RunCollection[RunConfig[Config]]):
-# #     assert all(not r.cfg for r in rc)
-
-
-# # def test_group_by_list_config(rc: RunCollection[RunConfig[Config]]):
-# #     rc.set_default("a", lambda x: list(x.script.grid_size))
-# #     gp = rc.group_by("a")
-# #     assert list(gp.keys()) == [(1, 2, 3), (2, 3, 4), (3, 4, 5)]
-
-
-# # def test_group_by_list(rc: RunCollection[RunConfig[Config]]):
-# #     for r in rc:
-# #         r.dummy = [1, 2]  # type: ignore
-# #     gp = rc.group_by("dummy")
-# #     assert list(gp.keys()) == [(1, 2)]
-
-
-# # def test_group_by_numpy(rc: RunCollection[RunConfig[Config]]):
-# #     for r in rc:
-# #         r.dummy = np.array([1, 2])  # type: ignore
-# #     gp = rc.group_by("dummy")
-# #     assert list(gp.keys()) == [(1, 2)]
-
-
-# # def test_run_config_set_defaults(rc: RunCollection[RunConfig[Config]]):
-# #     rc.set_default("db.name", "abc")
-# #     assert all(r.cfg.db.name == "abc" for r in rc)
-# #     rc.set_default("a", 10)
-# #     assert all(r.cfg.a == 10 for r in rc)
-
-
-# # def test_run_config_set_defaults_callable(rc: RunCollection[RunConfig[Config]]):
-# #     rc.set_default("a", lambda x: x.script.grid_size[0])
-# #     assert rc.to_list("a") == [1, 2, 3, 1, 1]
-# #     rc.set_default("db.b", lambda x: x.script.grid_size[1])
-# #     assert rc.to_list("db.b") == [2, 3, 4, 2, 2]
-
-
-# # def test_run_config_set_defaults_tuple_callable(rc: RunCollection[RunConfig[Config]]):
-# #     rc.set_default(("a", "db.b"), lambda x: x.script.grid_size[:2])
-# #     assert rc.to_list("a") == [1, 2, 3, 1, 1]
-# #     assert rc.to_list("db.b") == [2, 3, 4, 2, 2]
-# #     rc.set_default(("a", "db.b"), lambda x: x.script.cell_size[:2])
-# #     assert rc.to_list("a") == [1, 2, 3, 1, 1]
-# #     assert rc.to_list("db.b") == [2, 3, 4, 2, 2]
-# #     for r in rc[:2]:
-# #         r.cfg.a = None  # type: ignore
-# #     for r in rc[3:]:
-# #         r.cfg.db.b = None  # type: ignore
-# #     rc.set_default(("a", "db.b"), lambda x: x.script.grid_size[1:])
-# #     assert rc.to_list("a") == [2, 3, 3, 1, 1]
-# #     assert rc.to_list("db.b") == [2, 3, 4, 3, 3]
-
-
-# # def test_run_series_set_defaults_type_error(root_dirs: list[str]):
-# #     rs = RunSeries.load(root_dirs)
-# #     with pytest.raises(AttributeError):
-# #         rs.set_default("a", 3)  # type: ignore
-
-
-# def test_to_hashable_fallback_str():
-#     from hydraflow.core.run_collection import to_hashable
-
-#     class C:
-#         __hash__ = None  # type: ignore
-
-#         def __str__(self) -> str:
-#             return "abc"
-
-#         def __iter__(self):
-#             raise TypeError
-
-#     assert to_hashable(C()) == "abc"
+    assert to_hashable(C()) == "abc"

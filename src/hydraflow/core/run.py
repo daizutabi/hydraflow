@@ -53,6 +53,16 @@ class Run[C, I = None]:
         self.info = RunInfo(run_dir)
         self.impl_factory = impl_factory
 
+    def __repr__(self) -> str:
+        """Return a string representation of the Run."""
+        class_name = self.__class__.__name__
+        if isinstance(self.impl_factory, type):
+            impl_name = f"[{self.impl_factory.__name__}]"
+        else:
+            impl_name = ""
+
+        return f"{class_name}{impl_name}({self.info.run_id!r})"
+
     @cached_property
     def cfg(self) -> C:
         """The configuration object loaded from the Hydra configuration file."""
