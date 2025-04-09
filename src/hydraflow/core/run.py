@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 from omegaconf import DictConfig, OmegaConf
+
+from .run_info import RunInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -11,16 +14,22 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 
-class Run[C]:
-    run_dir: Path
-    job_name: str
-    cfg: C
+class Run[C, I]:
+    info: RunInfo
+    impl_factory: Callable[[Path], I]
 
-    def __init__(self, run_dir: Path) -> None:
-        self.run_dir = run_dir
-        self.job_name = get_job_name(run_dir)
-        config_file = run_dir / "artifacts/.hydra/config.yaml"
-        self.cfg = OmegaConf.load(config_file)  # type: ignore
+    def __init__(self, run_dir: Path, impl_factory: Callable[[Path], I]) -> None:
+        self.info = RunInfo(run_dir)
+        self.impl_factory = impl_factory
+
+    @cached_property
+    def cfg(self) -> C:
+        config_file = self.info.run_dir / "artifacts/.hydra/config.yaml"
+        return OmegaConf.load(config_file)  # type: ignore
+
+    @cached_property
+    def impl(self) -> I:
+        return self.impl_factory(self.info.run_dir / "artifacts")
 
     @overload
     def set_default(
@@ -89,10 +98,3 @@ def _set_default(
     for k, v in zip(key, value, strict=True):
         if OmegaConf.select(cfg, k) is None:
             OmegaConf.update(cfg, k, v, force_add=True)
-
-    @cached_property
-    def config_file(self) -> Path:
-        return self.run_dir / "artifacts/.hydra/config.yaml"
-
-    def load_config(self) -> DictConfig:
-        return OmegaConf.load(self.config_file)  # type: ignore
