@@ -38,3 +38,11 @@ def test_job_name_no_file():
 
 def test_run_id():
     assert RunInfo(Path(__file__)).run_id == "test_run_info.py"
+
+
+def test_to_dict():
+    assert RunInfo(Path(__file__)).to_dict() == {
+        "run_dir": Path(__file__).as_posix(),
+        "run_id": "test_run_info.py",
+        "job_name": "",
+    }

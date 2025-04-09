@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Any
 
 
 @dataclass
@@ -47,6 +48,14 @@ class RunInfo:
         contain the expected format).
         """
         return get_job_name(self.run_dir)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the RunInfo to a dictionary."""
+        return {
+            "run_id": self.run_id,
+            "run_dir": self.run_dir.as_posix(),
+            "job_name": self.job_name,
+        }
 
 
 def get_job_name(run_dir: Path) -> str:
