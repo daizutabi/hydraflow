@@ -42,11 +42,9 @@ class RunInfo:
     def job_name(self) -> str:
         """The Hydra job name, which was used as the MLflow Experiment name.
 
-        Raises:
-            FileNotFoundError: If the Hydra configuration file does not exist.
-            ValueError: If the job name cannot be extracted from the
-                configuration file.
-
+        An empty string if the job name cannot be extracted from the
+        Hydra configuration file (e.g., if the file does not exist or does not
+        contain the expected format).
         """
         return get_job_name(self.run_dir)
 
@@ -54,29 +52,24 @@ class RunInfo:
 def get_job_name(run_dir: Path) -> str:
     """Extract the Hydra job name from the Hydra configuration file.
 
+    Return an empty string if the job name cannot be extracted from the
+    Hydra configuration file (e.g., if the file does not exist or does not
+    contain the expected format).
+
     Args:
         run_dir (Path): The directory where the run artifacts are stored.
 
     Returns:
         str: The Hydra job name, which was used as the MLflow Experiment name.
 
-    Raises:
-        FileNotFoundError: If the Hydra configuration file does not exist.
-        ValueError: If the job name cannot be extracted from the
-            configuration file.
-
     """
     hydra_file = run_dir / "artifacts/.hydra/hydra.yaml"
 
     if not hydra_file.exists():
-        msg = f"Hydra configuration file not found at {hydra_file}. "
-        msg += "This is required by HydraFlow conventions."
-        raise FileNotFoundError(msg)
+        return ""
 
     text = hydra_file.read_text()
     if "  job:\n    name: " in text:
         return text.split("  job:\n    name: ")[1].split("\n")[0]
 
-    msg = f"Could not extract job name from {hydra_file}. "
-    msg += "The file should contain a 'hydra.job.name' field."
-    raise ValueError(msg)
+    return ""
