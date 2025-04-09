@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import MISSING
 from functools import cached_property
+from pathlib import Path
 from typing import TYPE_CHECKING, overload
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
@@ -27,8 +28,9 @@ from .run_info import RunInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
     from typing import Any, Self
+
+    from .run_collection import RunCollection
 
 
 class Run[C, I = None]:
@@ -76,6 +78,36 @@ class Run[C, I = None]:
     def impl(self) -> I:
         """The implementation object created by the factory function."""
         return self.impl_factory(self.info.run_dir / "artifacts")
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        run_dir: str | Path,
+        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+    ) -> Self: ...
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        run_dir: Iterable[str | Path],
+        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+    ) -> RunCollection[Self]: ...
+
+    @classmethod
+    def load(
+        cls,
+        run_dir: str | Path | Iterable[str | Path],
+        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+    ) -> Self | RunCollection[Self]:
+        """Load a Run from a run directory."""
+        if isinstance(run_dir, str | Path):
+            return cls(Path(run_dir), impl_factory)
+
+        from .run_collection import RunCollection
+
+        return RunCollection(cls(Path(r), impl_factory) for r in run_dir)
 
     @overload
     def update(

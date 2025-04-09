@@ -4,6 +4,7 @@ import pytest
 from omegaconf import ListConfig
 
 from hydraflow.core.run import Run
+from hydraflow.core.run_collection import RunCollection
 
 
 class Db:
@@ -162,6 +163,33 @@ def test_impl():
 def test_repr_impl():
     run = Run[Config, Impl](Path("a/b/c"), Impl)
     assert repr(run) == "Run[Impl]('c')"
+
+
+def test_load():
+    run = Run[Config].load("a/b/c")
+    assert isinstance(run, Run)
+    assert run.impl is None
+
+
+def test_load_collection():
+    rc = Run[Config].load([Path("a/b/c"), "a/b/d"])
+    assert isinstance(rc, RunCollection)
+    assert len(rc) == 2
+    assert rc[0].impl is None
+    assert rc[1].impl is None
+
+
+def test_load_impl():
+    run = Run[Config, Impl].load("a/b/c", Impl)
+    assert run.impl.path == Path("a/b/c/artifacts")
+
+
+def test_load_impl_collection():
+    rc = Run[Config, Impl].load(["a/b/c", "a/b/d"], Impl)
+    assert isinstance(rc, RunCollection)
+    assert len(rc) == 2
+    assert rc[0].impl.path == Path("a/b/c/artifacts")
+    assert rc[1].impl.path == Path("a/b/d/artifacts")
 
 
 @pytest.fixture(scope="module")

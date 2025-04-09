@@ -11,9 +11,12 @@ The following example demonstrates how to use a Hydraflow application.
 ### Hydraflow's `main` decorator
 
 [`hydraflow.main`][] starts a new MLflow run that logs the Hydra configuration.
-The decorated function must have two arguments: `Run` and `Config`.
-The `Run` argument is the current MLflow run.
-The `Config` argument is the Hydra configuration.
+The decorated function must have two arguments: `run` and `cfg`.
+The `run` argument is the current MLflow run with type `mlflow.entities.Run`.
+The `cfg` argument is the Hydra configuration with type `omegaconf.DictConfig`.
+You can annotate the arguments with `Run` and `Config` to get type checking and
+autocompletion in your IDE, although the `cfg` argument is not actually an
+instance of `Config` (duck typing is used).
 
 ```python
 @hydraflow.main(Config)
@@ -53,13 +56,34 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 
 ## Use Hydraflow API
 
-### Run collection
+### Iterate over run's directory
+
+The `hydraflow.iter_run_dirs` function iterates over the run directories.
+The first argument is the path to the MLflow tracking root directory
+(in most cases, this is `"mlruns"`).
+
+```pycon exec="1" source="console" session="quickstart"
+>>> import hydraflow
+>>> for run_dir in hydraflow.iter_run_dirs("mlruns"):
+...     print(run_dir)
+```
+
+Optionally, you can specify the experiment name(s) to filter the runs.
+
+```python
+>>> hydraflow.iter_run_dirs("mlruns", "quickstart")
+>>> hydraflow.iter_run_dirs("mlruns", ["quickstart1", "quickstart2"])
+```
+
+
+### Collect runs
 
 The `RunCollection` object is a collection of runs.
 
 ```pycon exec="1" source="console" session="quickstart"
->>> import hydraflow
->>> rc = hydraflow.list_runs("quickstart")
+>>> from hydraflow import RunCollection
+>>> run_dirs = hydraflow.iter_run_dirs("mlruns", "quickstart")
+>>> rc = RunCollection(run_dirs)
 >>> print(rc)
 ```
 
