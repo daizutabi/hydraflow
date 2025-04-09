@@ -2,8 +2,6 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.xdist_group(name="group5")
-
 
 @pytest.fixture(scope="module")
 def results(collect):

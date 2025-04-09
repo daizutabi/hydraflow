@@ -3,8 +3,6 @@ from pathlib import Path
 import pytest
 from omegaconf import DictConfig
 
-pytestmark = pytest.mark.xdist_group(name="group5")
-
 
 @pytest.fixture(scope="module")
 def results(collect):
@@ -53,3 +51,10 @@ def cwd(path: Path):
 
 def test_cwd(cwd: Path, experiment_name: str):
     assert cwd.name == experiment_name
+
+
+def test_run(path: Path, cfg: DictConfig):
+    from hydraflow.core.run import Run
+
+    run = Run(path.parent)
+    assert run.cfg == cfg

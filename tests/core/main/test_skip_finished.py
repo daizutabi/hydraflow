@@ -5,8 +5,6 @@ from mlflow.entities import RunStatus
 from mlflow.tracking import MlflowClient
 from omegaconf import DictConfig
 
-pytestmark = pytest.mark.xdist_group(name="group4")
-
 
 def get_run_id(results: list[tuple[Path, DictConfig]], count: int) -> str:
     for path, cfg in results:

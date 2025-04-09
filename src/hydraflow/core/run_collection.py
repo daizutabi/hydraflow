@@ -1,5 +1,3 @@
-"""Provide a collection of Mumax3 simulations."""
-
 from __future__ import annotations
 
 from collections.abc import Hashable, Iterable
@@ -8,7 +6,7 @@ from typing import TYPE_CHECKING, overload
 import numpy as np
 from omegaconf import OmegaConf
 
-from .with_config import WithConfig
+from .run import Run
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -17,11 +15,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-class RunCollection[R]:
-    """Represent a collection of Mumax3 simulations."""
-
+class RunCollection[R: Run]:
     runs: list[R]
-    """A list of `RunSeries` instances."""
 
     def __init__(self, runs: Iterable[R]) -> None:
         self.runs = list(runs)
@@ -50,16 +45,6 @@ class RunCollection[R]:
     def __getitem__(self, index: Iterable[int]) -> Self: ...
 
     def __getitem__(self, index: int | slice | Iterable[int]) -> R | Self:
-        """Get item(s) from the collection by index.
-
-        Args:
-            index: An integer index, slice, or iterable of integers.
-
-        Returns:
-            A single RunSeries instance if index is an integer,
-            or a new RunCollection containing the selected RunSeries instances.
-
-        """
         if isinstance(index, int):
             return self.runs[index]
         if isinstance(index, slice):
@@ -74,15 +59,15 @@ class RunCollection[R]:
         predicate: Callable[[R], bool] | dict[str, Any] | None = None,
         **kwargs,
     ) -> Self:
-        """Filter the RunSeries instances based on the provided criteria.
+        """Filter the Run instances based on the provided criteria.
 
-        This method creates a new RunCollection containing only the RunSeries
+        This method creates a new RunCollection containing only the Run
         instances that match the specified criteria. Filtering can be done using
         a custom predicate function, attribute-based filters, or a combination
         of both.
 
         Args:
-            predicate: Optional function that takes a RunSeries and returns True/False.
+            predicate: Optional function that takes a Run and returns True/False.
                 If provided, this function is used to filter the runs.
             **kwargs: Attribute-based filters, where keys are attribute names
                 and values are the filtering criteria.
@@ -94,7 +79,7 @@ class RunCollection[R]:
                     - Callable: Custom evaluation function (value(attr) == True)
 
         Returns:
-            A new RunCollection containing only the RunSeries instances that match
+            A new RunCollection containing only the Run instances that match
             the specified criteria.
 
         """
@@ -110,21 +95,21 @@ class RunCollection[R]:
 
     def try_get(
         self,
-        predicate: Callable[[R], bool] | None = None,
+        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
         **kwargs,
     ) -> R | None:
-        """Attempt to get a single RunSeries instance that matches the criteria.
+        """Attempt to get a single Run instance that matches the criteria.
 
-        This method returns a single matching RunSeries if exactly one is found,
+        This method returns a single matching Run if exactly one is found,
         returns None if no matches are found, and raises an error if multiple
         matches are found.
 
         Args:
-            predicate: Optional function that takes a RunSeries and returns True/False.
+            predicate: Optional function that takes a Run and returns True/False.
             **kwargs: Attribute-based filters (see filter method for details).
 
         Returns:
-            The single matching RunSeries instance, or None if no matches found.
+            The single matching Run instance, or None if no matches found.
 
         Raises:
             ValueError: If multiple matches are found.
@@ -139,22 +124,26 @@ class RunCollection[R]:
         if n == 1:
             return runs[0]
 
-        msg = f"Multiple RunSeries ({n}) found matching the criteria, "
+        msg = f"Multiple Run ({n}) found matching the criteria, "
         msg += "expected exactly one"
         raise ValueError(msg)
 
-    def get(self, predicate: Callable[[R], bool] | None = None, **kwargs) -> R:
-        """Get a single RunSeries instance that matches the criteria.
+    def get(
+        self,
+        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
+        **kwargs,
+    ) -> R:
+        """Get a single Run instance that matches the criteria.
 
-        This method enforces that exactly one RunSeries matches the given criteria.
+        This method enforces that exactly one Run matches the given criteria.
         It raises an error if either no matches or multiple matches are found.
 
         Args:
-            predicate: Optional function that takes a RunSeries and returns True/False.
+            predicate: Optional function that takes a Run and returns True/False.
             **kwargs: Attribute-based filters (see filter method for details).
 
         Returns:
-            The single matching RunSeries instance.
+            The single matching Run instance.
 
         Raises:
             ValueError: If no matches or multiple matches are found.
@@ -163,20 +152,24 @@ class RunCollection[R]:
         if run := self.try_get(predicate, **kwargs):
             return run
 
-        msg = "No RunSeries found matching the specified criteria"
+        msg = "No Run found matching the specified criteria"
         raise ValueError(msg)
 
-    def first(self, predicate: Callable[[R], bool] | None = None, **kwargs) -> R:
-        """Get the first RunSeries instance that matches the criteria.
+    def first(
+        self,
+        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
+        **kwargs,
+    ) -> R:
+        """Get the first Run instance that matches the criteria.
 
-        Return the first RunSeries that matches the given criteria.
+        Return the first Run that matches the given criteria.
 
         Args:
-            predicate: Optional function that takes a RunSeries and returns True/False.
+            predicate: Optional function that takes a Run and returns True/False.
             **kwargs: Attribute-based filters (see filter method for details).
 
         Returns:
-            The first matching RunSeries instance.
+            The first matching Run instance.
 
         Raises:
             ValueError: If no matches are found.
@@ -185,20 +178,24 @@ class RunCollection[R]:
         if runs := self.filter(predicate, **kwargs):
             return runs[0]
 
-        msg = "No RunSeries found matching the specified criteria"
+        msg = "No Run found matching the specified criteria"
         raise ValueError(msg)
 
-    def last(self, predicate: Callable[[R], bool] | None = None, **kwargs) -> R:
-        """Get the last RunSeries instance that matches the criteria.
+    def last(
+        self,
+        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
+        **kwargs,
+    ) -> R:
+        """Get the last Run instance that matches the criteria.
 
-        Return the last RunSeries that matches the given criteria.
+        Return the last Run that matches the given criteria.
 
         Args:
-            predicate: Optional function that takes a RunSeries and returns True/False.
+            predicate: Optional function that takes a Run and returns True/False.
             **kwargs: Attribute-based filters (see filter method for details).
 
         Returns:
-            The last matching RunSeries instance.
+            The last matching Run instance.
 
         Raises:
             ValueError: If no matches are found.
@@ -207,19 +204,18 @@ class RunCollection[R]:
         if runs := self.filter(predicate, **kwargs):
             return runs[-1]
 
-        msg = "No RunSeries found matching the specified criteria"
+        msg = "No Run found matching the specified criteria"
         raise ValueError(msg)
 
-    def to_list(self, name: str) -> list[Any]:
+    def to_list(self, key: str) -> list[Any]:
         """Return a list of the specified attribute values from all runs.
 
         This method collects the specified attribute from each
-        RunSeries in the collection and returns them as a list.
+        Run in the collection and returns them as a list.
         The attribute can be a nested attribute using dot notation
-        (e.g., 'mag.Msat').
 
         Args:
-            name: The name of the attribute to collect. Can use dot notation
+            key: The key of the attribute to collect. Can use dot notation
                 for nested attributes.
 
         Returns:
@@ -229,18 +225,17 @@ class RunCollection[R]:
             AttributeError: If the specified attribute is not found in any run.
 
         """
-        return [_getattr(run, name) for run in self]
+        return [_getattr(run, key) for run in self]
 
-    def to_numpy(self, name: str) -> NDArray:
+    def to_numpy(self, key: str) -> NDArray:
         """Return a numpy array of the specified attribute values from all runs.
 
         This method collects the specified attribute from each
-        RunSeries in the collection and returns them as a numpy array.
+        Run in the collection and returns them as a numpy array.
         The attribute can be a nested attribute using dot notation
-        (e.g., 'mag.Msat').
 
         Args:
-            name (str): The name of the attribute to collect.
+            key (str): The key of the attribute to collect.
                 Can use dot notation for nested attributes
                 (e.g., 'cfg.size').
 
@@ -251,17 +246,17 @@ class RunCollection[R]:
             AttributeError: If the specified attribute is not found in any run.
 
         """
-        return np.array(self.to_list(name))
+        return np.array(self.to_list(key))
 
-    def unique(self, name: str) -> NDArray:
+    def unique(self, key: str) -> NDArray:
         """Return the unique values of the specified attribute across all runs.
 
-        This method collects the specified attribute from each RunSeries
+        This method collects the specified attribute from each Run
         in the collection, then returns the unique values as a sorted
         numpy array.
 
         Args:
-            name (str): The name of the attribute to collect.
+            key (str): The key of the attribute to collect.
                 Can use dot notation for nested attributes
                 (e.g., 'cfg.size').
 
@@ -272,25 +267,25 @@ class RunCollection[R]:
             AttributeError: If the specified attribute is not found in any run.
 
         """
-        return np.unique(self.to_numpy(name), axis=0)
+        return np.unique(self.to_numpy(key), axis=0)
 
-    def n_unique(self, name: str) -> int:
+    def n_unique(self, key: str) -> int:
         """Return the number of unique values for the specified attribute.
 
         Args:
-            name (str): The name of the attribute to analyze.
+            key (str): The key of the attribute to analyze.
                 Can use dot notation for nested attributes.
 
         Returns:
             int: The number of unique values for the specified attribute.
 
         """
-        return len(self.unique(name))
+        return len(self.unique(key))
 
-    def sorted(self, *names: str, reverse: bool = False) -> Self:
-        """Return a new collection with RunSeries instances sorted by attributes.
+    def sorted(self, *keys: str, reverse: bool = False) -> Self:
+        """Return a new collection with Run instances sorted by attributes.
 
-        This method returns a new RunCollection with RunSeries
+        This method returns a new RunCollection with Run
         instances sorted according to the specified attributes.
         When multiple attributes are provided, sorting is performed
         hierarchically (first by the first attribute, then by
@@ -298,21 +293,21 @@ class RunCollection[R]:
         the original collection is returned unchanged.
 
         Args:
-        *names: The attribute names to sort by. Can use dot
+        *keys: The attribute keys to sort by. Can use dot
             notation for nested attributes (e.g., 'cfg.size').
             Multiple attributes can be specified for hierarchical sorting.
         reverse: If True, sort in descending order. Default is
             False (ascending).
 
         Returns:
-            Self: A new RunCollection with the same RunSeries instances,
+            Self: A new RunCollection with the same Run instances,
             but in sorted order. If no names are provided, returns self.
 
         """
-        if not names:
+        if not keys:
             return self
 
-        arrays = [self.to_numpy(name) for name in names]
+        arrays = [self.to_numpy(key) for key in keys]
         index = np.lexsort(arrays[::-1])
 
         if reverse:
@@ -320,11 +315,11 @@ class RunCollection[R]:
 
         return self[index]
 
-    def group_by(self, *names: str) -> dict[Any, Self]:
-        """Group RunSeries instances by the values of the specified attributes.
+    def group_by(self, *keys: str) -> dict[Any, Self]:
+        """Group Run instances by the values of the specified attributes.
 
         Args:
-            *names (str): The names of the attributes to group by.
+            *keys (str): The keys of the attributes to group by.
                 Can use dot notation.
 
         Returns:
@@ -335,8 +330,8 @@ class RunCollection[R]:
         result: dict[Any, Self] = {}
 
         for run in self:
-            keys = [to_hashable(_getattr(run, name)) for name in names]
-            key = keys[0] if len(names) == 1 else tuple(keys)
+            keys_ = [to_hashable(_getattr(run, key)) for key in keys]
+            key = keys_[0] if len(keys) == 1 else tuple(keys_)
 
             if key not in result:
                 result[key] = self.__class__([])
@@ -345,23 +340,23 @@ class RunCollection[R]:
         return result
 
     @overload
-    def set_default[T: WithConfig](
-        self: RunCollection[T],
+    def set_default(
+        self,
         key: str,
-        value: Any | Callable[[T], Any],
+        value: Any | Callable[[R], Any],
     ) -> None: ...
 
     @overload
-    def set_default[T: WithConfig](
-        self: RunCollection[T],
+    def set_default(
+        self,
         key: tuple[str, ...],
-        value: Iterable[Any] | Callable[[T], Iterable[Any]],
+        value: Iterable[Any] | Callable[[R], Iterable[Any]],
     ) -> None: ...
 
-    def set_default[T: WithConfig](
-        self: RunCollection[T],
+    def set_default(
+        self,
         key: str | tuple[str, ...],
-        value: Any | Callable[[T], Any],
+        value: Any | Callable[[R], Any],
     ) -> None:
         """Set default value(s) in the configuration of all RunConfig instances.
 
@@ -388,28 +383,28 @@ class RunCollection[R]:
             run.set_default(key, value)
 
 
-def _getattr(obj: Any, name: str) -> Any:
-    if "." in name:
-        first, name = name.split(".", 1)
+def _getattr(obj: Any, key: str) -> Any:
+    if "." in key:
+        first, key = key.split(".", 1)
         obj = _getattr(obj, first)
 
-    if hasattr(obj, name):
-        attr = getattr(obj, name)
+    if hasattr(obj, key):
+        attr = getattr(obj, key)
 
         if callable(attr):
             return attr()
 
         return attr
 
-    if isinstance(obj, WithConfig) and hasattr(obj.cfg, name):
-        return _getattr(obj.cfg, name)
+    if isinstance(obj, Run) and hasattr(obj.cfg, key):
+        return _getattr(obj.cfg, key)
 
-    msg = f"Attribute not found: {name}"
+    msg = f"Attribute not found: {key}"
     raise AttributeError(msg)
 
 
-def _predicate(obj: Any, name: str, value: Any) -> bool:
-    attr = _getattr(obj, name)
+def _predicate(obj: Any, key: str, value: Any) -> bool:
+    attr = _getattr(obj, key)
 
     if callable(value):
         return bool(value(attr))

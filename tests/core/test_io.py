@@ -4,8 +4,6 @@ from pathlib import Path
 import mlflow
 import pytest
 
-pytestmark = pytest.mark.xdist_group(name="group1")
-
 
 @pytest.mark.parametrize(
     ("uri", "path"),

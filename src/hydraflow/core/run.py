@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 from omegaconf import DictConfig, OmegaConf
@@ -12,20 +11,16 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 
-class WithConfig[C]:
-    root_dir: Path
+class Run[C]:
+    run_dir: Path
+    job_name: str
+    cfg: C
 
-    def __init__(self, root_dir: Path) -> None:
-        self.root_dir = root_dir
-
-    @cached_property
-    def cfg(self) -> C:
-        """The configuration object loaded from the Hydra config file."""
-        config_file = self.root_dir / ".hydra/config.yaml"
-        if config_file.exists():
-            return OmegaConf.load(config_file)  # type: ignore
-
-        return DictConfig({})  # type: ignore
+    def __init__(self, run_dir: Path) -> None:
+        self.run_dir = run_dir
+        self.job_name = get_job_name(run_dir)
+        config_file = run_dir / "artifacts/.hydra/config.yaml"
+        self.cfg = OmegaConf.load(config_file)  # type: ignore
 
     @overload
     def set_default(
@@ -66,24 +61,38 @@ class WithConfig[C]:
                 or if the callable doesn't return an iterable.
 
         """
-        cfg: DictConfig = self.cfg  # type: ignore
+        _set_default(self, self.cfg, key, value)  # type: ignore
 
-        if isinstance(key, str):
-            if OmegaConf.select(cfg, key) is None:
-                v = value(self) if callable(value) else value
-                OmegaConf.update(cfg, key, v, force_add=True)
-            return
 
-        if all(OmegaConf.select(cfg, k) is not None for k in key):
-            return
+def _set_default(
+    run: Any,
+    cfg: DictConfig,
+    key: str | tuple[str, ...],
+    value: Any,
+) -> None:
+    if isinstance(key, str):
+        if OmegaConf.select(cfg, key) is None:
+            v = value(run) if callable(value) else value
+            OmegaConf.update(cfg, key, v, force_add=True)
+        return
 
-        if callable(value):
-            value = value(self)
+    if all(OmegaConf.select(cfg, k) is not None for k in key):
+        return
 
-        if not isinstance(value, Iterable) or isinstance(value, str):
-            msg = f"{value} is not an iterable"
-            raise TypeError(msg)
+    if callable(value):
+        value = value(run)
 
-        for k, v in zip(key, value, strict=True):
-            if OmegaConf.select(cfg, k) is None:
-                OmegaConf.update(cfg, k, v, force_add=True)
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        msg = f"{value} is not an iterable"
+        raise TypeError(msg)
+
+    for k, v in zip(key, value, strict=True):
+        if OmegaConf.select(cfg, k) is None:
+            OmegaConf.update(cfg, k, v, force_add=True)
+
+    @cached_property
+    def config_file(self) -> Path:
+        return self.run_dir / "artifacts/.hydra/config.yaml"
+
+    def load_config(self) -> DictConfig:
+        return OmegaConf.load(self.config_file)  # type: ignore

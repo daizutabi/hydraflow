@@ -3,8 +3,6 @@ from pathlib import Path
 import pytest
 from omegaconf import DictConfig
 
-pytestmark = pytest.mark.xdist_group(name="group2")
-
 
 @pytest.fixture(scope="module")
 def results(collect):
