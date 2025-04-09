@@ -27,7 +27,7 @@ from .run_info import RunInfo
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
-    from typing import Any
+    from typing import Any, Self
 
 
 class Run[C, I]:
@@ -73,7 +73,7 @@ class Run[C, I]:
     def update(
         self,
         key: str,
-        value: Any | Callable[[I], Any],
+        value: Any | Callable[[Self], Any],
         *,
         force: bool = False,
     ) -> None: ...
@@ -82,7 +82,7 @@ class Run[C, I]:
     def update(
         self,
         key: tuple[str, ...],
-        value: Iterable[Any] | Callable[[I], Iterable[Any]],
+        value: Iterable[Any] | Callable[[Self], Iterable[Any]],
         *,
         force: bool = False,
     ) -> None: ...
@@ -90,7 +90,7 @@ class Run[C, I]:
     def update(
         self,
         key: str | tuple[str, ...],
-        value: Any | Callable[[I], Any],
+        value: Any | Callable[[Self], Any],
         *,
         force: bool = False,
     ) -> None:
@@ -110,24 +110,21 @@ class Run[C, I]:
                   a value
                 - For tuple keys: An iterable with the same length as the
                   key tuple, or a callable that returns such an iterable
+                - For callable values: The callable must accept a single argument
+                  of type Run (self) and return the appropriate value type
             force: Whether to force the update even if the key already exists.
 
         Raises:
-            ValueError: If impl is None and value is a callable.
             TypeError: If a tuple key is provided but the value is
                 not an iterable, or if the callable doesn't return
                 an iterable.
 
         """
-        if self.impl is None and callable(value):
-            msg = "Cannot set default value for callable when impl_factory is None"
-            raise ValueError(msg)
-
         cfg: DictConfig = self.cfg  # type: ignore
 
         if isinstance(key, str):
             if force or OmegaConf.select(cfg, key) is None:
-                v = value(self.impl) if callable(value) else value  # type: ignore
+                v = value(self) if callable(value) else value  # type: ignore
                 OmegaConf.update(cfg, key, v, force_add=True)
             return
 
@@ -135,7 +132,7 @@ class Run[C, I]:
             return
 
         if callable(value):
-            value = value(self.impl)  # type: ignore
+            value = value(self)  # type: ignore
 
         if not isinstance(value, Iterable) or isinstance(value, str):
             msg = f"{value} is not an iterable"
