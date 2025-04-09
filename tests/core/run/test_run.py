@@ -126,6 +126,10 @@ def test_predicate_tuple(run: Run[Config]):
     assert run.predicate("a", (2, 1)) is False
 
 
+def test_impl_none(run: Run[Config]):
+    assert run.impl is None
+
+
 class Impl:
     path: Path
 
