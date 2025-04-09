@@ -383,41 +383,6 @@ class RunCollection[R: Run]:
             run.set_default(key, value)
 
 
-def _getattr(obj: Any, key: str) -> Any:
-    if "." in key:
-        first, key = key.split(".", 1)
-        obj = _getattr(obj, first)
-
-    if hasattr(obj, key):
-        attr = getattr(obj, key)
-
-        if callable(attr):
-            return attr()
-
-        return attr
-
-    if isinstance(obj, Run) and hasattr(obj.cfg, key):
-        return _getattr(obj.cfg, key)
-
-    msg = f"Attribute not found: {key}"
-    raise AttributeError(msg)
-
-
-def _predicate(obj: Any, key: str, value: Any) -> bool:
-    attr = _getattr(obj, key)
-
-    if callable(value):
-        return bool(value(attr))
-
-    if isinstance(value, list | set) and not isinstance(attr, list | set):
-        return attr in value
-
-    if isinstance(value, tuple) and len(value) == 2 and not isinstance(attr, tuple):
-        return value[0] <= attr <= value[1]
-
-    return attr == value
-
-
 def to_hashable(value: Any) -> Hashable:
     """Convert value to hashable."""
     if OmegaConf.is_list(value):  # Is ListConfig hashable?
