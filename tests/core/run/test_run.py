@@ -87,8 +87,7 @@ def test_get_error(run: Run[Config]):
 
 
 def test_get_info(run: Run[Config]):
-    with pytest.raises(AttributeError):
-        run.get("unknown")
+    assert run.get("run_dir") == "."
 
 
 @pytest.mark.parametrize(
@@ -124,6 +123,20 @@ def test_predicate_tuple(run: Run[Config]):
     run.update("a", (1, 2))
     assert run.predicate("a", (1, 2)) is True
     assert run.predicate("a", (2, 1)) is False
+
+
+def test_to_dict(run: Run[Config]):
+    run.update("a", 10)
+    run.update("db.name", "abc")
+    run.update("db.b", 100)
+    assert run.to_dict() == {
+        "run_id": "",
+        "run_dir": ".",
+        "job_name": "",
+        "a": 10,
+        "db.name": "abc",
+        "db.b": 100,
+    }
 
 
 def test_impl_none(run: Run[Config]):

@@ -17,6 +17,7 @@ configuration values and filtering runs.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import MISSING
 from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
@@ -120,12 +121,13 @@ class Run[C, I = None]:
         cfg: DictConfig = self.cfg  # type: ignore
 
         if isinstance(key, str):
-            if force or OmegaConf.select(cfg, key) is None:
+            if force or OmegaConf.select(cfg, key, default=MISSING) is MISSING:
                 v = value(self) if callable(value) else value  # type: ignore
                 OmegaConf.update(cfg, key, v, force_add=True)
             return
 
-        if not force and all(OmegaConf.select(cfg, k) is not None for k in key):
+        it = (OmegaConf.select(cfg, k, default=MISSING) is not MISSING for k in key)
+        if not force and all(it):
             return
 
         if callable(value):
@@ -136,11 +138,11 @@ class Run[C, I = None]:
             raise TypeError(msg)
 
         for k, v in zip(key, value, strict=True):
-            if force or OmegaConf.select(cfg, k) is None:
+            if force or OmegaConf.select(cfg, k, default=MISSING) is MISSING:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
     def get(self, key: str) -> Any:
-        """Get a value from the configuration.
+        """Get a value from the information or configuration.
 
         Args:
             key: The key to look for. Can use dot notation for nested keys
@@ -153,9 +155,13 @@ class Run[C, I = None]:
             AttributeError: If the key is not found in any of the components.
 
         """
-        value = OmegaConf.select(self.cfg, key)  # type: ignore
-        if value is not None:
+        value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
+        if value is not MISSING:
             return value
+
+        info = self.info.to_dict()
+        if key in info:
+            return info[key]
 
         msg = f"Key not found: {key}"
         raise AttributeError(msg)
@@ -205,6 +211,23 @@ class Run[C, I = None]:
 
         return attr == value
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the Run to a dictionary."""
+        info = self.info.to_dict()
+        cfg = OmegaConf.to_container(self.cfg)
+        return info | _flatten_dict(cfg)  # type: ignore
+
 
 def _is_iterable(value: Any) -> bool:
     return isinstance(value, Iterable) and not isinstance(value, str)
+
+
+def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
+    items = []
+    for k, v in d.items():
+        key = f"{parent_key}.{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(_flatten_dict(v, key).items())
+        else:
+            items.append((key, v))
+    return dict(items)

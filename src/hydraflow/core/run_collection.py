@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Hashable, Iterable
+from collections.abc import Hashable, Iterable, Sequence
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
+import polars as pl
 from omegaconf import OmegaConf
+from polars import DataFrame
 
 from .run import Run
 
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-class RunCollection[R: Run]:
+class RunCollection[R: Run[Any, Any]](Sequence[R]):
     runs: list[R]
 
     def __init__(self, runs: Iterable[R]) -> None:
@@ -54,68 +56,58 @@ class RunCollection[R: Run]:
     def __iter__(self) -> Iterator[R]:
         return iter(self.runs)
 
+    @overload
+    def update(
+        self,
+        key: str,
+        value: Any | Callable[[R], Any],
+        *,
+        force: bool = False,
+    ) -> None: ...
+
+    @overload
+    def update(
+        self,
+        key: tuple[str, ...],
+        value: Iterable[Any] | Callable[[R], Iterable[Any]],
+        *,
+        force: bool = False,
+    ) -> None: ...
+
+    def update(
+        self,
+        key: str | tuple[str, ...],
+        value: Any | Callable[[R], Any],
+        *,
+        force: bool = False,
+    ) -> None:
+        for run in self:
+            run.update(key, value, force=force)
+
     def filter(
         self,
-        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
-        **kwargs,
+        *predicates: Callable[[R], bool] | tuple[str, Any],
+        **kwargs: Any,
     ) -> Self:
-        """Filter the Run instances based on the provided criteria.
+        runs = self.runs
 
-        This method creates a new RunCollection containing only the Run
-        instances that match the specified criteria. Filtering can be done using
-        a custom predicate function, attribute-based filters, or a combination
-        of both.
+        for predicate in predicates:
+            if callable(predicate):
+                runs = [r for r in runs if predicate(r)]
+            else:
+                runs = [r for r in runs if r.predicate(*predicate)]
 
-        Args:
-            predicate: Optional function that takes a Run and returns True/False.
-                If provided, this function is used to filter the runs.
-            **kwargs: Attribute-based filters, where keys are attribute names
-                and values are the filtering criteria.
-                The following value types are supported:
-
-                    - Simple value: Exact match (attr == value)
-                    - List/Set: Membership check (attr in value)
-                    - Tuple of 2 values: Range check (value[0] <= attr <= value[1])
-                    - Callable: Custom evaluation function (value(attr) == True)
-
-        Returns:
-            A new RunCollection containing only the Run instances that match
-            the specified criteria.
-
-        """
-        runs = [r for r in self if predicate(r)] if callable(predicate) else self.runs
-
-        if isinstance(predicate, dict):
-            kwargs |= predicate
-
-        for name, value in kwargs.items():
-            runs = [r for r in runs if _predicate(r, name, value)]
+        for key, value in kwargs.items():
+            runs = [r for r in runs if r.predicate(key, value)]
 
         return self.__class__(runs)
 
     def try_get(
         self,
-        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
-        **kwargs,
+        *predicates: Callable[[R], bool] | tuple[str, Any],
+        **kwargs: Any,
     ) -> R | None:
-        """Attempt to get a single Run instance that matches the criteria.
-
-        This method returns a single matching Run if exactly one is found,
-        returns None if no matches are found, and raises an error if multiple
-        matches are found.
-
-        Args:
-            predicate: Optional function that takes a Run and returns True/False.
-            **kwargs: Attribute-based filters (see filter method for details).
-
-        Returns:
-            The single matching Run instance, or None if no matches found.
-
-        Raises:
-            ValueError: If multiple matches are found.
-
-        """
-        runs = self.filter(predicate, **kwargs)
+        runs = self.filter(*predicates, **kwargs)
 
         n = len(runs)
         if n == 0:
@@ -130,26 +122,10 @@ class RunCollection[R: Run]:
 
     def get(
         self,
-        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
-        **kwargs,
+        *predicates: Callable[[R], bool] | tuple[str, Any],
+        **kwargs: Any,
     ) -> R:
-        """Get a single Run instance that matches the criteria.
-
-        This method enforces that exactly one Run matches the given criteria.
-        It raises an error if either no matches or multiple matches are found.
-
-        Args:
-            predicate: Optional function that takes a Run and returns True/False.
-            **kwargs: Attribute-based filters (see filter method for details).
-
-        Returns:
-            The single matching Run instance.
-
-        Raises:
-            ValueError: If no matches or multiple matches are found.
-
-        """
-        if run := self.try_get(predicate, **kwargs):
+        if run := self.try_get(*predicates, **kwargs):
             return run
 
         msg = "No Run found matching the specified criteria"
@@ -157,25 +133,10 @@ class RunCollection[R: Run]:
 
     def first(
         self,
-        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
-        **kwargs,
+        *predicates: Callable[[R], bool] | tuple[str, Any],
+        **kwargs: Any,
     ) -> R:
-        """Get the first Run instance that matches the criteria.
-
-        Return the first Run that matches the given criteria.
-
-        Args:
-            predicate: Optional function that takes a Run and returns True/False.
-            **kwargs: Attribute-based filters (see filter method for details).
-
-        Returns:
-            The first matching Run instance.
-
-        Raises:
-            ValueError: If no matches are found.
-
-        """
-        if runs := self.filter(predicate, **kwargs):
+        if runs := self.filter(*predicates, **kwargs):
             return runs[0]
 
         msg = "No Run found matching the specified criteria"
@@ -183,127 +144,28 @@ class RunCollection[R: Run]:
 
     def last(
         self,
-        predicate: Callable[[R], bool] | dict[str, Any] | None = None,
-        **kwargs,
+        *predicates: Callable[[R], bool] | tuple[str, Any],
+        **kwargs: Any,
     ) -> R:
-        """Get the last Run instance that matches the criteria.
-
-        Return the last Run that matches the given criteria.
-
-        Args:
-            predicate: Optional function that takes a Run and returns True/False.
-            **kwargs: Attribute-based filters (see filter method for details).
-
-        Returns:
-            The last matching Run instance.
-
-        Raises:
-            ValueError: If no matches are found.
-
-        """
-        if runs := self.filter(predicate, **kwargs):
+        if runs := self.filter(*predicates, **kwargs):
             return runs[-1]
 
         msg = "No Run found matching the specified criteria"
         raise ValueError(msg)
 
     def to_list(self, key: str) -> list[Any]:
-        """Return a list of the specified attribute values from all runs.
-
-        This method collects the specified attribute from each
-        Run in the collection and returns them as a list.
-        The attribute can be a nested attribute using dot notation
-
-        Args:
-            key: The key of the attribute to collect. Can use dot notation
-                for nested attributes.
-
-        Returns:
-            list: A list containing the attribute values from all runs.
-
-        Raises:
-            AttributeError: If the specified attribute is not found in any run.
-
-        """
-        return [_getattr(run, key) for run in self]
+        return [run.get(key) for run in self]
 
     def to_numpy(self, key: str) -> NDArray:
-        """Return a numpy array of the specified attribute values from all runs.
-
-        This method collects the specified attribute from each
-        Run in the collection and returns them as a numpy array.
-        The attribute can be a nested attribute using dot notation
-
-        Args:
-            key (str): The key of the attribute to collect.
-                Can use dot notation for nested attributes
-                (e.g., 'cfg.size').
-
-        Returns:
-            NDArray: A numpy array containing the attribute values from all runs.
-
-        Raises:
-            AttributeError: If the specified attribute is not found in any run.
-
-        """
         return np.array(self.to_list(key))
 
     def unique(self, key: str) -> NDArray:
-        """Return the unique values of the specified attribute across all runs.
-
-        This method collects the specified attribute from each Run
-        in the collection, then returns the unique values as a sorted
-        numpy array.
-
-        Args:
-            key (str): The key of the attribute to collect.
-                Can use dot notation for nested attributes
-                (e.g., 'cfg.size').
-
-        Returns:
-            NDArray: A sorted numpy array containing the unique attribute values.
-
-        Raises:
-            AttributeError: If the specified attribute is not found in any run.
-
-        """
         return np.unique(self.to_numpy(key), axis=0)
 
     def n_unique(self, key: str) -> int:
-        """Return the number of unique values for the specified attribute.
-
-        Args:
-            key (str): The key of the attribute to analyze.
-                Can use dot notation for nested attributes.
-
-        Returns:
-            int: The number of unique values for the specified attribute.
-
-        """
         return len(self.unique(key))
 
-    def sorted(self, *keys: str, reverse: bool = False) -> Self:
-        """Return a new collection with Run instances sorted by attributes.
-
-        This method returns a new RunCollection with Run
-        instances sorted according to the specified attributes.
-        When multiple attributes are provided, sorting is performed
-        hierarchically (first by the first attribute, then by
-        the second for ties, and so on). If no attributes are provided,
-        the original collection is returned unchanged.
-
-        Args:
-        *keys: The attribute keys to sort by. Can use dot
-            notation for nested attributes (e.g., 'cfg.size').
-            Multiple attributes can be specified for hierarchical sorting.
-        reverse: If True, sort in descending order. Default is
-            False (ascending).
-
-        Returns:
-            Self: A new RunCollection with the same Run instances,
-            but in sorted order. If no names are provided, returns self.
-
-        """
+    def sort(self, *keys: str, reverse: bool = False) -> Self:
         if not keys:
             return self
 
@@ -315,22 +177,23 @@ class RunCollection[R: Run]:
 
         return self[index]
 
-    def group_by(self, *keys: str) -> dict[Any, Self]:
-        """Group Run instances by the values of the specified attributes.
+    def to_frame(self, *keys: str, **kwargs: Callable[[R], Any]) -> DataFrame:
+        if keys:
+            df = DataFrame({key: self.to_list(key) for key in keys})
+        else:
+            df = DataFrame(r.to_dict() for r in self)
 
-        Args:
-            *keys (str): The keys of the attributes to group by.
-                Can use dot notation.
+        if not kwargs:
+            return df
 
-        Returns:
-            dict[Any, Self]: A dictionary mapping attribute value tuples to
-            RunCollection instances.
+        columns = [pl.Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
+        return df.with_columns(*columns)
 
-        """
+    def _group_by(self, *keys: str) -> dict[Any, Self]:
         result: dict[Any, Self] = {}
 
         for run in self:
-            keys_ = [to_hashable(_getattr(run, key)) for key in keys]
+            keys_ = [to_hashable(run.get(key)) for key in keys]
             key = keys_[0] if len(keys) == 1 else tuple(keys_)
 
             if key not in result:
@@ -340,47 +203,27 @@ class RunCollection[R: Run]:
         return result
 
     @overload
-    def set_default(
-        self,
-        key: str,
-        value: Any | Callable[[R], Any],
-    ) -> None: ...
+    def group_by(self, *keys: str) -> dict[Any, Self]: ...
 
     @overload
-    def set_default(
+    def group_by(
         self,
-        key: tuple[str, ...],
-        value: Iterable[Any] | Callable[[R], Iterable[Any]],
-    ) -> None: ...
+        *keys: str,
+        **kwargs: Callable[[Self | Sequence[R]], Any],
+    ) -> DataFrame: ...
 
-    def set_default(
+    def group_by(
         self,
-        key: str | tuple[str, ...],
-        value: Any | Callable[[R], Any],
-    ) -> None:
-        """Set default value(s) in the configuration of all RunConfig instances.
+        *keys: str,
+        **kwargs: Callable[[Self | Sequence[R]], Any],
+    ) -> dict[Any, Self] | DataFrame:
+        gp = self._group_by(*keys)
+        if not kwargs:
+            return gp
 
-        This method calls set_default on each RunConfig instance in the collection,
-        applying the same key and value to all of them.
-
-        Args:
-            key: Either a string representing a single configuration path
-                (can use dot notation like "section.subsection.param"),
-                or a tuple of strings to set multiple related configuration
-                values at once.
-            value: The value to set. This can be:
-                - For string keys: Any value, or a callable that takes a
-                  RunConfig instance and returns a value
-                - For tuple keys: An iterable with the same length as the
-                  key tuple, or a callable that returns such an iterable
-
-        Raises:
-            TypeError: If a tuple key is provided but the value is not an
-                iterable, or if the callable doesn't return an iterable.
-
-        """
-        for run in self:
-            run.set_default(key, value)
+        df = DataFrame(dict(zip(keys, k, strict=True)) for k in gp)
+        columns = [pl.Series(k, [v(r) for r in gp.values()]) for k, v in kwargs.items()]
+        return df.with_columns(*columns)
 
 
 def to_hashable(value: Any) -> Hashable:
