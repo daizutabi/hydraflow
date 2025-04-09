@@ -67,23 +67,29 @@ class Run[C, I]:
         return self.impl_factory(self.info.run_dir / "artifacts")
 
     @overload
-    def set_default(
+    def update(
         self,
         key: str,
         value: Any | Callable[[I], Any],
+        *,
+        force: bool = False,
     ) -> None: ...
 
     @overload
-    def set_default(
+    def update(
         self,
         key: tuple[str, ...],
         value: Iterable[Any] | Callable[[I], Iterable[Any]],
+        *,
+        force: bool = False,
     ) -> None: ...
 
-    def set_default(
+    def update(
         self,
         key: str | tuple[str, ...],
         value: Any | Callable[[I], Any],
+        *,
+        force: bool = False,
     ) -> None:
         """Set default value(s) in the configuration if they don't already exist.
 
@@ -101,6 +107,7 @@ class Run[C, I]:
                   a value
                 - For tuple keys: An iterable with the same length as the
                   key tuple, or a callable that returns such an iterable
+            force: Whether to force the update even if the key already exists.
 
         Raises:
             ValueError: If impl is None and value is a callable.
@@ -116,12 +123,12 @@ class Run[C, I]:
         cfg: DictConfig = self.cfg  # type: ignore
 
         if isinstance(key, str):
-            if OmegaConf.select(cfg, key) is None:
+            if force or OmegaConf.select(cfg, key) is None:
                 v = value(self.impl) if callable(value) else value  # type: ignore
                 OmegaConf.update(cfg, key, v, force_add=True)
             return
 
-        if all(OmegaConf.select(cfg, k) is not None for k in key):
+        if not force and all(OmegaConf.select(cfg, k) is not None for k in key):
             return
 
         if callable(value):
@@ -132,7 +139,7 @@ class Run[C, I]:
             raise TypeError(msg)
 
         for k, v in zip(key, value, strict=True):
-            if OmegaConf.select(cfg, k) is None:
+            if force or OmegaConf.select(cfg, k) is None:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
     def get(self, key: str) -> Any:
