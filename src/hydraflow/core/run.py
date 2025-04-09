@@ -81,7 +81,7 @@ class Run[C, I = None]:
 
     @overload
     @classmethod
-    def load(
+    def load(  # type: ignore
         cls,
         run_dir: str | Path,
         impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
@@ -93,6 +93,8 @@ class Run[C, I = None]:
         cls,
         run_dir: Iterable[str | Path],
         impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+        *,
+        n_jobs: int = 0,
     ) -> RunCollection[Self]: ...
 
     @classmethod
@@ -100,14 +102,38 @@ class Run[C, I = None]:
         cls,
         run_dir: str | Path | Iterable[str | Path],
         impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+        *,
+        n_jobs: int = 0,
     ) -> Self | RunCollection[Self]:
-        """Load a Run from a run directory."""
+        """Load a Run from a run directory.
+
+        Args:
+            run_dir (str | Path | Iterable[str | Path]): The directory where the
+                MLflow runs are stored, either as a string, a Path object,
+                or an iterable of them.
+            impl_factory (Callable[[Path], I]): A factory function that creates the
+                implementation object. Defaults to a function that returns None.
+            n_jobs (int): The number of parallel jobs. If 0 (default), runs
+                sequentially. If -1, uses all available CPU cores.
+
+        Returns:
+            Self | RunCollection[Self]: A single Run instance or a RunCollection
+            of Run instances.
+
+        """
         if isinstance(run_dir, str | Path):
             return cls(Path(run_dir), impl_factory)
 
         from .run_collection import RunCollection
 
-        return RunCollection(cls(Path(r), impl_factory) for r in run_dir)
+        if n_jobs == 0:
+            return RunCollection(cls(Path(r), impl_factory) for r in run_dir)
+
+        from joblib import Parallel, delayed
+
+        parallel = Parallel(backend="threading", n_jobs=n_jobs)
+        runs = parallel(delayed(cls)(Path(r), impl_factory) for r in run_dir)
+        return RunCollection(runs)  # type: ignore
 
     @overload
     def update(

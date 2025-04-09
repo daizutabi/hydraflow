@@ -171,8 +171,9 @@ def test_load():
     assert run.impl is None
 
 
-def test_load_collection():
-    rc = Run[Config].load([Path("a/b/c"), "a/b/d"])
+@pytest.mark.parametrize("n_jobs", [0, 1, 2])
+def test_load_collection(n_jobs: int):
+    rc = Run[Config].load([Path("a/b/c"), Path("a/b/d")], n_jobs=n_jobs)
     assert isinstance(rc, RunCollection)
     assert len(rc) == 2
     assert rc[0].impl is None
@@ -184,8 +185,9 @@ def test_load_impl():
     assert run.impl.path == Path("a/b/c/artifacts")
 
 
-def test_load_impl_collection():
-    rc = Run[Config, Impl].load(["a/b/c", "a/b/d"], Impl)
+@pytest.mark.parametrize("n_jobs", [0, 1, 2])
+def test_load_impl_collection(n_jobs: int):
+    rc = Run[Config, Impl].load([Path("a/b/c"), Path("a/b/d")], Impl, n_jobs=n_jobs)
     assert isinstance(rc, RunCollection)
     assert len(rc) == 2
     assert rc[0].impl.path == Path("a/b/c/artifacts")
