@@ -9,8 +9,12 @@ from hydraflow.core.io import (
     iter_run_dirs,
 )
 from hydraflow.core.main import main
+from hydraflow.core.run import Run
+from hydraflow.core.run_collection import RunCollection
 
 __all__ = [
+    "Run",
+    "RunCollection",
     "chdir_artifact",
     "get_artifact_dir",
     "iter_artifact_paths",

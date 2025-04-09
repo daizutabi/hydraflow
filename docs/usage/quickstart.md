@@ -44,7 +44,7 @@ Check the MLflow CLI to view the experiment.
 $ mlflow experiments search
 ```
 
-The experiment name is the name of the Hydra job.
+The experiment name comes from the name of the Hydra job.
 
 ### Multi-run
 
@@ -74,6 +74,64 @@ Optionally, you can specify the experiment name(s) to filter the runs.
 >>> hydraflow.iter_run_dirs("mlruns", "quickstart")
 >>> hydraflow.iter_run_dirs("mlruns", ["quickstart1", "quickstart2"])
 ```
+
+### Load a run
+
+
+```pycon exec="1" source="console" session="quickstart"
+>>> from hydraflow import Run
+>>> run_dirs = hydraflow.iter_run_dirs("mlruns", "quickstart")
+>>> run_dir = next(run_dirs)
+>>> print(run_dir)
+```
+
+```pycon exec="1" source="console" session="quickstart"
+>>> run = Run(run_dir)
+>>> print(run)
+```
+
+Here, `Run` is a class that represents a *Hydraflow* run,
+not an MLflow run.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> print(type(run))
+```
+
+The `Run` object has an `info` attribute that contains information about the run.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> print(run.info.run_dir)
+>>> print(run.info.run_id)
+>>> print(run.info.job_name)  # The Hydra job name = MLflow experiment name
+```
+
+The `Run` object has a `cfg` attribute that contains the Hydra configuration.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> print(run.cfg)
+```
+
+### Implementation of the run
+
+Optionally, you can specify the implementation of the run.
+Use the `Run[I]` class to specify the implementation type.
+The second argument `impl_factory` is the implementation factory.
+which can be a class or a function to generate the implementation.
+The `impl_factory` is called with the run's artifacts directory
+as the first and only argument.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> from pathlib import Path
+>>> class Impl:
+...     root_dir: Path
+...     def __init__(self, root_dir: Path):
+...         self.root_dir = root_dir
+>>> run = Run[Impl](run_dir, Impl)
+>>> print(run)
+>>> print(run.impl.root_dir)
+```
+
+
 
 
 ### Collect runs

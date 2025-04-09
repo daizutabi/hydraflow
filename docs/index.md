@@ -8,3 +8,7 @@ to manage and track machine learning experiments.
 ```bash
 pip install hydraflow
 ```
+
+## Requirements
+
+- Python 3.12+
