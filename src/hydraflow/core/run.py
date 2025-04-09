@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 
-class Run[C, I]:
+class Run[C, I = None]:
     """Represent an MLflow Run in HydraFlow.
 
     A Run contains information about the run, configuration, and
@@ -41,13 +41,13 @@ class Run[C, I]:
     info: RunInfo
     """Information about the run, such as run directory, run ID, and job name."""
 
-    impl_factory: Callable[[Path], I] | None
+    impl_factory: Callable[[Path], I]
     """Factory function to create the implementation object."""
 
     def __init__(
         self,
         run_dir: Path,
-        impl_factory: Callable[[Path], I] | None = None,
+        impl_factory: Callable[[Path], I] = lambda _: None,
     ) -> None:
         self.info = RunInfo(run_dir)
         self.impl_factory = impl_factory
@@ -62,11 +62,8 @@ class Run[C, I]:
         return OmegaConf.create()  # type: ignore
 
     @cached_property
-    def impl(self) -> I | None:
+    def impl(self) -> I:
         """The implementation object created by the factory function."""
-        if self.impl_factory is None:
-            return None
-
         return self.impl_factory(self.info.run_dir / "artifacts")
 
     @overload
@@ -142,6 +139,37 @@ class Run[C, I]:
             if force or OmegaConf.select(cfg, k) is None:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
+    def try_get(self, key: str) -> Any | None:
+        """Try to get a value from the implementation, configuration, or run information.
+
+        The method looks for the key in the following order:
+        1. Implementation object (if available)
+        2. Configuration object
+        3. Run information (if key starts with "info.")
+
+        Args:
+            key: The key to look for. Can use dot notation for nested keys
+                in configuration, or "info." prefix for run information.
+
+        Returns:
+            Any | None: The value associated with the key, or None if the key
+            is not found.
+
+        """  # noqa: E501
+        if self.impl is not None and hasattr(self.impl, key):
+            return getattr(self.impl, key)
+
+        value = OmegaConf.select(self.cfg, key)  # type: ignore
+        if value is not None:
+            return value
+
+        if key.startswith("info."):
+            key = key[len("info.") :]
+            if hasattr(self.info, key):
+                return getattr(self.info, key)
+
+        return None
+
     def get(self, key: str) -> Any:
         """Get a value from the implementation, configuration, or run information.
 
@@ -161,17 +189,9 @@ class Run[C, I]:
             AttributeError: If the key is not found in any of the components.
 
         """
-        if self.impl is not None and hasattr(self.impl, key):
-            return getattr(self.impl, key)
-
-        value = OmegaConf.select(self.cfg, key)  # type: ignore
+        value = self.try_get(key)
         if value is not None:
             return value
-
-        if key.startswith("info."):
-            key = key[len("info.") :]
-            if hasattr(self.info, key):
-                return getattr(self.info, key)
 
         msg = f"Key not found: {key}"
         raise AttributeError(msg)
