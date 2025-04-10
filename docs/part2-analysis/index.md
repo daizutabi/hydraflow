@@ -110,9 +110,3 @@ In the following pages, we'll explore HydraFlow's analysis tools in detail:
 - [Run Collection](run-collection.md): Discover the powerful features of the
   [`RunCollection`][hydraflow.core.run_collection.RunCollection] class for
   working with multiple runs.
-
-- [Data Frames](data-frames.md): Learn how to convert experiment data into
-  DataFrames for statistical analysis and visualization.
-
-- [Visualization](visualization.md): Create insightful visualizations to
-  understand experiment results and identify optimization opportunities.

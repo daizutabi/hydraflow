@@ -86,8 +86,6 @@ nav:
           - Overview: part2-analysis/index.md
           - Run Class: part2-analysis/run-class.md
           - Run Collection: part2-analysis/run-collection.md
-          - Data Frames: part2-analysis/data-frames.md
-          - Visualization: part2-analysis/visualization.md
       - "Part 3: Automating Workflows":
           - Overview: part3-advanced/index.md
           - Executor: part3-advanced/executor.md
