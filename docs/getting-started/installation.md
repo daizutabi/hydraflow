@@ -6,7 +6,7 @@ This guide walks you through installing HydraFlow and its dependencies.
 
 HydraFlow requires:
 
-- Python 3.10 or higher
+- Python 3.13 or higher
 - pip or conda package manager
 
 ## Basic Installation
@@ -70,7 +70,7 @@ pip install hydraflow
 ### Using conda
 
 ```bash
-conda create -n hydraflow-env python=3.10
+conda create -n hydraflow-env python=3.13
 conda activate hydraflow-env
 pip install hydraflow
 ```
@@ -79,7 +79,7 @@ pip install hydraflow
 
 If you encounter issues during installation:
 
-1. Ensure your Python version is 3.10 or higher
+1. Ensure your Python version is 3.13 or higher
 2. Update pip: `pip install --upgrade pip`
 3. If installing from source, ensure you have the necessary build tools
    installed for your platform

@@ -98,4 +98,4 @@ nav:
       - Simple Example: examples/simple-example.md
       - Analysis Example: examples/analysis-example.md
       - Advanced Example: examples/advanced-example.md
-  - API Reference: api/index.md
+  - API Reference: $api/hydraflow.***
