@@ -127,22 +127,26 @@ You can specify different Hydra configurations for different parameter sets:
 jobs:
   train:
     submit: sbatch job.sh
+    # Job-level add (used by sets without their own add)
+    add: hydra/launcher=submitit_slurm
     sets:
-      # Small models use fewer resources
+      # This set uses job-level add
       - each: model=small
+
+      # These sets override job-level add with set-level add
+      - each: model=medium
         add: >-
           hydra.launcher.submitit.params.gres=gpu:1
-          hydra.launcher.submitit.params.mem=8G
+          hydra.launcher.submitit.params.mem=16G
 
-      # Large models need more resources
       - each: model=large
         add: >-
           hydra.launcher.submitit.params.gres=gpu:2
           hydra.launcher.submitit.params.mem=32G
 ```
 
-The `add` parameter appends additional arguments to each command, which can
-be used to pass Hydra configuration options.
+**Important**: When a set has its own `add` parameter, it completely overrides the job-level `add`.
+The job-level `add` is entirely ignored for that set, not merged or combined.
 
 ## Passing Environment Variables
 
@@ -325,18 +329,24 @@ Use the `add` parameter to configure Hydra options:
 jobs:
   train:
     submit: sbatch job.sh
+    # Job-level add - default configuration
     add: >-
       hydra/launcher=submitit_slurm
       hydra.launcher.submitit.params.partition=gpu
     sets:
+      # Uses job-level add
       - each: model=small
-        add: hydra.launcher.submitit.params.gres=gpu:1
 
+      # Completely overrides job-level add
       - each: model=large
-        add: hydra.launcher.submitit.params.gres=gpu:4
+        add: >-
+          hydra/launcher=submitit_slurm
+          hydra.launcher.submitit.params.partition=bigmem
+          hydra.launcher.submitit.params.gres=gpu:4
 ```
 
-This appends Hydra configuration options to each command.
+Remember that set-level `add` completely replaces job-level `add`, so you need to include
+all necessary configurations in the set-level `add` if you override it.
 
 ### Centralize Job Scripts
 

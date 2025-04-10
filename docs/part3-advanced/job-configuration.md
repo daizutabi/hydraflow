@@ -123,8 +123,8 @@ sets:
 ```
 
 This will append Hydra configuration to each command from the set.
-If a set has its own `add` parameter, it overrides the job-level `add` parameter
-(they are not merged).
+If a set has its own `add` parameter, it completely overrides the job-level `add` parameter
+(they are not merged). The job-level `add` is entirely ignored for that set.
 
 ## Multiple Parameter Sets
 
@@ -157,17 +157,26 @@ You can combine different parameter types within a single set:
 jobs:
   train:
     run: python train.py
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
-      - each: model=small,large
+      # First set: uses job-level add
+      - each: model=small
       - all: seed=42 debug=true
-      - add: hydra/launcher=joblib hydra.launcher.n_jobs=4
+
+      # Second set: overrides job-level add with set-level add
+      - each: model=large
+      - all: seed=43
+      - add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=4
 ```
 
 This will execute:
 
 ```bash
-python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=4
-python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=4
+# First set: with job-level add
+python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2
+
+# Second set: only using set-level add (job-level add is completely ignored)
+python train.py model=large seed=43 hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=4
 ```
 
 ## Job-level and Set-level `add`
@@ -181,15 +190,18 @@ jobs:
     add: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
       # Uses job-level add
-      - each: model=small,large
+      - each: model=small,medium
 
-      # Overrides job-level add
-      - each: model=xlarge
-        add: hydra/launcher=joblib hydra.launcher.n_jobs=8
+      # Completely overrides job-level add
+      - each: model=large,xlarge
+        add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=8
 ```
 
 When a set has its own `add` parameter, it completely overrides the job-level
-`add` parameter (they are not merged or appended).
+`add` parameter. The job-level `add` is entirely ignored, not merged or partially replaced.
+
+This behavior is important to remember when organizing your parameter sets and ensuring
+the correct configuration options are applied to each set.
 
 ## Extended Sweep Syntax
 
@@ -398,8 +410,9 @@ jobs:
     inherit: train
     run: python finetune.py
     sets:
+      # This set completely overrides the job-level add from base_train
       - each: model=large,xlarge
-        add: hydra/launcher=joblib hydra.launcher.n_jobs=8
+        add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=8
       - all: pretrained=true learning_rate=${base_lr}*0.01
 ```
 

@@ -136,19 +136,27 @@ jobs:
     run: python train.py
     add: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level add
     sets:
-      - each: model=small,large  # Creates multiple commands
-      - all: seed=42 debug=true  # Included in every command
-      - add: hydra.job.num_nodes=1  # Appended to every command
+      # First set - uses job-level add
+      - each: model=small  # Creates a command
+      - all: seed=42       # Included in the command
+
+      # Second set - overrides job-level add with set-level add
+      - each: model=large
+      - all: seed=43
+      - add: hydra.job.num_nodes=1  # Completely replaces job-level add
 ```
 
 This generates:
 
 ```bash
-$ python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
-$ python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
+# First set - uses job-level add
+$ python train.py model=small seed=42 hydra/launcher=joblib hydra.launcher.n_jobs=2
+
+# Second set - only uses set-level add (job-level add is ignored)
+$ python train.py model=large seed=43 hydra.job.num_nodes=1
 ```
 
-Note that the set-level `add` would override the job-level `add` if both were specified.
+**Important**: When a set has its own `add` parameter, it completely overrides the job-level `add`. The job-level `add` is entirely ignored for that set, not merged or selectively replaced.
 
 ### 6. Parallelize with Submission Commands
 

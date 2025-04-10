@@ -258,22 +258,29 @@ Example with all three types:
 jobs:
   train:
     run: python train.py
-    add: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level add
     sets:
-      - each: model=small,large
+      # First set: uses job-level add
+      - each: model=small
       - all: seed=42,43 epochs=100
-      - add: hydra.job.num_nodes=1
+
+      # Second set: overrides job-level add completely
+      - each: model=large
+      - all: seed=44
+      - add: hydra.job.num_nodes=1  # Replaces job-level add entirely
 ```
 
 This generates:
 
 ```bash
-python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
-python train.py model=large seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
+# First set: with job-level add
+python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2
+
+# Second set: only uses set-level add (job-level add is completely ignored)
+python train.py model=large seed=44 hydra.job.num_nodes=1
 ```
 
-Note that `seed=42,43` from `all` is passed as-is to the command but isn't expanded,
-whereas `model=small,large` from `each` creates separate commands.
+**Important**: When a set has its own `add` parameter, it completely overrides the job-level `add`. The job-level `add` is entirely ignored for that set, not merged or combined.
 
 ## Advanced Examples
 
