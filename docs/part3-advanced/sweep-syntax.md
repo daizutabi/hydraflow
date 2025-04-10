@@ -30,8 +30,13 @@ HydraFlow supports defining numerical ranges using a colon-separated syntax:
 # Format: start:step:stop
 1:0.5:3    # Expands to 1, 1.5, 2, 2.5, 3
 
-# Decreasing ranges
+# Decreasing ranges (requires negative step)
 5:-1:1     # Expands to 5, 4, 3, 2, 1
+
+# For learning rates (decreasing from 0.1 to 0.001)
+0.1:-0.01:0.001  # Decreasing by 0.01 steps: 0.1, 0.09, 0.08, ..., 0.001
+# Or more commonly, use comma notation for log-scale:
+0.1,0.01,0.001   # Log-scale decrease (clearer for order-of-magnitude changes)
 ```
 
 This is especially useful for defining learning rate schedules,
@@ -73,7 +78,7 @@ Define lists of values with commas:
 model=cnn,transformer,lstm    # Three model types
 
 # Combined with ranges
-lr=0.1,0.01:0.001:0.0001     # 0.1, 0.01, 0.001, 0.0001
+lr=0.1,0.01,0.001,0.0001     # Explicit values for clarity
 ```
 
 ## Parentheses for Grouping
@@ -114,8 +119,12 @@ model=transformer batch_size=128
 ### Logarithmic Sweeps
 
 ```
-# Logarithmic sweep of learning rates
-lr=1:0.1:0.0001      # 1, 0.1, 0.01, 0.001, 0.0001
+# Logarithmic sweep of learning rates (comma notation is clearer)
+lr=1,0.1,0.01,0.001,0.0001  # Explicit log-scale values
+
+# Using range notation for regular intervals
+lr=0.001:0.001:0.01  # Increasing: 0.001, 0.002, 0.003, ..., 0.01
+lr=0.01:-0.001:0.001 # Decreasing: 0.01, 0.009, 0.008, ..., 0.001
 ```
 
 ### Grid Search with Multiple Parameters
@@ -152,7 +161,7 @@ jobs:
     steps:
       - batch: >-
           model=cnn,transformer,lstm
-          learning_rate=0.1:0.01:0.001
+          learning_rate=0.1,0.01,0.001
           batch_size=32,64
 ```
 
@@ -170,3 +179,4 @@ While powerful, the extended syntax has a few limitations:
 2. **Use Clear Separators**: Maintain readability by separating parameter groups
 3. **Limit Combinatorial Explosion**: Be careful with multiple parameters that combine to create very large sweep spaces
 4. **Validate Your Expansions**: Use the `--dry-run` flag to check expanded commands before executing
+5. **Prefer Comma Notation for Log Scales**: For learning rates and other parameters that vary by orders of magnitude, use explicit comma notation (`0.1,0.01,0.001`) instead of ranges

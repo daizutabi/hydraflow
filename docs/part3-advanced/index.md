@@ -45,7 +45,7 @@ jobs:
     steps:
       - batch: >-
           model=transformer,lstm
-          learning_rate=0.1:0.01:0.001
+          learning_rate=0.1,0.01,0.001
           optimizer=adam,sgd
 
 # 2. Run the job using the CLI
@@ -53,6 +53,34 @@ $ hydraflow run train
 
 # 3. Or submit the job to a cluster
 $ hydraflow run train --submit
+```
+
+## Basic Workflow
+
+```yaml
+# 1. Define a job in hydraflow.yaml
+jobs:
+  train:
+    run: python train.py
+    steps:
+      # Each combination creates a separate execution (parallel)
+      - batch: >-
+          model=transformer,lstm
+          learning_rate=0.1,0.01,0.001
+
+      # Fixed arguments passed to every command
+      - args: optimizer=adam,sgd  # Passed as-is to each command
+```
+
+```bash
+# 2. Run the job using the CLI
+$ hydraflow run train
+
+# 3. Or perform a dry run to see expanded commands
+$ hydraflow run train --dry-run
+
+# 4. Submit to a cluster
+$ hydraflow run train
 ```
 
 ## When to Use Advanced Workflows

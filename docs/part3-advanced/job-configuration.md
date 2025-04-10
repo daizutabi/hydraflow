@@ -102,8 +102,8 @@ Each step supports the following properties:
 
 | Property | Description |
 |----------|-------------|
-| `batch`  | Parameter sweep definition |
-| `args`   | Fixed arguments for all runs |
+| `batch`  | Parameter sweep that creates separate job executions, each running as individual processes (useful for parallel execution on clusters) |
+| `args`   | Fixed arguments added to each batch execution, can contain parameter sweeps that will be passed as-is to a single command |
 | `with`   | Step-specific options (overrides job-level) |
 
 ## Parameter Inheritance
@@ -249,3 +249,39 @@ jobs:
   deploy:
     run: python deploy.py
     with: --production
+```
+
+### Understanding Batch vs Args
+
+The distinction between `batch` and `args` is crucial:
+
+```yaml
+jobs:
+  example:
+    run: python app.py
+    steps:
+      # Example 1: Using batch
+      - batch: model=cnn,transformer
+        # Creates TWO separate processes:
+        # 1. python app.py model=cnn
+        # 2. python app.py model=transformer
+
+      # Example 2: Using args
+      - args: model=cnn,transformer
+        # Creates ONE process:
+        # python app.py model=cnn,transformer
+
+      # Example 3: Combining batch and args
+      - batch: model=cnn,transformer
+        args: epochs=10,20
+        # Creates TWO separate processes:
+        # 1. python app.py model=cnn epochs=10,20
+        # 2. python app.py model=transformer epochs=10,20
+```
+
+This distinction enables:
+
+1. **Parallel Execution**: Each `batch` item can be executed on a different compute node
+2. **Parameter Grouping**: Related parameters can be kept together using `args`
+3. **Efficient Resource Use**: Critical parameters that require separate resources use `batch`,
+   while others can be combined with `args`
