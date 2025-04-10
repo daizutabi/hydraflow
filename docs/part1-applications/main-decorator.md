@@ -167,6 +167,8 @@ The `hydraflow.main` decorator supports several keyword arguments that enhance i
 
 Control whether the working directory changes to the run's artifact directory:
 
+Change the current working directory to the run's artifact directory during execution:
+
 ```python
 @hydraflow.main(Config, chdir=True)
 def train(run: Run, cfg: Config) -> None:
@@ -176,29 +178,50 @@ def train(run: Run, cfg: Config) -> None:
         f.write("Results will be saved as an artifact in the run")
 ```
 
+This option is beneficial when:
+
+- You need to save or access files using relative paths
+- Your code relies on local file operations within the experiment directory
+- You want artifacts to be automatically associated with the current run
+- You're working with libraries that expect files in the current directory
+
 ### Forcing New Runs (`force_new_run`)
 
-Always create a new run instead of potentially reusing an existing one:
+Override the default run identification and reuse behavior by always creating a new run, even when identical configurations exist:
 
 ```python
 @hydraflow.main(Config, force_new_run=True)
 def train(run: Run, cfg: Config) -> None:
-    # This will always create a new run, even if
-    # identical configurations exist
+    # This will always create a new run, even if identical
+    # configurations exist in the experiment
     print(f"Fresh run created: {run.info.run_id}")
 ```
 
+This option is useful when:
+
+- You want to test the reproducibility of your experiments
+- You need to compare results across multiple identical runs
+- You've made changes to external dependencies not captured in the configuration
+- You want to avoid the run identification mechanism for debugging purposes
+
 ### Rerunning Finished Experiments (`rerun_finished`)
 
-Allow rerunning experiments that have already completed:
+Override the automatic skipping of completed runs by explicitly allowing rerunning of experiments that have already finished:
 
 ```python
 @hydraflow.main(Config, rerun_finished=True)
 def train(run: Run, cfg: Config) -> None:
-    # Runs that have FINISHED status can be rerun
-    # Useful for iterative development or verification
-    print(f"Run may be rerunning: {run.info.run_id}")
+    # Runs that have FINISHED status will be rerun instead of skipped
+    # The same run ID will be reused
+    print(f"Run may be rerunning even if it completed successfully: {run.info.run_id}")
 ```
+
+This option is valuable when:
+
+- You need to regenerate artifacts or metrics from a successful run
+- You've improved your logging or analysis and want to apply it to previous runs
+- You're iteratively refining experiments without changing their configuration
+- You suspect that a "successful" run may have had undetected issues
 
 ### Matching Based on Overrides (`match_overrides`)
 
@@ -211,6 +234,13 @@ def train(run: Run, cfg: Config) -> None:
     # rather than the complete configuration contents
     print(f"Run ID: {run.info.run_id}")
 ```
+
+This option is particularly useful when:
+
+- You have large default configurations but only care about specific parameters
+- You want to group runs by the parameters that were explicitly overridden
+- You're iterating on experiments with command-line variations
+- Your configuration contains volatile or automatically generated values
 
 ## Best Practices
 
