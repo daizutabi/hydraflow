@@ -163,7 +163,7 @@ jobs:
       - each: model=small
       - all: seed=42 debug=true
 
-      # Second set: overrides job-level add with set-level add
+      # Second set: merges with job-level add (set-level parameters take precedence)
       - each: model=large
       - all: seed=43
       - add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=4
@@ -175,8 +175,8 @@ This will execute:
 # First set: with job-level add
 python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2
 
-# Second set: only using set-level add (job-level add is completely ignored)
-python train.py model=large seed=43 hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=4
+# Second set: merges job-level and set-level add (hydra/launcher is overridden by set-level)
+python train.py model=large seed=43 hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.launcher.submitit.cpus_per_task=4
 ```
 
 ## Job-level and Set-level `add`
@@ -192,16 +192,26 @@ jobs:
       # Uses job-level add
       - each: model=small,medium
 
-      # Completely overrides job-level add
+      # Merges with job-level add (set-level takes precedence for the same keys)
       - each: model=large,xlarge
         add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=8
 ```
 
-When a set has its own `add` parameter, it completely overrides the job-level
-`add` parameter. The job-level `add` is entirely ignored, not merged or partially replaced.
+When a set has its own `add` parameter, it is merged with the job-level `add` parameter.
+If the same parameter key exists in both the job-level and set-level `add`, the set-level value takes precedence.
 
-This behavior is important to remember when organizing your parameter sets and ensuring
-the correct configuration options are applied to each set.
+For example, with the configuration above:
+- The first set uses: `hydra/launcher=joblib hydra.launcher.n_jobs=2`
+- The second set uses: `hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.launcher.submitit.cpus_per_task=8`
+
+Notice how `hydra/launcher` is overridden by the set-level value, while `hydra.launcher.n_jobs` from the job-level is retained.
+
+This behavior allows you to:
+1. Define common parameters at the job level
+2. Override or add specific parameters at the set level
+3. Keep all non-conflicting parameters from both levels
+
+This merging behavior makes it easy to maintain common configuration options while customizing specific aspects for different parameter sets.
 
 ## Extended Sweep Syntax
 

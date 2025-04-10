@@ -250,7 +250,7 @@ HydraFlow uses three different parameter types:
 
 1. **`each`**: Creates separate executions for each parameter combination.
 2. **`all`**: Parameters included in every command but can still use sweep syntax.
-3. **`add`**: Additional arguments appended as-is to each command (no sweep expansion).
+3. **`add`**: Additional arguments appended to each command (no sweep expansion). When specified at both job and set levels, they are merged with set-level values taking precedence for the same keys.
 
 Example with all three types:
 
@@ -264,10 +264,10 @@ jobs:
       - each: model=small
       - all: seed=42,43 epochs=100
 
-      # Second set: overrides job-level add completely
+      # Second set: merges with job-level add (set-level takes precedence for conflicts)
       - each: model=large
       - all: seed=44
-      - add: hydra.job.num_nodes=1  # Replaces job-level add entirely
+      - add: hydra/launcher=submitit hydra.job.num_nodes=1
 ```
 
 This generates:
@@ -276,11 +276,11 @@ This generates:
 # First set: with job-level add
 python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2
 
-# Second set: only uses set-level add (job-level add is completely ignored)
-python train.py model=large seed=44 hydra.job.num_nodes=1
+# Second set: merges job-level and set-level add (hydra/launcher is overridden by set-level)
+python train.py model=large seed=44 hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
 ```
 
-**Important**: When a set has its own `add` parameter, it completely overrides the job-level `add`. The job-level `add` is entirely ignored for that set, not merged or combined.
+**Important**: When a set has its own `add` parameter, it is merged with the job-level `add`. If the same parameter key appears in both, the set-level value takes precedence. Parameters unique to either the job-level or set-level `add` are preserved in the final command.
 
 ## Advanced Examples
 
