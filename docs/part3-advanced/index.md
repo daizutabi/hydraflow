@@ -30,7 +30,7 @@ HydraFlow's advanced workflow capabilities are built around these components:
    supporting ranges, lists, and combinations
 
 2. **Job Definition** - YAML-based configuration for defining reusable
-   multi-step jobs
+   job configurations with independent parameter sets
 
 3. **CLI Commands** - Commands for managing and executing jobs defined
    in configuration files
@@ -50,18 +50,35 @@ jobs:
   train:
     run: python train.py
     steps:
-      # Each combination creates a separate execution
+      # First independent parameter set
       - batch: >-
           model=small,large
           learning_rate=0.1,0.2
 
-      # Parameters included in each batch execution
-      - args: optimizer=adam,sgd
+      # Second independent parameter set
+      - batch: >-
+          optimizer=adam,sgd
+          dropout=0.1,0.2
 ```
 
 This configuration defines a job named `train` that will execute `train.py` with
-different parameter combinations. The `batch` step creates a grid of parameters
-(model and learning rate), while the `args` step adds parameters to each execution.
+different parameter combinations. Each `step` represents an independent set of
+parameter combinations - the steps do not build upon or depend on each other.
+
+### Understanding Steps
+
+Steps in HydraFlow are completely independent from each other. Each step generates
+its own set of commands to execute, and there is no relationship between steps.
+When you run a job, HydraFlow will:
+
+1. Generate all parameter combinations for the first step
+2. Execute those commands
+3. Move to the second step and generate its combinations
+4. Execute those commands
+5. And so on for each step
+
+This allows you to organize different parameter sweep sets under the same job
+configuration, sharing the same execution command (`run`, `call`, or `submit`).
 
 ### 2. Validate with Dry Run
 
@@ -82,18 +99,43 @@ Once validated, run the job with:
 $ hydraflow run train
 ```
 
-This executes the following commands sequentially:
+With the configuration above, this executes the following commands sequentially:
 
 ```bash
-$ python train.py model=small learning_rate=0.1 optimizer=adam,sgd
-$ python train.py model=large learning_rate=0.1 optimizer=adam,sgd
-$ python train.py model=small learning_rate=0.2 optimizer=adam,sgd
-$ python train.py model=large learning_rate=0.2 optimizer=adam,sgd
+# First step commands
+$ python train.py model=small learning_rate=0.1
+$ python train.py model=large learning_rate=0.1
+$ python train.py model=small learning_rate=0.2
+$ python train.py model=large learning_rate=0.2
+
+# Second step commands (completely independent from first step)
+$ python train.py optimizer=adam dropout=0.1
+$ python train.py optimizer=sgd dropout=0.1
+$ python train.py optimizer=adam dropout=0.2
+$ python train.py optimizer=sgd dropout=0.2
 ```
 
-When `train.py` is a Hydra application, it will perform an inner sweep on the `optimizer`
-parameter while keeping `model` and `learning_rate` fixed for each run. This creates
-a total of 8 combinations (2 models × 2 learning rates × 2 optimizers).
+### Combining Parameters with `args`
+
+While `batch` parameters create separate executions, you can use `args` to include
+parameters in each execution:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    steps:
+      - batch: >-
+          model=small,large
+      - args: seed=42 debug=true
+```
+
+This would execute:
+
+```bash
+$ python train.py model=small seed=42 debug=true
+$ python train.py model=large seed=42 debug=true
+```
 
 ### Parallelize with Submission Commands
 
@@ -109,25 +151,21 @@ jobs:
       - batch: >-
           model=small,large
           learning_rate=0.1,0.2
-      - args: optimizer=adam,sgd
+      - args: seed=42
 ```
 
 This approach offers several advantages:
-
 - **Parallelization**: Execute multiple parameter combinations simultaneously
 - **Resource Optimization**: Allocate appropriate resources to each job
 - **Scalability**: Easily scale to hundreds or thousands of experiments
 - **Fault Isolation**: Failures in one job don't affect others
-
-This separation of batch parameters and inner-sweep parameters allows for efficient
-resource allocation while maintaining the flexibility of Hydra's parameter sweeping.
 
 ## When to Use Advanced Workflows
 
 Consider using HydraFlow's advanced workflow features when:
 
 - You need to explore complex parameter spaces with many configurations
-- Your experiments require a structured approach with multiple steps
+- You want to organize multiple independent parameter sweeps under the same job
 - You want to leverage distributed computing resources
 - You need reproducible workflow definitions
 
