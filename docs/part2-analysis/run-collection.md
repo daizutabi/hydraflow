@@ -14,19 +14,17 @@ from hydraflow import Run, RunCollection
 from pathlib import Path
 
 # Method 1: Using Run.load with multiple paths
-runs = Run.load(["mlruns/0/run_id1", "mlruns/0/run_id2", "mlruns/0/run_id3"])
+run_dirs = ["mlruns/exp_id/run_id1", "mlruns/exp_id/run_id2"]
+runs = Run.load(run_dirs)
 
-# Method 2: Using a pattern to find multiple runs
-runs = Run.load("mlruns/0/*")  # Load all runs in experiment 0
+# Method 2: Using a generator expression
+run_dirs = Path("mlruns/exp_id").glob("*")
+runs = Run.load(run_dirs)
 
 # Method 3: Creating from a list of Run instances
-run1 = Run(Path("mlruns/0/run_id1"))
-run2 = Run(Path("mlruns/0/run_id2"))
+run1 = Run(Path("mlruns/exp_id/run_id1"))
+run2 = Run(Path("mlruns/exp_id/run_id2"))
 runs = RunCollection([run1, run2])
-
-# Method 4: Using a generator expression
-run_dirs = Path("mlruns/0").glob("*")
-runs = Run.load(run_dirs)
 ```
 
 ## Basic Operations
@@ -66,7 +64,8 @@ specific_runs = runs.filter(
 )
 
 # Filter with dot notation for nested parameters
-nested_filter = runs.filter(model__hidden_size=512)  # Double underscore for nesting
+# Use a tuple to specify the parameter name and value
+nested_filter = runs.filter(("model.hidden_size", 512))
 
 # Filter with tuple for range values (inclusive)
 lr_range = runs.filter(learning_rate=(0.0001, 0.01))
@@ -75,10 +74,10 @@ lr_range = runs.filter(learning_rate=(0.0001, 0.01))
 multiple_models = runs.filter(model_type=["transformer", "lstm"])
 
 # Filter by a predicate function
-def high_accuracy(run):
-    return run.metrics.get("accuracy", 0) > 0.9
+def is_large_image(run: Run):
+    return run.get("width") + run.get("height") > 100
 
-good_runs = runs.filter(predicate=high_accuracy)
+good_runs = runs.filter(predicate=is_large_image)
 ```
 
 ## Advanced Filtering
@@ -93,11 +92,20 @@ complex_filter = runs.filter(
     batch_size=32
 )
 
-# Filter based on metrics
-accurate_runs = runs.filter(lambda run: run.metrics.get("accuracy", 0) > 0.9)
-
 # Chained filtering
 final_runs = runs.filter(model_type="transformer").filter(learning_rate=0.001)
+```
+
+## Sorting Runs
+
+The `sort` method allows you to sort runs based on specific criteria:
+
+```python
+# Sort by accuracy in descending order
+runs.sort("learning_rate", reverse=True)
+
+# Sort by multiple keys
+runs.sort("learning_rate", "model_type")
 ```
 
 ## Getting Individual Runs
@@ -109,11 +117,53 @@ While `filter` returns a `RunCollection`, the `get` method returns a single
 # Get a specific run (raises error if multiple or no matches are found)
 best_run = runs.get(model_type="transformer", learning_rate=0.001)
 
-# Get with a default value if no match is found
-fallback_run = runs.get(model_type="unknown_model", default=None)
+# Try to get a specific run. If no match is found, return None
+fallback_run = runs.try_get(model_type="transformer")
 
-# Get the first matching run when multiple matches exist
-first_match = runs.get(model_type="transformer", first=True)
+# Get the first matching run.
+first_match = runs.first(model_type="transformer")
+
+# Get the last matching run.
+last_match = runs.last(model_type="transformer")
+```
+
+## Extracting Data
+
+RunCollection provides several methods to extract specific data from runs:
+
+```python
+# Extract values for a specific key as a list
+learning_rates = runs.to_list("learning_rate")
+
+# Extract values as a NumPy array
+batch_sizes = runs.to_numpy("batch_size")
+
+# Get unique values for a key
+model_types = runs.unique("model_type")
+
+# Count unique values
+num_model_types = runs.n_unique("model_type")
+```
+
+## Converting to DataFrame
+
+For advanced analysis, you can convert your runs to a Polars DataFrame:
+
+```python
+# DataFrame with run information and entire configuration
+df = runs.to_frame()
+
+# DataFrame with specific configuration parameters
+df = runs.to_frame("model_type", "learning_rate", "batch_size")
+
+# Using a custom function that returns multiple columns
+def get_metrics(run: Run) -> dict[str, float]:
+    return {
+        "accuracy": run.impl.accuracy(),
+        "precision": run.impl.precision(),
+    }
+
+df = runs.to_frame("model_type", metrics=get_metrics)
 ```
 
 ## Grouping Runs
@@ -135,69 +185,23 @@ param_groups = runs.group_by("model_type", "learning_rate")
 transformer_001_group = param_groups[("transformer", 0.001)]
 ```
 
-## Aggregating Data
-
-`RunCollection` provides methods to aggregate data across runs:
-
-```python
-# Calculate average metric value
-avg_accuracy = runs.mean("accuracy")
-
-# Calculate other statistics
-max_accuracy = runs.max("accuracy")
-min_accuracy = runs.min("accuracy")
-accuracy_std = runs.std("accuracy")
-
-# Calculate with a custom aggregation function
-q75_accuracy = runs.aggregate("accuracy", lambda values: np.percentile(values, 75))
-```
-
-## Converting to DataFrame
-
-For advanced analysis, you can convert your runs to a Polars DataFrame:
-
-```python
-# Basic DataFrame with run information
-df = runs.to_frame()
-
-# Include specific configuration parameters
-df = runs.to_frame("model_type", "learning_rate", "batch_size")
-
-# Include metrics
-df = runs.to_frame(
-    "model_type",
-    "learning_rate",
-    accuracy=lambda run: run.metrics.get("accuracy", 0),
-    loss=lambda run: run.metrics.get("loss", float("inf"))
-)
-
-# Using a custom function that returns multiple columns
-def get_metrics(run):
-    return {
-        "accuracy": run.metrics.get("accuracy", 0),
-        "precision": run.metrics.get("precision", 0),
-        "recall": run.metrics.get("recall", 0),
-        "f1": run.metrics.get("f1", 0)
-    }
-
-df = runs.to_frame("model_type", "learning_rate", metrics=get_metrics)
-```
-
 ## Aggregation with Group By
 
 Combine `group_by` with aggregation for powerful analysis:
 
 ```python
 # Group by model type and calculate average accuracy
-model_accuracies = runs.group_by("model_type", accuracy=lambda runs: runs.mean("accuracy"))
+model_accuracies = runs.group_by(
+    "model_type",
+    accuracy=mean_accuracy
+)
 
 # Group by multiple parameters with multiple aggregations
 results = runs.group_by(
     "model_type",
     "learning_rate",
     count=len,
-    avg_accuracy=lambda runs: runs.mean("accuracy"),
-    max_accuracy=lambda runs: runs.max("accuracy")
+    accuracy=mean_accuracy
 )
 ```
 
@@ -222,7 +226,8 @@ class Config:
     batch_size: int
 
 # Create a typed RunCollection
-runs = Run[Config].load(["mlruns/0/run_id1", "mlruns/0/run_id2"])
+run_dirs = ["mlruns/exp_id/run_id1", "mlruns/exp_id/run_id2"]
+runs = Run[Config].load(run_dirs)
 
 # Type-safe access in iterations
 for run in runs:
@@ -237,7 +242,7 @@ You can also create collections with custom implementation classes:
 
 ```python
 class ModelAnalyzer:
-    def __init__(self, artifacts_dir, cfg=None):
+    def __init__(self, artifacts_dir: Path, cfg: Config | None = None):
         self.artifacts_dir = artifacts_dir
         self.cfg = cfg
 
@@ -258,39 +263,22 @@ for run in runs:
     results = run.impl.evaluate(test_data)
 ```
 
-## Parallel Processing
-
-For operations on large collections, you can use parallel processing:
-
-```python
-# Load runs in parallel
-runs = Run.load(run_dirs, n_jobs=4)  # Use 4 processes
-runs = Run.load(run_dirs, n_jobs=-1)  # Use all available cores
-
-# Process runs in parallel with custom function
-def process_run(run):
-    model = load_model(run)
-    return evaluate_model(model)
-
-results = runs.map(process_run, n_jobs=4)
-```
-
 ## Best Practices
 
-1. **Filter Early**: Apply filters as early as possible to reduce the number of
-   runs you're working with.
+1. **Filter Early**: Apply filters as early as possible
+   to reduce the number of runs you're working with.
 
-2. **Use Type Parameters**: Specify configuration types with `Run[Config]` for
-   better IDE support and type checking.
+2. **Use Type Parameters**: Specify
+   configuration/implementation types
+   with `Run[Config]` or `Run[Config, Impl]` and
+   use `load` method to collect runs for better IDE support and
+   type checking.
 
-3. **Chain Operations**: Combine filtering, grouping, and aggregation for
-   efficient analysis workflows.
+3. **Chain Operations**: Combine filtering, grouping,
+   and aggregation for efficient analysis workflows.
 
-4. **Use DataFrame Integration**: Convert to DataFrames for complex analysis and
-   visualization needs.
-
-5. **Leverage Parallelism**: Use parallel processing for operations on large
-   collections of runs.
+4. **Use DataFrame Integration**: Convert to DataFrames
+   for complex analysis and visualization needs.
 
 ## Summary
 
