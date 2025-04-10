@@ -161,7 +161,7 @@ This automatic skipping behavior:
 
 ## Advanced Features
 
-The `hydraflow.main` decorator supports several keyword arguments that enhance its functionality:
+The `hydraflow.main` decorator supports several keyword arguments that enhance its functionality. All these options are set to `False` by default and must be explicitly enabled when needed:
 
 ### Working Directory Management (`chdir`)
 
