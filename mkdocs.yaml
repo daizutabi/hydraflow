@@ -86,6 +86,7 @@ nav:
           - Overview: part2-analysis/index.md
           - Run Class: part2-analysis/run-class.md
           - Run Collection: part2-analysis/run-collection.md
+          - Updating Run Configurations: part2-analysis/updating-runs.md
       - "Part 3: Automating Workflows":
           - Overview: part3-advanced/index.md
           - Executor: part3-advanced/executor.md
