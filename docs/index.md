@@ -51,7 +51,7 @@ production workflows:
 pip install hydraflow
 ```
 
-**Requirements:** Python 3.12+
+**Requirements:** Python 3.13+
 
 ## Minimal Example
 

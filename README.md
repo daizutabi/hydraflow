@@ -48,6 +48,8 @@ You can install Hydraflow via pip:
 pip install hydraflow
 ```
 
+**Requirements:** Python 3.13+
+
 ## Quick Start
 
 Here is a simple example to get you started with Hydraflow:
