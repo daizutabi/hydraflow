@@ -3,7 +3,7 @@
 The [`Run`][hydraflow.core.run.Run] class is a fundamental component of
 HydraFlow's analysis toolkit, representing a single execution of an
 experiment. It provides structured access to all data associated with
-a run, including configuration, metrics, and artifacts.
+a run, including configuration and artifacts.
 
 ## Basic Usage
 
@@ -15,11 +15,11 @@ from hydraflow import Run
 from pathlib import Path
 
 # Using constructor with Path object
-run_dir = Path("mlruns/0/run_id")
+run_dir = Path("mlruns/exp_id/run_id")
 run = Run(run_dir)
 
 # Using load method with string path
-run = Run.load("mlruns/0/run_id")
+run = Run.load("mlruns/exp_id/run_id")
 
 # Access run information
 print(f"Run ID: {run.info.run_id}")
@@ -35,16 +35,6 @@ The `Run` class provides access to various aspects of the experiment:
 # Access configuration
 learning_rate = run.get("learning_rate")  # Access by key
 model_type = run.get("model.type")  # Nested access with dot notation
-
-# Access metrics
-accuracy = run.metrics.get("accuracy")
-loss = run.metrics.get("loss")
-
-# Access parameters
-batch_size = run.params.get("batch_size")
-
-# Access tags
-version = run.tags.get("version")
 ```
 
 ## Type-Safe Configuration Access
@@ -118,7 +108,7 @@ Implementation classes can optionally accept the run's configuration:
 
 ```python
 class AdvancedModelLoader:
-    def __init__(self, artifacts_dir: Path, cfg=None):
+    def __init__(self, artifacts_dir: Path, cfg: Config | None = None):
         self.artifacts_dir = artifacts_dir
         self.cfg = cfg
 
@@ -139,36 +129,15 @@ The `load` class method can load both individual runs and collections of runs:
 
 ```python
 # Load a single run
-run = Run.load("mlruns/0/run_id")
+run = Run.load("mlruns/exp_id/run_id")
 
 # Load multiple runs to create a RunCollection
-runs = Run.load(["mlruns/0/run_id1", "mlruns/0/run_id2"])
-
-# Load all runs from a directory pattern
-runs = Run.load("mlruns/0/*")
+run_dirs = ["mlruns/exp_id/run_id1", "mlruns/exp_id/run_id2"]
+runs = Run.load(run_dirs)
 
 # Load runs with parallel processing
 runs = Run.load(run_dirs, n_jobs=4)  # Use 4 parallel jobs for loading
 runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
-```
-
-## Accessing Run Information
-
-The `Run` class provides extensive information about the experiment:
-
-```python
-# Basic run information
-print(f"Run ID: {run.info.run_id}")
-print(f"Experiment name: {run.info.job_name}")
-print(f"Run directory: {run.info.run_dir}")
-
-# Access MLflow run data
-print(f"Start time: {run.info.start_time}")
-print(f"End time: {run.info.end_time}")
-print(f"Status: {run.info.status}")
-
-# Access artifact paths
-model_path = run.info.run_dir / "artifacts" / "model.pkl"
 ```
 
 ## Best Practices
