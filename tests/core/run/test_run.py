@@ -91,6 +91,10 @@ def test_get_error(run: Run[Config]):
         run.get("unknown")
 
 
+def test_get_default(run: Run[Config]):
+    assert run.get("unknown", 10) == 10
+
+
 def test_get_info(run: Run[Config]):
     assert run.get("run_dir") == "."
 

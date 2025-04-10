@@ -249,18 +249,23 @@ class Run[C, I = None]:
             if force or OmegaConf.select(cfg, k, default=MISSING) is MISSING:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str, default: Any = MISSING) -> Any:
         """Get a value from the information or configuration.
 
         Args:
-            key: The key to look for. Can use dot notation for nested keys
-                in configuration.
+            key: The key to look for. Can use dot notation for
+                nested keys in configuration.
+            default: Value to return if the key is not found.
+                If not provided, AttributeError will be raised.
 
         Returns:
-            Any: The value associated with the key.
+            Any: The value associated with the key, or the
+            default value if the key is not found and a default
+            is provided.
 
         Raises:
-            AttributeError: If the key is not found in any of the components.
+            AttributeError: If the key is not found and
+                no default is provided.
 
         """
         value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
@@ -271,7 +276,10 @@ class Run[C, I = None]:
         if key in info:
             return info[key]
 
-        msg = f"Key not found: {key}"
+        if default is not MISSING:
+            return default
+
+        msg = f"No such key: {key}"
         raise AttributeError(msg)
 
     def predicate(self, key: str, value: Any) -> bool:

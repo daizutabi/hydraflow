@@ -79,7 +79,7 @@ parameters dynamically:
 ```python
 # Calculate aspect_ratio from width and height
 def calculate_aspect_ratio(run: Run) -> float:
-    width = run.get("width", 0)
+    width = run.get("width", 0)  # Use default value if key doesn't exist
     height = run.get("height", 0)
     if height == 0:
         return 1.0
@@ -102,7 +102,7 @@ runs.update(
 
 # Update with calculated values
 def calculate_dimensions(run: Run) -> tuple[int, int]:
-    base_size = run.get("base_size", 256)
+    base_size = run.get("base_size", 256)  # Default value if key doesn't exist
     return (base_size, base_size)
 
 runs.update(("width", "height"), calculate_dimensions)
