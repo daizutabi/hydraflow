@@ -33,7 +33,7 @@ if __name__ == "__main__":
 The function decorated with [`@hydraflow.main`][hydraflow.main] must accept
 two parameters:
 
-1. `run`: The current MLflow run object, which can be used to access run
+1. `run`: The current run object of type `mlflow.entities.Run`, which can be used to access run
    information and log additional metrics or artifacts.
 
 2. `cfg`: The configuration object containing all parameters, populated from
@@ -98,47 +98,92 @@ def train(run: Run, cfg: Config) -> None:
     mlflow.log_param("custom_param", "value")
 ```
 
+## Run Identification and Reuse
+
+One of HydraFlow's key features is automatic run identification and reuse. By default,
+if a run with the same configuration already exists within an experiment, HydraFlow
+will reuse that existing run instead of creating a new one.
+
+This behavior is particularly valuable in computation clusters where preemption
+(forced termination by the system) can occur. If your job is preempted before
+completion, you can simply restart it, and HydraFlow will automatically continue
+with the existing run, allowing you to resume from checkpoints.
+
+```python
+from pathlib import Path
+
+@hydraflow.main(Config)
+def train(run: Run, cfg: Config) -> None:
+    # If this exact configuration was run before but interrupted,
+    # the same Run object will be reused
+    checkpoint_path = Path("checkpoint.pt")
+
+    if checkpoint_path.exists():
+        print(f"Resuming from checkpoint in run: {run.info.run_id}")
+        # Load checkpoint and continue training
+    else:
+        print(f"Starting new training in run: {run.info.run_id}")
+        # Start training from scratch
+```
+
+This default behavior improves efficiency by:
+
+- Avoiding duplicate experiments with identical configurations
+- Enabling graceful recovery from system interruptions
+- Reducing wasted computation when jobs are preempted
+- Supporting iterative development with checkpointing
+
 ## Advanced Features
 
-### Customizing the Run Name
+The `hydraflow.main` decorator supports several keyword arguments that enhance its functionality:
 
-You can customize the MLflow run name by providing a `run_name` parameter:
+### Working Directory Management (`chdir`)
+
+Control whether the working directory changes to the run's artifact directory:
 
 ```python
-@hydraflow.main(Config, run_name="custom_experiment")
-def train(run, cfg: Config) -> None:
-    # Training code
+@hydraflow.main(Config, chdir=True)
+def train(run: Run, cfg: Config) -> None:
+    # Working directory is now the run's artifact directory
+    # Useful for relative path references
+    with open("results.txt", "w") as f:
+        f.write("Results will be saved as an artifact in the run")
 ```
 
-### Tags and Custom Logging
+### Forcing New Runs (`force_new_run`)
 
-Add custom tags to the run for better organization:
+Always create a new run instead of potentially reusing an existing one:
 
 ```python
-import mlflow
-
-@hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
-    # Add custom tags
-    mlflow.set_tag("model_version", "v2.0")
-    mlflow.set_tag("data_version", "2023-01-15")
-
-    # Your training code here
+@hydraflow.main(Config, force_new_run=True)
+def train(run: Run, cfg: Config) -> None:
+    # This will always create a new run, even if
+    # identical configurations exist
+    print(f"Fresh run created: {run.info.run_id}")
 ```
 
-### Accessing Run Information
+### Rerunning Finished Experiments (`rerun_finished`)
 
-The `run` parameter provides direct access to run information:
+Allow rerunning experiments that have already completed:
 
 ```python
-@hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
-    # Access run information
+@hydraflow.main(Config, rerun_finished=True)
+def train(run: Run, cfg: Config) -> None:
+    # Runs that have FINISHED status can be rerun
+    # Useful for iterative development or verification
+    print(f"Run may be rerunning: {run.info.run_id}")
+```
+
+### Matching Based on Overrides (`match_overrides`)
+
+Match runs based on command-line overrides instead of the full configuration:
+
+```python
+@hydraflow.main(Config, match_overrides=True)
+def train(run: Run, cfg: Config) -> None:
+    # Runs will be matched based on CLI overrides
+    # rather than the complete configuration contents
     print(f"Run ID: {run.info.run_id}")
-    print(f"Experiment ID: {run.info.experiment_id}")
-    print(f"Status: {run.info.status}")
-
-    # Your training code here
 ```
 
 ## Best Practices
