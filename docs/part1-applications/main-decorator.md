@@ -11,6 +11,7 @@ Here's how to use the main decorator in its simplest form:
 
 ```python
 from dataclasses import dataclass
+from mlflow.entities import Run
 import hydraflow
 
 @dataclass
@@ -19,7 +20,7 @@ class Config:
     batch_size: int = 32
 
 @hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     print(f"Training with learning_rate={cfg.learning_rate}")
     # Your training code here
 
@@ -62,7 +63,7 @@ class Config:
     seed: int = 42
 
 @hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     # Type-checked access to nested configuration
     lr = cfg.training.learning_rate
     data_path = cfg.data.path
@@ -70,29 +71,31 @@ def train(run, cfg: Config) -> None:
     # Your training code here
 ```
 
-## Available HydraFlow Functions
+## Using MLflow APIs
 
 Within a function decorated with [`@hydraflow.main`][hydraflow.main], you have
-access to various HydraFlow utilities for logging:
+access to standard MLflow logging functions:
 
 ```python
+import mlflow
+
 @hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     # Log metrics
-    hydraflow.log_metric("accuracy", 0.95)
+    mlflow.log_metric("accuracy", 0.95)
 
     # Log a set of metrics
-    hydraflow.log_metrics({
+    mlflow.log_metrics({
         "precision": 0.92,
         "recall": 0.89,
         "f1_score": 0.90
     })
 
     # Log artifacts
-    hydraflow.log_artifact("model.pkl", "Trained model")
+    mlflow.log_artifact("model.pkl")
 
     # Log parameters not included in the config
-    hydraflow.log_param("custom_param", "value")
+    mlflow.log_param("custom_param", "value")
 ```
 
 ## Advanced Features
@@ -112,11 +115,13 @@ def train(run, cfg: Config) -> None:
 Add custom tags to the run for better organization:
 
 ```python
+import mlflow
+
 @hydraflow.main(Config)
 def train(run, cfg: Config) -> None:
     # Add custom tags
-    hydraflow.set_tag("model_version", "v2.0")
-    hydraflow.set_tag("data_version", "2023-01-15")
+    mlflow.set_tag("model_version", "v2.0")
+    mlflow.set_tag("data_version", "2023-01-15")
 
     # Your training code here
 ```

@@ -37,7 +37,7 @@ params = mlflow_run.data.params
 ```
 
 The `Run` class serves as the primary interface for interacting with
-individual experiments, allowing you to analyze results and compare
+individual experiment runs, allowing you to analyze results and compare
 different approaches.
 
 ## RunCollection
@@ -125,7 +125,7 @@ def train(run, cfg: Config) -> None:
 These core concepts work together to provide a comprehensive framework for
 managing machine learning experiments:
 
-- `Run` represents individual experiments with a focus on Hydra configuration
+- `Run` represents individual experiment runs with a focus on Hydra configuration
 - `RunCollection` enables comparative analysis across multiple runs
 - Configuration management with Hydra ensures reproducibility
 - Experiment tracking with MLflow records metrics and artifacts

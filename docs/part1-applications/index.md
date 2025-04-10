@@ -31,6 +31,7 @@ The core elements of a HydraFlow application are:
 
 ```python
 from dataclasses import dataclass
+from mlflow.entities import Run
 import hydraflow
 
 @dataclass
@@ -40,7 +41,7 @@ class Config:
     epochs: int = 10
 
 @hydraflow.main(Config)
-def app(run, cfg: Config) -> None:
+def app(run: Run, cfg: Config) -> None:
     # Your experiment code here
     print(f"Training with lr={cfg.learning_rate}, batch_size={cfg.batch_size}")
 
