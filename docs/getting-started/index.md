@@ -22,7 +22,7 @@ Managing machine learning experiments involves numerous challenges, including:
   multiple experiment runs
 - **Reproducibility**: Ensuring experiments can be reliably reproduced
 - **Result Analysis**: Efficiently comparing and analyzing experiment outcomes
-- **Workflow Automation**: Orchestrating complex experimental pipelines
+- **Workflow Automation**: Organizing and managing experiment workflows
 
 HydraFlow addresses these challenges by providing:
 
@@ -32,8 +32,8 @@ HydraFlow addresses these challenges by providing:
    respective strengths
 3. **Analysis Tools**: Providing powerful APIs for filtering, grouping,
    and analyzing results
-4. **Workflow Automation**: Enabling the construction of complex
-   experimental pipelines
+4. **Workflow Automation**: Simplifying the organization and execution of
+   machine learning experiments
 
 ## Quick Example
 

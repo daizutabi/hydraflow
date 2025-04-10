@@ -4,13 +4,13 @@
 
 - 🚀 **Define and Run Experiments**
   Combine Hydra's configuration management with MLflow's experiment
-  tracking to build powerful experimentation pipelines
+  tracking for streamlined experiment workflows
 - 📊 **Collect and Analyze Results**
   Gather, filter, and analyze experiment results with type-safe APIs
   for comprehensive insights
 - 🔄 **Automate Workflows**
-  Automate complex experimental pipelines and manage large-scale
-  machine learning projects efficiently
+  Manage and organize large-scale machine learning experiments
+  efficiently
 
 </div>
 
@@ -41,8 +41,8 @@ HydraFlow goes beyond simply using Hydra and MLflow side by side:
   MLflow experiment organization
 - **Configuration-Aware Analysis**: Filter and group experiment results using
   Hydra configuration parameters
-- **Reproducible Pipelines**: Create reusable workflows with configuration-based
-  experiment definitions
+- **Reproducible Experiments**: Ensure experiments can be reliably reproduced
+  with configuration-based definitions
 - **Implementation Support**: Extend experiment analysis with custom
   domain-specific implementations
 

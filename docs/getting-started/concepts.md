@@ -5,25 +5,35 @@ foundation of the framework.
 
 ## Run
 
-A `Run` represents a single execution of a machine learning experiment.
-Each run:
+A `Run` represents a single execution of a machine learning experiment in
+HydraFlow. It is important to note that HydraFlow's `Run` class is distinct
+from MLflow's `Run` class (`mlflow.entities.Run`). HydraFlow's `Run` is
+designed with a focus on Hydra integration and configuration management.
 
-- Contains metadata about the experiment (parameters, metrics, tags)
-- Links to artifacts generated during execution (models, datasets, plots)
-- Provides methods to track and analyze experiment results
+HydraFlow's `Run` provides:
+
+- Access to experiment configurations used during the run
+- Methods for loading and analyzing experiment results
+- Support for custom implementations through the factory pattern
+- Type-safe access to configuration values
 
 Example usage:
 
 ```python
-from hydraflow.core import Run
+from hydraflow import Run
 
 # Load an existing run
 run = Run.load("path/to/run")
 
-# Access run information
-print(run.info.run_id)
-print(run.params)  # Configuration parameters
-print(run.metrics)  # Performance metrics
+# Access configuration
+learning_rate = run.get("learning_rate")
+model_type = run.get("model.type")  # Access nested config with dot notation
+
+# For MLflow specific data, you can use the underlying MLflow client
+import mlflow
+mlflow_run = mlflow.get_run(run_id=run.info.run_id)
+metrics = mlflow_run.data.metrics
+params = mlflow_run.data.params
 ```
 
 The `Run` class serves as the primary interface for interacting with
@@ -35,27 +45,27 @@ different approaches.
 A `RunCollection` is a collection of `Run` instances that provides tools
 for analyzing and comparing multiple experiments. Key features include:
 
-- Filtering runs based on parameters or metrics
+- Filtering runs based on configuration parameters
 - Grouping runs by common attributes
-- Aggregating metrics across runs
-- Visualizing experiment results
+- Aggregating data across runs
+- Converting to DataFrames for analysis
 
 Example usage:
 
 ```python
-from hydraflow.core import Run
+from hydraflow import Run
 
 # Load multiple runs
 runs = Run.load(["path/to/run1", "path/to/run2", "path/to/run3"])
 
 # Filter runs by parameter value
-filtered_runs = runs.filter({"model.type": "lstm"})
+filtered_runs = runs.filter(model_type="lstm")
 
 # Group runs by a parameter
 grouped_runs = runs.group_by("dataset.name")
 
-# Calculate average metric across runs
-avg_accuracy = runs.mean("metrics.accuracy")
+# Convert to DataFrame for analysis
+df = runs.to_frame("run_id", "learning_rate", "batch_size")
 ```
 
 The `RunCollection` class enables comparative analysis across multiple
@@ -71,88 +81,43 @@ Hydra. This provides:
 - Dynamic configuration resolution
 - Command-line overrides
 
-Example configuration structure:
-
-```yaml
-# config.yaml
-model:
-  type: transformer
-  hidden_size: 512
-
-training:
-  batch_size: 32
-  learning_rate: 0.001
-
-dataset:
-  name: mnist
-  split: [0.8, 0.1, 0.1]
-```
-
-Loading and using configuration:
+Using configuration with HydraFlow:
 
 ```python
-from hydraflow.config import load_config
+from dataclasses import dataclass
+import hydraflow
 
-# Load configuration
-cfg = load_config("config.yaml")
+@dataclass
+class Config:
+    learning_rate: float = 0.001
+    batch_size: int = 32
+    epochs: int = 10
 
-# Access configuration values
-model_type = cfg.model.type  # "transformer"
-batch_size = cfg.training.batch_size  # 32
+@hydraflow.main(Config)
+def train(run, cfg: Config) -> None:
+    # Use configuration
+    print(f"Training with lr={cfg.learning_rate}, batch_size={cfg.batch_size}")
 
-# Configuration can be passed to Run creation
-run = Run.create(cfg=cfg)
+    # Log metrics with MLflow
+    mlflow.log_metric("accuracy", 0.95)
 ```
 
 ## Experiment Tracking
 
-HydraFlow integrates with MLflow for experiment tracking, providing:
-
-- Automatic logging of parameters, metrics, and artifacts
-- Experiment organization and versioning
-- Remote storage support
-- Visualizations and dashboards
-
-Example tracking usage:
+HydraFlow seamlessly integrates with MLflow, allowing you to use standard
+MLflow functionality within your `hydraflow.main` decorated functions:
 
 ```python
-from hydraflow.tracking import log_metric, log_artifact
+from hydraflow import hydraflow
+import mlflow
 
-# Log a metric
-log_metric("accuracy", 0.95)
+@hydraflow.main(Config)
+def train(run, cfg: Config) -> None:
+    # Your training code
 
-# Log an artifact
-log_artifact("model.pt", "Model checkpoint")
-```
-
-## Pipelines
-
-HydraFlow supports creating reproducible ML pipelines that:
-
-- Define dependencies between components
-- Manage data flow between pipeline stages
-- Track intermediate artifacts
-- Enable selective re-execution
-
-Example pipeline:
-
-```python
-from hydraflow.pipeline import Pipeline, Stage
-
-# Define pipeline stages
-data_stage = Stage("data_preparation", prepare_data)
-train_stage = Stage("model_training", train_model)
-eval_stage = Stage("model_evaluation", evaluate_model)
-
-# Create pipeline with dependencies
-pipeline = Pipeline([
-    data_stage,
-    train_stage.depends_on(data_stage),
-    eval_stage.depends_on(train_stage)
-])
-
-# Execute pipeline
-results = pipeline.run(cfg)
+    # Use standard MLflow APIs for tracking
+    mlflow.log_metric("accuracy", 0.95)
+    mlflow.log_artifact("model.pt")
 ```
 
 ## Summary
@@ -160,11 +125,10 @@ results = pipeline.run(cfg)
 These core concepts work together to provide a comprehensive framework for
 managing machine learning experiments:
 
-- `Run` represents individual experiments
-- `RunCollection` enables comparative analysis
-- Configuration management ensures reproducibility
-- Experiment tracking records all relevant information
-- Pipelines organize complex workflows
+- `Run` represents individual experiments with a focus on Hydra configuration
+- `RunCollection` enables comparative analysis across multiple runs
+- Configuration management with Hydra ensures reproducibility
+- Experiment tracking with MLflow records metrics and artifacts
 
 Understanding these fundamental concepts will help you leverage the full
 power of HydraFlow for your machine learning projects.
