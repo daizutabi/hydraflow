@@ -6,12 +6,18 @@ Run in HydraFlow. A Run contains three main components:
 1. info: Information about the run, such as run directory,
    run ID, and job name.
 2. cfg: Configuration loaded from the Hydra configuration file.
-3. impl: Implementation object created by the provided
+3. impl: Implementation instance created by the provided
    factory function.
 
 The Run class allows accessing these components through
 a unified interface, and provides methods for setting default
 configuration values and filtering runs.
+
+The implementation instance (impl) can be created using a factory function
+that accepts either just the artifacts directory path, or both the
+artifacts directory path and the configuration instance. This flexibility
+allows implementation classes to be configuration-aware and adjust their
+behavior based on the run's configuration.
 """
 
 from __future__ import annotations
@@ -45,7 +51,16 @@ class Run[C, I = None]:
     """Information about the run, such as run directory, run ID, and job name."""
 
     impl_factory: Callable[[Path], I] | Callable[[Path, C], I]
-    """Factory function to create the implementation object."""
+    """Factory function to create the implementation instance.
+
+    This can be a callable that accepts either:
+    - A single Path parameter: the artifacts directory
+    - Both a Path and a config parameter: the artifacts directory and
+      the configuration instance
+
+    The implementation dynamically detects the signature and calls the
+    factory with the appropriate arguments.
+    """
 
     def __init__(
         self,
@@ -67,7 +82,7 @@ class Run[C, I = None]:
 
     @cached_property
     def cfg(self) -> C:
-        """The configuration object loaded from the Hydra configuration file."""
+        """The configuration instance loaded from the Hydra configuration file."""
         config_file = self.info.run_dir / "artifacts/.hydra/config.yaml"
         if config_file.exists():
             return OmegaConf.load(config_file)  # type: ignore
@@ -76,7 +91,19 @@ class Run[C, I = None]:
 
     @cached_property
     def impl(self) -> I:
-        """The implementation object created by the factory function."""
+        """The implementation instance created by the factory function.
+
+        This property dynamically examines the signature of the impl_factory
+        using the inspect module and calls it with the appropriate arguments:
+
+        - If the factory accepts one parameter: called with just the artifacts
+          directory
+        - If the factory accepts two parameters: called with the artifacts
+          directory and the configuration instance
+
+        This allows implementation classes to be configuration-aware and
+        utilize both the file system and configuration information.
+        """
         artifacts_dir = self.info.run_dir / "artifacts"
 
         sig = inspect.signature(self.impl_factory)
@@ -119,10 +146,13 @@ class Run[C, I = None]:
 
         Args:
             run_dir (str | Path | Iterable[str | Path]): The directory where the
-                MLflow runs are stored, either as a string, a Path object,
+                MLflow runs are stored, either as a string, a Path instance,
                 or an iterable of them.
-            impl_factory (Callable[[Path], I]): A factory function that creates the
-                implementation object. Defaults to a function that returns None.
+            impl_factory (Callable[[Path], I] | Callable[[Path, C], I]): A factory
+                function that creates the implementation instance. It can accept
+                either just the artifacts directory path, or both the path and
+                the configuration instance. Defaults to a function that returns
+                None.
             n_jobs (int): The number of parallel jobs. If 0 (default), runs
                 sequentially. If -1, uses all available CPU cores.
 
