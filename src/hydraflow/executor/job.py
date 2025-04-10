@@ -75,14 +75,40 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     """
     job_name = f"hydra.job.name={job.name}"
-    job_configs = shlex.split(job.add)
+    job_add = shlex.split(job.add)
 
     for set_ in job.sets:
-        configs = shlex.split(set_.add) or job_configs
+        add = merge_args(job_add, shlex.split(set_.add)) if set_.add else job_add
 
         for args in iter_args(set_.each, set_.all):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
-            yield ["--multirun", *args, job_name, sweep_dir, *configs]
+            yield ["--multirun", *args, job_name, sweep_dir, *add]
+
+
+def merge_args(first: list[str], second: list[str]) -> list[str]:
+    """Merge two lists of arguments.
+
+    This function merges two lists of arguments by checking for conflicts
+    and resolving them by keeping the values from the second list.
+
+    Args:
+        first (list[str]): The first list of arguments.
+        second (list[str]): The second list of arguments.
+
+    Returns:
+        list[str]: A merged list of arguments.
+
+    """
+    merged = {}
+
+    for item in [*first, *second]:
+        if "=" in item:
+            key, value = item.split("=", 1)
+            merged[key] = value
+        else:
+            merged[item] = None
+
+    return [k if v is None else f"{k}={v}" for k, v in merged.items()]
 
 
 @dataclass

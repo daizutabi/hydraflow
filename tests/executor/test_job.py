@@ -37,6 +37,21 @@ def batches(job: Job):
     return list(iter_batches(job))
 
 
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        (["a=1", "b=2"], ["c=3", "d=4"], ["a=1", "b=2", "c=3", "d=4"]),
+        (["a=1", "b=2"], ["c=3", "d=4", "a=5"], ["a=5", "b=2", "c=3", "d=4"]),
+        (["a=1", "b=2"], ["c=3", "d=4", "a=5", "b=6"], ["a=5", "b=6", "c=3", "d=4"]),
+        (["a", "b"], ["c", "d", "a", "b=1"], ["a", "b=1", "c", "d"]),
+    ],
+)
+def test_merge_args(first, second, expected):
+    from hydraflow.executor.job import merge_args
+
+    assert merge_args(first, second) == expected
+
+
 def test_sweep_dir(batches):
     assert all(x[-1].startswith("hydra.sweep.dir=multirun/") for x in batches)
     assert all(len(x[-1].split("/")[-1]) == 26 for x in batches)
