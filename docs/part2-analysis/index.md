@@ -11,16 +11,14 @@ enabling you to:
 
 - Load and access experiment data from MLflow runs
 - Filter and group experiments based on configuration parameters
-- Compare metrics across different experiment runs
 - Transform experiment data into structured formats for analysis
-- Create visualizations to identify patterns and trends
 
 ## Key Components
 
 The main components of HydraFlow's analysis tools are:
 
 1. **[`Run`][hydraflow.core.run.Run] Class**: Represents a single experiment
-   run, providing access to configuration, metrics, and artifacts.
+   run, providing access to configuration and artifacts.
 
 2. **[`RunCollection`][hydraflow.core.run_collection.RunCollection] Class**:
    A collection of `Run` instances with tools for filtering, grouping, and
@@ -44,7 +42,7 @@ filtered_runs = runs.filter(learning_rate=0.01, model_type="transformer")
 grouped_runs = runs.group_by("batch_size")
 
 # Convert to DataFrame for analysis
-df = runs.to_frame("learning_rate", "batch_size", accuracy=lambda run: run.metrics["accuracy"])
+df = runs.to_frame("learning_rate", "batch_size", accuracy=lambda run: run.get("accuracy"))
 
 # Perform analysis on the DataFrame
 best_run = df.sort("accuracy", descending=True).first()
@@ -65,7 +63,7 @@ class MyConfig:
     model_type: str
 
 # Load runs with type information
-runs = Run[MyConfig].load("path/to/runs")
+runs = Run[MyConfig].load(["path/to/run1", "path/to/run2"])
 
 # Type-checked access to configuration
 for run in runs:
@@ -83,7 +81,7 @@ from hydraflow import Run
 from pathlib import Path
 
 class ModelAnalyzer:
-    def __init__(self, artifacts_dir: Path, cfg=None):
+    def __init__(self, artifacts_dir: Path, cfg: MyConfig | None = None):
         self.artifacts_dir = artifacts_dir
         self.cfg = cfg
 
@@ -94,13 +92,12 @@ class ModelAnalyzer:
         # Custom analysis logic
         pass
 
-# Load runs with implementation
-runs = Run[MyConfig, ModelAnalyzer].load("path/to/runs", ModelAnalyzer)
+# Load a run with implementation
+run = Run[MyConfig, ModelAnalyzer].load("path/to/run", ModelAnalyzer)
 
 # Access implementation methods
-for run in runs:
-    model = run.impl.load_model()
-    results = run.impl.analyze_performance()
+model = run.impl.load_model()
+results = run.impl.analyze_performance()
 ```
 
 ## What's Next
