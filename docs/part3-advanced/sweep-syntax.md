@@ -244,26 +244,36 @@ jobs:
 
 Variables are expanded when the configuration is loaded.
 
-## Combining with `args`
+## Understanding `batch`, `args`, and `with`
 
-While `batch` creates separate executions, you can use `args` to include
-parameters in each execution:
+HydraFlow uses three different parameter types:
+
+1. **`batch`**: Creates separate executions for each parameter combination.
+2. **`args`**: Parameters included in every command but can still use sweep syntax.
+3. **`with`**: Additional arguments appended as-is to each command (no sweep expansion).
+
+Example with all three types:
 
 ```yaml
 jobs:
   train:
     run: python train.py
+    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
       - batch: model=small,large
-      - args: seed=42 epochs=100
+      - args: seed=42,43 epochs=100
+      - with: hydra.job.num_nodes=1
 ```
 
 This generates:
 
 ```bash
-python train.py model=small seed=42 epochs=100
-python train.py model=large seed=42 epochs=100
+python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
+python train.py model=large seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
 ```
+
+Note that `seed=42,43` from `args` is passed as-is to the command but isn't expanded,
+whereas `model=small,large` from `batch` creates separate commands.
 
 ## Advanced Examples
 

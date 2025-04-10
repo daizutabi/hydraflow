@@ -26,6 +26,7 @@ The configuration file uses the following structure:
 - `jobs`: The top-level key containing all job definitions
   - `<job_name>`: Name of the job (e.g., "train")
     - `run`: The command to execute
+    - `with`: Global configuration arguments appended to each command
     - `sets`: List of parameter sets for the job
 
 Each job must have either a `run`, `call`, or `submit` key, and at least one
@@ -110,17 +111,20 @@ This will include `seed=42 debug=true` in every execution for the set.
 
 ### `with`
 
-The `with` parameter adds environment variables to the execution:
+The `with` parameter adds additional arguments that are appended to the end
+of each command. This is primarily used for Hydra configuration settings:
 
 ```yaml
 sets:
   - batch: model=small,large
   - with: >-
-      CUDA_VISIBLE_DEVICES=0
-      OMP_NUM_THREADS=4
+      hydra/launcher=joblib
+      hydra.launcher.n_jobs=4
 ```
 
-Environment variables are set before executing the command.
+This will append Hydra configuration to each command from the set.
+If a set has its own `with` parameter, it overrides the job-level `with` parameter
+(they are not merged).
 
 ## Multiple Parameter Sets
 
@@ -156,15 +160,36 @@ jobs:
     sets:
       - batch: model=small,large
       - args: seed=42 debug=true
-      - with: CUDA_VISIBLE_DEVICES=0
+      - with: hydra/launcher=joblib hydra.launcher.n_jobs=4
 ```
 
 This will execute:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python train.py model=small seed=42 debug=true
-CUDA_VISIBLE_DEVICES=0 python train.py model=large seed=42 debug=true
+python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=4
+python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=4
 ```
+
+## Job-level and Set-level `with`
+
+You can specify `with` at both the job level and set level:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    sets:
+      # Uses job-level with
+      - batch: model=small,large
+
+      # Overrides job-level with
+      - batch: model=xlarge
+        with: hydra/launcher=joblib hydra.launcher.n_jobs=8
+```
+
+When a set has its own `with` parameter, it completely overrides the job-level
+`with` parameter (they are not merged or appended).
 
 ## Extended Sweep Syntax
 
@@ -349,9 +374,9 @@ jobs:
   # Base job definition
   base_train:
     run: python train.py
+    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
       - use: common
-      - with: CUDA_VISIBLE_DEVICES=0
 
   # Training job
   train:
@@ -368,11 +393,13 @@ jobs:
       - batch: model=${models}
       - args: eval_split=test
 
-  # Fine-tuning job
+  # Fine-tuning job with higher parallelism
   finetune:
     inherit: train
     run: python finetune.py
     sets:
+      - batch: model=large,xlarge
+        with: hydra/launcher=joblib hydra.launcher.n_jobs=8
       - args: pretrained=true learning_rate=${base_lr}*0.01
 ```
 
@@ -443,6 +470,8 @@ Add comments to explain complex configurations:
 jobs:
   train:
     run: python train.py
+    # Use parallel execution for faster processing
+    with: hydra/launcher=joblib hydra.launcher.n_jobs=4
     sets:
       # These parameters control the model architecture
       - batch: >-

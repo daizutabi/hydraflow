@@ -115,27 +115,40 @@ $ python train.py optimizer=adam dropout=0.2
 $ python train.py optimizer=sgd dropout=0.2
 ```
 
-### Combining Parameters with `args`
+### Parameter Types: `batch`, `args`, and `with`
 
-While `batch` parameters create separate executions, you can use `args` to include
-parameters in each execution:
+HydraFlow supports three types of parameters for configuring your commands:
+
+- **`batch`**: Creates a grid of parameter combinations, each resulting in a separate
+  command. These are swept using the sweep syntax.
+
+- **`args`**: Parameters included in every command from the set. These parameters
+  can also use the sweep syntax, but all expansions will be included in each command.
+
+- **`with`**: Additional arguments appended to the end of each command, primarily used
+  for Hydra configuration. These are passed as-is, without any expansion.
+
+Example of the three parameter types:
 
 ```yaml
 jobs:
   train:
     run: python train.py
+    with: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level with
     sets:
-      - batch: >-
-          model=small,large
-      - args: seed=42 debug=true
+      - batch: model=small,large  # Creates multiple commands
+      - args: seed=42 debug=true  # Included in every command
+      - with: hydra.job.num_nodes=1  # Appended to every command
 ```
 
-This would execute:
+This generates:
 
 ```bash
-$ python train.py model=small seed=42 debug=true
-$ python train.py model=large seed=42 debug=true
+$ python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
+$ python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
 ```
+
+Note that the set-level `with` would override the job-level `with` if both were specified.
 
 ### Parallelize with Submission Commands
 
@@ -147,6 +160,7 @@ jobs to run in parallel on a cluster:
 jobs:
   train:
     submit: sbatch --partition=gpu --nodes=1 job.sh
+    with: hydra/launcher=submitit_slurm
     sets:
       - batch: >-
           model=small,large

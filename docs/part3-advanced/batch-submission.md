@@ -119,27 +119,35 @@ Where `job_template.sh` might look like:
 eval "$@"
 ```
 
-## Resource Allocation
+## Resource Configuration with `with`
 
-You can specify different resources for different parameter combinations:
+You can specify different Hydra configurations for different parameter sets:
 
 ```yaml
 jobs:
   train:
-    submit: sbatch
+    submit: sbatch job.sh
     sets:
-      # Small models use less resources
+      # Small models use fewer resources
       - batch: model=small
-        with: SBATCH="--partition=gpu --gres=gpu:1 --mem=8G"
+        with: >-
+          hydra.launcher.submitit.params.gres=gpu:1
+          hydra.launcher.submitit.params.mem=8G
 
       # Large models need more resources
       - batch: model=large
-        with: SBATCH="--partition=gpu --gres=gpu:2 --mem=32G"
+        with: >-
+          hydra.launcher.submitit.params.gres=gpu:2
+          hydra.launcher.submitit.params.mem=32G
 ```
 
-## Environment Variables
+The `with` parameter appends additional arguments to each command, which can
+be used to pass Hydra configuration options.
 
-You can set environment variables for your jobs:
+## Passing Environment Variables
+
+When you need to pass environment variables to your jobs, you can use the
+job script to set them:
 
 ```yaml
 jobs:
@@ -147,9 +155,21 @@ jobs:
     submit: sbatch job.sh
     sets:
       - batch: model=small,large
-      - with: >-
-          CUDA_VISIBLE_DEVICES=0
-          OMP_NUM_THREADS=4
+```
+
+And in your `job.sh`:
+
+```bash
+#!/bin/bash
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+
+# Set environment variables
+export CUDA_VISIBLE_DEVICES=0
+export OMP_NUM_THREADS=4
+
+# Run the command
+eval "$@"
 ```
 
 ## Job Arrays
@@ -297,36 +317,26 @@ jobs:
     # ...
 ```
 
-### Use Set Environment Variables
+### Configure Hydra Options with `with`
 
-Use environment variables to configure your job scripts:
+Use the `with` parameter to configure Hydra options:
 
 ```yaml
 jobs:
   train:
     submit: sbatch job.sh
+    with: >-
+      hydra/launcher=submitit_slurm
+      hydra.launcher.submitit.params.partition=gpu
     sets:
       - batch: model=small
-        with: >-
-          NUM_GPUS=1
-          MEMORY=8G
+        with: hydra.launcher.submitit.params.gres=gpu:1
 
       - batch: model=large
-        with: >-
-          NUM_GPUS=4
-          MEMORY=32G
+        with: hydra.launcher.submitit.params.gres=gpu:4
 ```
 
-Then in your job script:
-
-```bash
-#!/bin/bash
-#SBATCH --gres=gpu:$NUM_GPUS
-#SBATCH --mem=$MEMORY
-
-# Run the command
-eval "$@"
-```
+This appends Hydra configuration options to each command.
 
 ### Centralize Job Scripts
 
