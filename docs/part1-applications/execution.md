@@ -24,7 +24,7 @@ Note that any other artifacts (models, data files, etc.) must be explicitly save
 
 ## Command-line Override Syntax
 
-HydraFlow (via Hydra) provides a powerful syntax for overriding configuration
+Hydra provides a powerful syntax for overriding configuration
 values:
 
 ```bash
@@ -62,19 +62,19 @@ of the specified parameters (2 learning rates × 3 model types).
 
 ## Output Organization
 
-By default, HydraFlow organizes outputs in the following directory structure:
+By default, Hydra organizes outputs in the following directory structure for HydraFlow applications:
 
 ```
 outputs/
-├── YYYY-MM-DD/                 # Date
-│   └── HH-MM-SS/              # Time
-│       └── .hydra/            # Hydra configuration
-└── multirun/                   # Created in multirun mode
+├── YYYY-MM-DD/              # Date
+│   └── HH-MM-SS/            # Time
+│       └── .hydra/          # Hydra configuration
+└── multirun/                # Created in multirun mode
     └── YYYY-MM-DD/
         └── HH-MM-SS/
-            ├── 0/             # Run 0
+            ├── 0/           # Run 0
             │   └── .hydra/
-            ├── 1/             # Run 1
+            ├── 1/           # Run 1
             │   └── .hydra/
             └── ...
 ```
@@ -83,15 +83,25 @@ Each run also creates an entry in the MLflow tracking directory:
 
 ```
 mlruns/
-├── 0/                          # Experiment ID
-│   ├── run_id_1/              # Run ID
+├── experiment_id_1/         # Experiment ID
+│   ├── run_id_1/            # Run ID
 │   │   ├── artifacts/
+│   │   │   └── .hydra/      # Hydra config copied here
+│   │   │       ├── config.yaml
+│   │   │       └── overrides.yaml
 │   │   ├── metrics/
 │   │   ├── params/
 │   │   └── tags/
-│   └── run_id_2/
+│   ├── run_id_2/
+│   │   └── artifacts/
+│   │       └── .hydra/
+│   └── meta.yaml            # Contains Hydra job name
 └── meta.yaml
 ```
+
+**Important**: In HydraFlow, the MLflow run's `artifacts` directory serves as the single source of truth for your experiment data. The Hydra-generated output directories are only used as temporary locations to store configuration files and logs, which are then copied to the MLflow artifacts. After your application completes, you can safely delete the Hydra output directories without losing any essential information, as everything important is preserved in the MLflow run.
+
+Users can always access Hydra-generated configuration files and logs by navigating to the `run_dir/artifacts/.hydra/` directory within the MLflow run. This directory contains all the configuration files, overrides, and other Hydra-related files that were used for that specific run, making it easy to review and reproduce the experiment settings even after the original Hydra output directories have been deleted.
 
 ## Customizing Output Directories
 
