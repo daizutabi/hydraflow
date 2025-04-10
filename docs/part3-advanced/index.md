@@ -37,39 +37,19 @@ HydraFlow's advanced workflow capabilities are built around these components:
 
 ## Basic Workflow
 
-```python
-# 1. Define a job in hydraflow.yaml
-jobs:
-  train:
-    run: python train.py
-    steps:
-      - batch: >-
-          model=transformer,lstm
-          learning_rate=0.1,0.01,0.001
-          optimizer=adam,sgd
-
-# 2. Run the job using the CLI
-$ hydraflow run train
-
-# 3. Or submit the job to a cluster
-$ hydraflow run train --submit
-```
-
-## Basic Workflow
-
 ```yaml
 # 1. Define a job in hydraflow.yaml
 jobs:
   train:
     run: python train.py
     steps:
-      # Each combination creates a separate execution (parallel)
+      # Each combination creates a separate execution (sequential unless using 'submit')
       - batch: >-
           model=transformer,lstm
           learning_rate=0.1,0.01,0.001
 
-      # Fixed arguments passed to every command
-      - args: optimizer=adam,sgd  # Passed as-is to each command
+      # Parameters that will be expanded but included in each batch execution
+      - args: optimizer=adam,sgd  # Expanded but included with each batch command
 ```
 
 ```bash

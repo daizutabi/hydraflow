@@ -102,8 +102,8 @@ Each step supports the following properties:
 
 | Property | Description |
 |----------|-------------|
-| `batch`  | Parameter sweep that creates separate job executions, each running as individual processes (useful for parallel execution on clusters) |
-| `args`   | Fixed arguments added to each batch execution, can contain parameter sweeps that will be passed as-is to a single command |
+| `batch`  | Parameter sweep that creates separate job executions - runs sequentially by default, or in parallel when using `submit` |
+| `args`   | Arguments that apply to each batch execution - can also use extended sweep syntax but all expansions are included in a single command |
 | `with`   | Step-specific options (overrides job-level) |
 
 ## Parameter Inheritance
@@ -233,7 +233,7 @@ jobs:
     steps:
       - batch: >-
           model=resnet50,efficientnet
-          learning_rate=0.1:0.001:0.0001
+          learning_rate=0.1,0.01,0.001,0.0001
 
       - batch: >-
           model=transformer
@@ -253,7 +253,7 @@ jobs:
 
 ### Understanding Batch vs Args
 
-The distinction between `batch` and `args` is crucial:
+The distinction between `batch` and `args` is crucial for understanding how HydraFlow constructs and executes commands:
 
 ```yaml
 jobs:
@@ -261,27 +261,154 @@ jobs:
     run: python app.py
     steps:
       # Example 1: Using batch
-      - batch: model=cnn,transformer
-        # Creates TWO separate processes:
-        # 1. python app.py model=cnn
-        # 2. python app.py model=transformer
-
-      # Example 2: Using args
-      - args: model=cnn,transformer
-        # Creates ONE process:
-        # python app.py model=cnn,transformer
-
-      # Example 3: Combining batch and args
-      - batch: model=cnn,transformer
-        args: epochs=10,20
-        # Creates TWO separate processes:
-        # 1. python app.py model=cnn epochs=10,20
-        # 2. python app.py model=transformer epochs=10,20
+      - batch: b=3,4
+        args: a=1,2
+        # HydraFlow constructs TWO separate commands:
+        # 1. python app.py b=3 a=1,2
+        # 2. python app.py b=4 a=1,2
 ```
 
-This distinction enables:
+#### How Command Execution Works
 
-1. **Parallel Execution**: Each `batch` item can be executed on a different compute node
-2. **Parameter Grouping**: Related parameters can be kept together using `args`
-3. **Efficient Resource Use**: Critical parameters that require separate resources use `batch`,
-   while others can be combined with `args`
+HydraFlow's role is to **construct command-line arguments** based on your parameter definitions and then execute your specified command with those arguments. What happens after that depends entirely on the command you've specified:
+
+##### With `run` property:
+
+```yaml
+run: python app.py
+```
+
+HydraFlow executes each generated command sequentially using `subprocess.run`:
+1. First command runs and completes
+2. Then the next command runs
+3. And so on...
+
+If your command completes quickly (like submitting a job to a scheduler), the next command will execute almost immediately.
+
+##### With `submit` property:
+
+```yaml
+submit: sbatch
+```
+
+HydraFlow:
+1. Creates a temporary text file containing all generated command lines
+2. Executes a single command passing this file: `sbatch temp_file.txt`
+3. Your submission command is responsible for processing the file contents
+
+This is optimal for cluster schedulers that can efficiently process multiple jobs from a file.
+
+### Examples with Explanation
+
+```yaml
+jobs:
+  sequential_processing:
+    run: python process.py
+    steps:
+      - batch: dataset=train,test,validation
+        args: model=resnet,vgg
+        # Executes sequentially:
+        # 1. python process.py dataset=train model=resnet,vgg
+        # 2. python process.py dataset=test model=resnet,vgg
+        # 3. python process.py dataset=validation model=resnet,vgg
+
+  cluster_submission:
+    submit: sbatch --partition=gpu
+    with: python train.py
+    steps:
+      - batch: learning_rate=0.1,0.01,0.001
+        # Creates a file with lines:
+        # python train.py learning_rate=0.1
+        # python train.py learning_rate=0.01
+        # python train.py learning_rate=0.001
+        # Then executes: sbatch --partition=gpu temp_file.txt
+```
+
+HydraFlow focuses on making parameter sweep definition simple and flexible. The actual execution behavior (sequential, parallel, distributed) depends on the commands you specify, giving you complete control over how your workflows run.
+
+## Workflow Integration Examples
+
+HydraFlow is designed to integrate with various cluster environments and
+batch systems. Below are examples showing how to configure HydraFlow with different
+submission systems:
+
+### Slurm (sbatch)
+
+```yaml
+jobs:
+  train:
+    submit: sbatch --partition=gpu --nodes=1 --ntasks=1 --cpus-per-task=4 --gres=gpu:1
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+This submits a single job to Slurm that processes all combinations.
+
+### PBS
+
+```yaml
+jobs:
+  train:
+    submit: qsub -l select=1:ncpus=4:ngpus=1 -q gpu_queue
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+### SGE (Sun Grid Engine)
+
+```yaml
+jobs:
+  train:
+    submit: qsub -l gpu=1 -q ml.q
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+### Local Parallel Execution
+
+You can use GNU Parallel for local parallelization:
+
+```yaml
+jobs:
+  train:
+    submit: parallel -j 4
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+### Kubernetes
+
+For Kubernetes integration, you might use a helper script:
+
+```yaml
+jobs:
+  train:
+    submit: ./k8s_submit.sh
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+Where `k8s_submit.sh` might create a job from each line in the input file.
+
+### Custom Submission Systems
+
+You can create a custom submission script for any environment:
+
+```yaml
+jobs:
+  train:
+    submit: ./my_custom_submitter.py --resource=gpu
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+The key is that HydraFlow is agnostic to the submission system - it simply
+prepares the parameter combinations and passes them to your command. This
+flexibility allows HydraFlow to work with virtually any computing environment
+or batch system.

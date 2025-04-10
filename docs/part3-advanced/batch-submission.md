@@ -10,8 +10,9 @@ The batch submission capabilities allow you to:
 
 1. Submit multiple parameter configurations as a single batch job
 2. Leverage HPC clusters and job schedulers like SLURM, PBS, etc.
-3. Efficiently manage resources for large parameter sweeps
-4. Track and monitor distributed experiment runs
+3. Execute parameter combinations in parallel on distributed resources
+4. Efficiently manage resources for large parameter sweeps
+5. Track and monitor distributed experiment runs
 
 ## Basic Submission
 
@@ -40,12 +41,34 @@ hydraflow run train
 When you run a job with the `submit` property:
 
 1. HydraFlow expands all parameter combinations from the job steps
-2. Creates a temporary file containing all parameter combinations
-3. Submits a single batch job that processes all combinations
-4. The batch scheduler manages resource allocation and execution
+2. Creates a temporary text file containing each command line as a separate row
+3. Executes a single command passing this file as an argument: `your_submit_command temp_file.txt`
+4. Your command is responsible for processing the file contents
 
-This is more efficient than submitting each parameter combination as a
-separate job, which would overwhelm the job scheduler.
+For example, if your job definition is:
+
+```yaml
+jobs:
+  train:
+    submit: sbatch --partition=gpu
+    with: python train.py
+    steps:
+      - batch: model=resnet,vgg learning_rate=0.1,0.01
+```
+
+HydraFlow will:
+1. Create a temporary file with contents:
+   ```
+   python train.py model=resnet learning_rate=0.1
+   python train.py model=resnet learning_rate=0.01
+   python train.py model=vgg learning_rate=0.1
+   python train.py model=vgg learning_rate=0.01
+   ```
+2. Execute: `sbatch --partition=gpu temp_file.txt`
+
+The key point is that HydraFlow does not dictate how your batch job runs - it simply formats the
+commands and passes them to your specified submission tool. This means you have complete control
+over your batch execution environment by choosing the appropriate submission command.
 
 ## Submission Commands
 
@@ -83,7 +106,7 @@ jobs:
     steps:
       - batch: >-
           model=large,xlarge
-          learning_rate=0.1:0.01:0.001
+          learning_rate=0.1,0.01,0.001
 ```
 
 ### PBS Example

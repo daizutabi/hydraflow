@@ -92,9 +92,4 @@ nav:
           - Extended Sweep Syntax: part3-advanced/sweep-syntax.md
           - Job Configuration: part3-advanced/job-configuration.md
           - Batch Submission: part3-advanced/batch-submission.md
-  - Examples:
-      - Overview: examples/index.md
-      - Simple Example: examples/simple-example.md
-      - Analysis Example: examples/analysis-example.md
-      - Advanced Example: examples/advanced-example.md
   - API Reference: $api/hydraflow.***
