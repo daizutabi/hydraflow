@@ -110,10 +110,10 @@ class Run[C, I = None]:
         params = list(sig.parameters.values())
 
         if len(params) == 1:
-            impl_factory = cast(Callable[[Path], I], self.impl_factory)
+            impl_factory = cast("Callable[[Path], I]", self.impl_factory)
             return impl_factory(artifacts_dir)
 
-        impl_factory = cast(Callable[[Path, C], I], self.impl_factory)
+        impl_factory = cast("Callable[[Path, C], I]", self.impl_factory)
         return impl_factory(artifacts_dir, self.cfg)
 
     @overload
