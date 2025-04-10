@@ -22,14 +22,29 @@ experiment management framework. It provides a complete workflow from defining
 experiments to execution and analysis, streamlining machine learning projects
 from research to production.
 
+### Key Integration Features
+
+- **Automatic Configuration Tracking**: Hydra configurations are automatically
+  saved as MLflow artifacts, ensuring complete reproducibility of experiments
 - **Type-safe Configuration**: Leverage Python dataclasses for type-safe
-  experiment configuration
-- **Automatic Experiment Tracking**: Log configurations, metrics, and
-  artifacts automatically
-- **Powerful Result Analysis**: Advanced filtering and grouping of experimental
-  results
-- **Reproducibility**: Store experiments in a fully reproducible format
-- **Pipeline Automation**: Build and execute complex experiment pipelines
+  experiment configuration with full IDE support
+- **Unified Workflow**: Connect configuration management and experiment tracking
+  in a single, coherent workflow
+- **Powerful Analysis Tools**: Analyze and compare experiments using
+  configuration parameters captured from Hydra
+
+### Hydra + MLflow = More Than the Sum of Parts
+
+HydraFlow goes beyond simply using Hydra and MLflow side by side:
+
+- **Parameter Sweep Integration**: Run Hydra multi-run sweeps with automatic
+  MLflow experiment organization
+- **Configuration-Aware Analysis**: Filter and group experiment results using
+  Hydra configuration parameters
+- **Reproducible Pipelines**: Create reusable workflows with configuration-based
+  experiment definitions
+- **Implementation Support**: Extend experiment analysis with custom
+  domain-specific implementations
 
 ## Quick Installation
 
@@ -37,7 +52,7 @@ from research to production.
 pip install hydraflow
 ```
 
-**Requirements:** Python 3.12+
+**Requirements:** Python 3.13+
 
 ## Documentation Structure
 
