@@ -65,7 +65,7 @@ This configuration defines a job named `train` that will execute `train.py` with
 different parameter combinations. Each `set` represents an independent set of
 parameter combinations - the sets do not build upon or depend on each other.
 
-### Understanding Sets
+### 2. Understanding Sets
 
 Sets in HydraFlow are completely independent from each other. Each set generates
 its own set of commands to execute, and there is no relationship between sets.
@@ -80,7 +80,7 @@ When you run a job, HydraFlow will:
 This allows you to organize different parameter sweep sets under the same job
 configuration, sharing the same execution command (`run`, `call`, or `submit`).
 
-### 2. Validate with Dry Run
+### 3. Validate with Dry Run
 
 Before executing, validate your job configuration with the `--dry-run` flag:
 
@@ -91,7 +91,7 @@ $ hydraflow run train --dry-run
 This command displays the exact commands that would be executed without actually
 running them, allowing you to verify parameter combinations and execution flow.
 
-### 3. Execute the Job
+### 4. Execute the Job
 
 Once validated, run the job with:
 
@@ -115,7 +115,7 @@ $ python train.py optimizer=adam dropout=0.2
 $ python train.py optimizer=sgd dropout=0.2
 ```
 
-### Parameter Types: `batch`, `args`, and `with`
+### 5. Parameter Types: `batch`, `args`, and `with`
 
 HydraFlow supports three types of parameters for configuring your commands:
 
@@ -150,7 +150,7 @@ $ python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.lau
 
 Note that the set-level `with` would override the job-level `with` if both were specified.
 
-### Parallelize with Submission Commands
+### 6. Parallelize with Submission Commands
 
 The true power of HydraFlow's workflow management emerges when using job submission
 commands like `sbatch` or `qsub`. Instead of running sequentially, you can submit
