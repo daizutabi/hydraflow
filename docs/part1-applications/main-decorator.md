@@ -133,6 +133,32 @@ This default behavior improves efficiency by:
 - Reducing wasted computation when jobs are preempted
 - Supporting iterative development with checkpointing
 
+## Automatic Skipping of Completed Runs
+
+HydraFlow automatically skips runs that have already completed successfully. This is especially valuable in environments where jobs are automatically restarted after preemption. Without requiring any additional configuration, HydraFlow will:
+
+1. Identify already completed runs with the same configuration
+2. Skip re-execution of those runs
+3. Proceed only with runs that were interrupted or not yet executed
+
+```python
+@hydraflow.main(Config)
+def train(run: Run, cfg: Config) -> None:
+    # If this configuration was already successfully run before,
+    # the function won't even be called - HydraFlow automatically
+    # skips it and returns immediately
+
+    print(f"This run is either new or was previously interrupted: {run.info.run_id}")
+    # Your training code here
+```
+
+This automatic skipping behavior:
+
+- Prevents redundant computation in multi-job or batch scenarios
+- Handles preemption recovery efficiently in cluster environments
+- Reduces resource usage by avoiding unnecessary re-execution
+- Works seamlessly without requiring explicit handling in your code
+
 ## Advanced Features
 
 The `hydraflow.main` decorator supports several keyword arguments that enhance its functionality:
