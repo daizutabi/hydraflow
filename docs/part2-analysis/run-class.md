@@ -7,8 +7,9 @@ a run, including configuration and artifacts.
 
 ## Basic Usage
 
-To work with a run, first load it using either the constructor or the
-`load` class method:
+To work with a run, first load it using either
+the constructor or the
+[`Run.load`][hydraflow.core.run.Run.load] class method:
 
 ```python
 from hydraflow import Run
@@ -20,21 +21,40 @@ run = Run(run_dir)
 
 # Using load method with string path
 run = Run.load("mlruns/exp_id/run_id")
-
-# Access run information
-print(f"Run ID: {run.info.run_id}")
-print(f"Job name: {run.info.job_name}")
-print(f"Configuration: {run.cfg}")
 ```
 
 ## Access Run Data
 
-The `Run` class provides access to various aspects of the experiment:
+The `Run` class provides access to run information and configuration.
+
+### Run Information
+
+The `info` attribute provides the following information:
 
 ```python
-# Access configuration
-learning_rate = run.get("learning_rate")  # Access by key
-model_type = run.get("model.type")  # Nested access with dot notation
+print(f"Run ID: {run.info.run_id}")
+print(f"Run Directory: {run.info.run_dir}")
+print(f"Job name: {run.info.job_name}")
+```
+
+### Run Configuration
+
+The `cfg` attribute provides the entire configuration:
+
+```python
+# Access entire configuration
+print(f"Configuration: {run.cfg}")
+```
+
+You can also access configuration values by key using
+the [`get`][hydraflow.core.run.Run.get] method:
+
+```python
+# Access configuration by key
+learning_rate = run.get("learning_rate")
+
+# Nested access with dot notation
+model_type = run.get("model.type")
 ```
 
 ## Type-Safe Configuration Access
@@ -74,7 +94,8 @@ seed = run.cfg.seed
 
 ## Custom Implementation Classes
 
-The `Run` class can be extended with custom implementation classes to add
+The `Run` class can be extended with custom
+implementation classes to add
 domain-specific functionality:
 
 ```python
@@ -96,7 +117,12 @@ class ModelLoader:
 
 # Create a Run with implementation
 run = Run[Config, ModelLoader](run_dir, ModelLoader)
+```
 
+The `impl` attribute provides access to the
+implementation class instance:
+
+```python
 # Access implementation methods
 weights = run.impl.load_weights()
 results = run.impl.evaluate(test_data)
