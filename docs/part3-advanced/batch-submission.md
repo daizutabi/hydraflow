@@ -13,7 +13,7 @@ jobs:
   train:
     submit: sbatch --partition=gpu --nodes=1 job.sh
     sets:
-      - batch: >-
+      - each: >-
           model=small,large
           learning_rate=0.1,0.01
 ```
@@ -43,9 +43,9 @@ submitting jobs to a Slurm cluster:
 jobs:
   train:
     submit: sbatch --partition=gpu --nodes=1 --ntasks=1 --cpus-per-task=4 --gres=gpu:1
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 This submits a batch file to Slurm that processes all combinations,
@@ -59,9 +59,9 @@ For PBS/Torque clusters:
 jobs:
   train:
     submit: qsub -l select=1:ncpus=4:ngpus=1 -q gpu_queue
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 ### SGE (Sun Grid Engine)
@@ -72,9 +72,9 @@ For SGE clusters:
 jobs:
   train:
     submit: qsub -l gpu=1 -q ml.q
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 ### LSF
@@ -85,9 +85,9 @@ For LSF clusters:
 jobs:
   train:
     submit: bsub -q gpu -n 4 -gpu "num=1"
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 ## Using Job Templates
@@ -100,7 +100,7 @@ jobs:
   train:
     submit: sbatch job_template.sh
     sets:
-      - batch: model=resnet,vgg
+      - each: model=resnet,vgg
 ```
 
 Where `job_template.sh` might look like:
@@ -119,7 +119,7 @@ Where `job_template.sh` might look like:
 eval "$@"
 ```
 
-## Resource Configuration with `with`
+## Resource Configuration with `add`
 
 You can specify different Hydra configurations for different parameter sets:
 
@@ -129,19 +129,19 @@ jobs:
     submit: sbatch job.sh
     sets:
       # Small models use fewer resources
-      - batch: model=small
-        with: >-
+      - each: model=small
+        add: >-
           hydra.launcher.submitit.params.gres=gpu:1
           hydra.launcher.submitit.params.mem=8G
 
       # Large models need more resources
-      - batch: model=large
-        with: >-
+      - each: model=large
+        add: >-
           hydra.launcher.submitit.params.gres=gpu:2
           hydra.launcher.submitit.params.mem=32G
 ```
 
-The `with` parameter appends additional arguments to each command, which can
+The `add` parameter appends additional arguments to each command, which can
 be used to pass Hydra configuration options.
 
 ## Passing Environment Variables
@@ -154,7 +154,7 @@ jobs:
   train:
     submit: sbatch job.sh
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 And in your `job.sh`:
@@ -182,7 +182,7 @@ jobs:
   train:
     submit: sbatch --array=0-3 job_array.sh
     sets:
-      - batch: model=small,large learning_rate=0.1,0.01
+      - each: model=small,large learning_rate=0.1,0.01
 ```
 
 In your job script, you would access the array index:
@@ -205,9 +205,9 @@ You can use GNU Parallel for local parallelization:
 jobs:
   train:
     submit: parallel -j 4
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 ## Custom Submission Systems
@@ -218,9 +218,9 @@ You can create a custom submission script for any environment:
 jobs:
   train:
     submit: ./my_custom_submitter.py --resource=gpu
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg dataset=imagenet,cifar
+      - each: model=resnet,vgg dataset=imagenet,cifar
 ```
 
 ## Handling Job Dependencies
@@ -232,15 +232,15 @@ features:
 jobs:
   preprocess:
     submit: sbatch --parsable job.sh
-    with: python preprocess.py
+    add: python preprocess.py
     sets:
-      - batch: dataset=imagenet,cifar
+      - each: dataset=imagenet,cifar
 
   train:
     submit: sbatch --dependency=afterok:$PREPROCESS_JOB_ID job.sh
-    with: python train.py
+    add: python train.py
     sets:
-      - batch: model=resnet,vgg
+      - each: model=resnet,vgg
 ```
 
 You would need to capture and store the job ID from the first submission.
@@ -298,8 +298,8 @@ jobs:
   test_run:
     submit: sbatch job.sh
     sets:
-      - batch: model=small
-      - args: debug=true max_steps=100
+      - each: model=small
+      - all: debug=true max_steps=100
 ```
 
 ### Document Job Requirements
@@ -317,23 +317,23 @@ jobs:
     # ...
 ```
 
-### Configure Hydra Options with `with`
+### Configure Hydra Options with `add`
 
-Use the `with` parameter to configure Hydra options:
+Use the `add` parameter to configure Hydra options:
 
 ```yaml
 jobs:
   train:
     submit: sbatch job.sh
-    with: >-
+    add: >-
       hydra/launcher=submitit_slurm
       hydra.launcher.submitit.params.partition=gpu
     sets:
-      - batch: model=small
-        with: hydra.launcher.submitit.params.gres=gpu:1
+      - each: model=small
+        add: hydra.launcher.submitit.params.gres=gpu:1
 
-      - batch: model=large
-        with: hydra.launcher.submitit.params.gres=gpu:4
+      - each: model=large
+        add: hydra.launcher.submitit.params.gres=gpu:4
 ```
 
 This appends Hydra configuration options to each command.

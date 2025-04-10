@@ -51,12 +51,12 @@ jobs:
     run: python train.py
     sets:
       # First independent parameter set
-      - batch: >-
+      - each: >-
           model=small,large
           learning_rate=0.1,0.2
 
       # Second independent parameter set
-      - batch: >-
+      - each: >-
           optimizer=adam,sgd
           dropout=0.1,0.2
 ```
@@ -115,17 +115,17 @@ $ python train.py optimizer=adam dropout=0.2
 $ python train.py optimizer=sgd dropout=0.2
 ```
 
-### 5. Parameter Types: `batch`, `args`, and `with`
+### 5. Parameter Types: `each`, `all`, and `add`
 
 HydraFlow supports three types of parameters for configuring your commands:
 
-- **`batch`**: Creates a grid of parameter combinations, each resulting in a separate
-  command. These are swept using the sweep syntax.
+- **`each`**: Creates a grid of parameter combinations, each resulting in a separate
+  command. Parameters are expanded using the sweep syntax to generate multiple commands.
 
-- **`args`**: Parameters included in every command from the set. These parameters
-  can also use the sweep syntax, but all expansions will be included in each command.
+- **`all`**: Parameters included in every command from the set. These parameters
+  can also use the sweep syntax, but all parameters are included as-is in each command.
 
-- **`with`**: Additional arguments appended to the end of each command, primarily used
+- **`add`**: Additional arguments appended to the end of each command, primarily used
   for Hydra configuration. These are passed as-is, without any expansion.
 
 Example of the three parameter types:
@@ -134,11 +134,11 @@ Example of the three parameter types:
 jobs:
   train:
     run: python train.py
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level with
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level add
     sets:
-      - batch: model=small,large  # Creates multiple commands
-      - args: seed=42 debug=true  # Included in every command
-      - with: hydra.job.num_nodes=1  # Appended to every command
+      - each: model=small,large  # Creates multiple commands
+      - all: seed=42 debug=true  # Included in every command
+      - add: hydra.job.num_nodes=1  # Appended to every command
 ```
 
 This generates:
@@ -148,7 +148,7 @@ $ python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.lau
 $ python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
 ```
 
-Note that the set-level `with` would override the job-level `with` if both were specified.
+Note that the set-level `add` would override the job-level `add` if both were specified.
 
 ### 6. Parallelize with Submission Commands
 
@@ -160,12 +160,12 @@ jobs to run in parallel on a cluster:
 jobs:
   train:
     submit: sbatch --partition=gpu --nodes=1 job.sh
-    with: hydra/launcher=submitit_slurm
+    add: hydra/launcher=submitit_slurm
     sets:
-      - batch: >-
+      - each: >-
           model=small,large
           learning_rate=0.1,0.2
-      - args: seed=42
+      - all: seed=42
 ```
 
 This approach offers several advantages:

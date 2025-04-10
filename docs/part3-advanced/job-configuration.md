@@ -14,7 +14,7 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: >-
+      - each: >-
           model=small,large
           learning_rate=0.1,0.01
 ```
@@ -26,7 +26,7 @@ The configuration file uses the following structure:
 - `jobs`: The top-level key containing all job definitions
   - `<job_name>`: Name of the job (e.g., "train")
     - `run`: The command to execute
-    - `with`: Global configuration arguments appended to each command
+    - `add`: Global configuration arguments appended to each command
     - `sets`: List of parameter sets for the job
 
 Each job must have either a `run`, `call`, or `submit` key, and at least one
@@ -45,7 +45,7 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 ### `call`
@@ -57,7 +57,7 @@ jobs:
   train:
     call: my_module.train_function
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 The specified function will be imported and called with the parameters.
@@ -71,7 +71,7 @@ jobs:
   train:
     submit: sbatch --partition=gpu job.sh
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 The parameters will be passed to the submit command.
@@ -81,14 +81,14 @@ The parameters will be passed to the submit command.
 Each job contains one or more parameter sets under the `sets` key.
 Each set can include the following types of parameters:
 
-### `batch`
+### `each`
 
-The `batch` parameter defines a grid of parameter combinations. Each combination
+The `each` parameter defines a grid of parameter combinations. Each combination
 will be executed as a separate command:
 
 ```yaml
 sets:
-  - batch: >-
+  - each: >-
       model=small,large
       learning_rate=0.1,0.01
 ```
@@ -96,34 +96,34 @@ sets:
 This will generate four separate executions, one for each combination of
 model and learning rate.
 
-### `args`
+### `all`
 
-The `args` parameter defines parameters that will be included in each
+The `all` parameter defines parameters that will be included in each
 execution from the set:
 
 ```yaml
 sets:
-  - batch: model=small,large
-  - args: seed=42 debug=true
+  - each: model=small,large
+  - all: seed=42 debug=true
 ```
 
 This will include `seed=42 debug=true` in every execution for the set.
 
-### `with`
+### `add`
 
-The `with` parameter adds additional arguments that are appended to the end
+The `add` parameter adds additional arguments that are appended to the end
 of each command. This is primarily used for Hydra configuration settings:
 
 ```yaml
 sets:
-  - batch: model=small,large
-  - with: >-
+  - each: model=small,large
+  - add: >-
       hydra/launcher=joblib
       hydra.launcher.n_jobs=4
 ```
 
 This will append Hydra configuration to each command from the set.
-If a set has its own `with` parameter, it overrides the job-level `with` parameter
+If a set has its own `add` parameter, it overrides the job-level `add` parameter
 (they are not merged).
 
 ## Multiple Parameter Sets
@@ -136,12 +136,12 @@ jobs:
     run: python train.py
     sets:
       # First set: Train models with different architectures
-      - batch: >-
+      - each: >-
           model=small,large
           optimizer=adam
 
       # Second set: Train models with different learning rates
-      - batch: >-
+      - each: >-
           model=medium
           learning_rate=0.1,0.01,0.001
 ```
@@ -158,9 +158,9 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: model=small,large
-      - args: seed=42 debug=true
-      - with: hydra/launcher=joblib hydra.launcher.n_jobs=4
+      - each: model=small,large
+      - all: seed=42 debug=true
+      - add: hydra/launcher=joblib hydra.launcher.n_jobs=4
 ```
 
 This will execute:
@@ -170,26 +170,26 @@ python train.py model=small seed=42 debug=true hydra/launcher=joblib hydra.launc
 python train.py model=large seed=42 debug=true hydra/launcher=joblib hydra.launcher.n_jobs=4
 ```
 
-## Job-level and Set-level `with`
+## Job-level and Set-level `add`
 
-You can specify `with` at both the job level and set level:
+You can specify `add` at both the job level and set level:
 
 ```yaml
 jobs:
   train:
     run: python train.py
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
-      # Uses job-level with
-      - batch: model=small,large
+      # Uses job-level add
+      - each: model=small,large
 
-      # Overrides job-level with
-      - batch: model=xlarge
-        with: hydra/launcher=joblib hydra.launcher.n_jobs=8
+      # Overrides job-level add
+      - each: model=xlarge
+        add: hydra/launcher=joblib hydra.launcher.n_jobs=8
 ```
 
-When a set has its own `with` parameter, it completely overrides the job-level
-`with` parameter (they are not merged or appended).
+When a set has its own `add` parameter, it completely overrides the job-level
+`add` parameter (they are not merged or appended).
 
 ## Extended Sweep Syntax
 
@@ -200,7 +200,7 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: >-
+      - each: >-
           model=small,large
           learning_rate=logspace(0.1,0.001,4)
           weight_decay=0,1e-4,1e-5
@@ -218,14 +218,14 @@ jobs:
   base_train:
     run: python train.py
     sets:
-      - args: batch_size=32 seed=42
+      - all: batch_size=32 seed=42
 
   finetune:
     run: python train.py
     inherit: base_train
     sets:
-      - batch: model=small,large
-      - args: learning_rate=0.0001
+      - each: model=small,large
+      - all: learning_rate=0.0001
 ```
 
 The `finetune` job inherits the `run` command and the parameter sets from
@@ -240,7 +240,7 @@ jobs:
   base_train:
     run: python train.py
     sets:
-      - args: batch_size=32 seed=42
+      - all: batch_size=32 seed=42
 
   finetune:
     # Override the command
@@ -248,7 +248,7 @@ jobs:
     inherit: base_train
     sets:
       # Add new parameter sets
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 ## Inheritance Chains
@@ -260,17 +260,17 @@ jobs:
   base:
     run: python train.py
     sets:
-      - args: batch_size=32
+      - all: batch_size=32
 
   train:
     inherit: base
     sets:
-      - args: seed=42
+      - all: seed=42
 
   finetune:
     inherit: train
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 ```
 
 ## Using Variables
@@ -286,7 +286,7 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: >-
+      - each: >-
           model=${models}
           learning_rate=${base_lr}
 ```
@@ -302,11 +302,11 @@ jobs:
   train:
     run: python train.py
     sets:
-      - batch: model=small,large
+      - each: model=small,large
 
       # Only included if DEBUG=1 is set
       - if: ${env:DEBUG} == 1
-        args: debug=true verbose=true
+        all: debug=true verbose=true
 ```
 
 The condition is evaluated when the job is executed.
@@ -336,10 +336,10 @@ You can define reusable parameter sets and reference them:
 ```yaml
 param_sets:
   common:
-    args: seed=42 batch_size=32
+    all: seed=42 batch_size=32
 
   models:
-    batch: model=small,large
+    each: model=small,large
 
 jobs:
   train:
@@ -363,10 +363,10 @@ variables:
 
 param_sets:
   common:
-    args: seed=42 batch_size=32 epochs=100
+    all: seed=42 batch_size=32 epochs=100
 
   optimization:
-    batch: >-
+    each: >-
       optimizer=adam,sgd
       learning_rate=${base_lr},${base_lr}*0.1
 
@@ -374,7 +374,7 @@ jobs:
   # Base job definition
   base_train:
     run: python train.py
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=2
     sets:
       - use: common
 
@@ -382,7 +382,7 @@ jobs:
   train:
     inherit: base_train
     sets:
-      - batch: model=${models}
+      - each: model=${models}
       - use: optimization
 
   # Evaluation job
@@ -390,17 +390,17 @@ jobs:
     run: python evaluate.py
     sets:
       - use: common
-      - batch: model=${models}
-      - args: eval_split=test
+      - each: model=${models}
+      - all: eval_split=test
 
   # Fine-tuning job with higher parallelism
   finetune:
     inherit: train
     run: python finetune.py
     sets:
-      - batch: model=large,xlarge
-        with: hydra/launcher=joblib hydra.launcher.n_jobs=8
-      - args: pretrained=true learning_rate=${base_lr}*0.01
+      - each: model=large,xlarge
+        add: hydra/launcher=joblib hydra.launcher.n_jobs=8
+      - all: pretrained=true learning_rate=${base_lr}*0.01
 ```
 
 ## Best Practices
@@ -412,12 +412,12 @@ Group related parameters together in the same set:
 ```yaml
 sets:
   # Model architecture parameters
-  - batch: >-
+  - each: >-
       model=small,large
       num_layers=2,4,6
 
   # Optimization parameters
-  - batch: >-
+  - each: >-
       optimizer=adam,sgd
       learning_rate=0.1,0.01
 ```
@@ -459,7 +459,7 @@ jobs:
   train:
     # ...
     sets:
-      - args: epochs=${base_epochs} batch_size=${base_batch_size}
+      - all: epochs=${base_epochs} batch_size=${base_batch_size}
 ```
 
 ### Document Your Configurations
@@ -471,15 +471,15 @@ jobs:
   train:
     run: python train.py
     # Use parallel execution for faster processing
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=4
+    add: hydra/launcher=joblib hydra.launcher.n_jobs=4
     sets:
       # These parameters control the model architecture
-      - batch: >-
+      - each: >-
           model=small,large  # Model size
           num_layers=2,4     # Number of transformer layers
 
       # These control the optimization process
-      - batch: >-
+      - each: >-
           optimizer=adam,sgd  # Optimization algorithm
 ```
 
