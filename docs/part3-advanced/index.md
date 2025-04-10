@@ -37,31 +37,90 @@ HydraFlow's advanced workflow capabilities are built around these components:
 
 ## Basic Workflow
 
-```yaml
-# 1. Define a job in hydraflow.yaml
+HydraFlow's workflow management centers around the `hydraflow` CLI, which
+provides a structured approach to executing complex experiment jobs.
+
+### 1. Define a Job
+
+Create a `hydraflow.yaml` file in your project directory to define reusable job
+configurations:
+
+```yaml title="hydraflow.yaml"
 jobs:
   train:
     run: python train.py
     steps:
-      # Each combination creates a separate execution (sequential unless using 'submit')
+      # Each combination creates a separate execution
       - batch: >-
-          model=transformer,lstm
-          learning_rate=0.1,0.01,0.001
+          model=small,large
+          learning_rate=0.1,0.2
 
-      # Parameters that will be expanded but included in each batch execution
-      - args: optimizer=adam,sgd  # Expanded but included with each batch command
+      # Parameters included in each batch execution
+      - args: optimizer=adam,sgd
 ```
+
+This configuration defines a job named `train` that will execute `train.py` with
+different parameter combinations. The `batch` step creates a grid of parameters
+(model and learning rate), while the `args` step adds parameters to each execution.
+
+### 2. Validate with Dry Run
+
+Before executing, validate your job configuration with the `--dry-run` flag:
 
 ```bash
-# 2. Run the job using the CLI
-$ hydraflow run train
-
-# 3. Or perform a dry run to see expanded commands
 $ hydraflow run train --dry-run
+```
 
-# 4. Submit to a cluster
+This command displays the exact commands that would be executed without actually
+running them, allowing you to verify parameter combinations and execution flow.
+
+### 3. Execute the Job
+
+Once validated, run the job with:
+
+```bash
 $ hydraflow run train
 ```
+
+This executes the following commands sequentially:
+
+```bash
+$ python train.py model=small learning_rate=0.1 optimizer=adam,sgd
+$ python train.py model=large learning_rate=0.1 optimizer=adam,sgd
+$ python train.py model=small learning_rate=0.2 optimizer=adam,sgd
+$ python train.py model=large learning_rate=0.2 optimizer=adam,sgd
+```
+
+When `train.py` is a Hydra application, it will perform an inner sweep on the `optimizer`
+parameter while keeping `model` and `learning_rate` fixed for each run. This creates
+a total of 8 combinations (2 models × 2 learning rates × 2 optimizers).
+
+### Parallelize with Submission Commands
+
+The true power of HydraFlow's workflow management emerges when using job submission
+commands like `sbatch` or `qsub`. Instead of running sequentially, you can submit
+jobs to run in parallel on a cluster:
+
+```yaml title="hydraflow.yaml"
+jobs:
+  train:
+    submit: sbatch --partition=gpu --nodes=1 job.sh
+    steps:
+      - batch: >-
+          model=small,large
+          learning_rate=0.1,0.2
+      - args: optimizer=adam,sgd
+```
+
+This approach offers several advantages:
+
+- **Parallelization**: Execute multiple parameter combinations simultaneously
+- **Resource Optimization**: Allocate appropriate resources to each job
+- **Scalability**: Easily scale to hundreds or thousands of experiments
+- **Fault Isolation**: Failures in one job don't affect others
+
+This separation of batch parameters and inner-sweep parameters allows for efficient
+resource allocation while maintaining the flexibility of Hydra's parameter sweeping.
 
 ## When to Use Advanced Workflows
 
