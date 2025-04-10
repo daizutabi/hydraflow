@@ -18,7 +18,7 @@ The batch submission capabilities allow you to:
 To use batch submission, define a job with the `submit` property:
 
 ```yaml
-# .hydraflow.yaml
+# hydraflow.yaml
 jobs:
   train:
     submit: sbatch --partition=gpu --time=4:00:00

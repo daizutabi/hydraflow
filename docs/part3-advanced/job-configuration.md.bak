@@ -217,6 +217,42 @@ jobs:
 
 ## Example Configuration
 
+Complete example of a `.hydraflow.yaml` file:
+
+```yaml
+jobs:
+  preprocess:
+    run: python preprocess.py
+    with: --dataset=imagenet
+
+  train:
+    run: python train.py
+    with: >-
+      --config=configs/base.yaml
+      --seed=42
+    steps:
+      - batch: >-
+          model=resnet50,efficientnet
+          learning_rate=0.1:0.001:0.0001
+
+      - batch: >-
+          model=transformer
+          learning_rate=0.01,0.001
+          attention_heads=4,8
+
+  evaluate:
+    run: python evaluate.py
+    with: --metrics=accuracy,precision,recall
+    steps:
+      - batch: model=best,checkpoint
+
+  deploy:
+    run: python deploy.py
+    with: --production
+```
+
+## Example Configuration
+
 Complete example of a `hydraflow.yaml` file:
 
 ```yaml
@@ -249,3 +285,4 @@ jobs:
   deploy:
     run: python deploy.py
     with: --production
+```

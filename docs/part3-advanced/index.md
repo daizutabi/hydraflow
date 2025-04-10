@@ -38,7 +38,7 @@ HydraFlow's advanced workflow capabilities are built around these components:
 ## Basic Workflow
 
 ```python
-# 1. Define a job in .hydraflow.yaml
+# 1. Define a job in hydraflow.yaml
 jobs:
   train:
     run: python train.py
