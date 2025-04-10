@@ -29,50 +29,17 @@ uv pip install hydraflow
 
 These commands install the core framework with minimal dependencies.
 
-## Development Installation
-
-For development or to access the latest features, install directly from
-the GitHub repository:
-
-```bash
-# Clone the repository
-git clone https://github.com/username/hydraflow.git
-cd hydraflow
-
-# Install with pip
-pip install -e ".[dev]"
-
-# Or install with uv
-uv pip install -e ".[dev]"
-```
-
-Installing with the `[dev]` extra includes development tools like pytest,
-black, and other utilities necessary for contributing to the project.
-
-## Optional Dependencies
-
-HydraFlow offers additional features through optional dependencies:
-
-```bash
-# Install with visualization support using pip
-pip install "hydraflow[viz]"
-
-# Install with visualization support using uv
-uv pip install "hydraflow[viz]"
-
-# Install with all optional dependencies
-pip install "hydraflow[all]"  # or use uv pip
-```
-
 ## Verifying Installation
 
-After installation, verify that HydraFlow is correctly installed:
+After installation, verify that HydraFlow is correctly installed by running
+the CLI command:
 
 ```bash
-python -c "import hydraflow; print(hydraflow.__version__)"
+hydraflow --help
 ```
 
-This should print the current version of HydraFlow.
+This should display the help message and available commands, confirming that
+HydraFlow is properly installed and accessible from your terminal.
 
 ## Environment Setup
 
@@ -106,7 +73,7 @@ If you encounter issues during installation:
    installed for your platform
 
 For persistent issues, please check the
-[GitHub issues](https://github.com/username/hydraflow/issues) or open a
+[GitHub issues](https://github.com/daizutabi/hydraflow/issues) or open a
 new issue with details about your environment and the error message.
 
 ## Next Steps
