@@ -1,4 +1,9 @@
-# Quickstart
+# HydraFlow Quickstart Guide
+
+HydraFlow seamlessly integrates MLflow (for experiment tracking)
+with Hydra (for configuration management), creating a powerful
+framework for machine learning experimentation.
+This quickstart shows you how to get up and running with HydraFlow in minutes.
 
 ## Hydra application
 
@@ -10,13 +15,14 @@ The following example demonstrates how to use a Hydraflow application.
 
 ### Hydraflow's `main` decorator
 
-[`hydraflow.main`][] starts a new MLflow run that logs the Hydra configuration.
-The decorated function must have two arguments: `run` and `cfg`.
-The `run` argument is the current MLflow run with type `mlflow.entities.Run`.
-The `cfg` argument is the Hydra configuration with type `omegaconf.DictConfig`.
-You can annotate the arguments with `Run` and `Config` to get type checking and
-autocompletion in your IDE, although the `cfg` argument is not actually an
-instance of `Config` (duck typing is used).
+[`hydraflow.main`][] starts a new MLflow run that logs the Hydra
+configuration. The decorated function must have two arguments: `run` and
+`cfg`. The `run` argument is the current MLflow run with type
+`mlflow.entities.Run`. The `cfg` argument is the Hydra configuration
+with type `omegaconf.DictConfig`. You can annotate the arguments with
+`Run` and `Config` to get type checking and autocompletion in your IDE,
+although the `cfg` argument is not actually an instance of `Config`
+(duck typing is used).
 
 ```python
 @hydraflow.main(Config)
@@ -58,9 +64,9 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 
 ### Iterate over run's directory
 
-The [`hydraflow.iter_run_dirs`][] function iterates over the run directories.
-The first argument is the path to the MLflow tracking root directory
-(in most cases, this is `"mlruns"`).
+The [`hydraflow.iter_run_dirs`][] function iterates over the run
+directories. The first argument is the path to the MLflow tracking root
+directory (in most cases, this is `"mlruns"`).
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> import hydraflow
@@ -77,10 +83,10 @@ Optionally, you can specify the experiment name(s) to filter the runs.
 
 ### Load a run
 
-[`Run`][hydraflow.core.run.Run] is a class that represents a *Hydraflow* run,
-not an MLflow run.
-A `Run` instance is created by passing a `pathlib.Path`
-instance that points to the run directory to the `Run` constructor.
+[`Run`][hydraflow.core.run.Run] is a class that represents a *Hydraflow*
+run, not an MLflow run. A `Run` instance is created by passing a
+`pathlib.Path` instance that points to the run directory to the `Run`
+constructor.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import Run
@@ -91,9 +97,8 @@ instance that points to the run directory to the `Run` constructor.
 >>> print(type(run))
 ```
 
-You can use the [`load`][hydraflow.core.run.Run.load]
-class method to load a `Run` instance,
-which accepts a `str` as well as `pathlib.Path`.
+You can use the [`load`][hydraflow.core.run.Run.load] class method to
+load a `Run` instance, which accepts a `str` as well as `pathlib.Path`.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> Run.load(str(run_dir))
@@ -105,7 +110,8 @@ which accepts a `str` as well as `pathlib.Path`.
     from run directories as described below.
 
 
-The `Run` instance has an `info` attribute that contains information about the run.
+The `Run` instance has an `info` attribute that contains information
+about the run.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.info.run_dir)
@@ -113,7 +119,8 @@ The `Run` instance has an `info` attribute that contains information about the r
 >>> print(run.info.job_name)  # Hydra job name = MLflow experiment name
 ```
 
-The `Run` instance has a `cfg` attribute that contains the Hydra configuration.
+The `Run` instance has a `cfg` attribute that contains the Hydra
+configuration.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.cfg)
@@ -121,7 +128,8 @@ The `Run` instance has a `cfg` attribute that contains the Hydra configuration.
 
 ### Configuration type of the run
 
-Optionally, you can specify the config type of the run using the `Run[C]` class.
+Optionally, you can specify the config type of the run using the
+`Run[C]` class.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from dataclasses import dataclass
@@ -136,9 +144,8 @@ Optionally, you can specify the config type of the run using the `Run[C]` class.
 ```
 
 The `Run[C]` class is a generic class that takes a config type `C` as a
-type parameter.
-The `run.cfg` attribute is recognized as `C` type in IDEs,
-which provides autocompletion and type checking.
+type parameter. The `run.cfg` attribute is recognized as `C` type in
+IDEs, which provides autocompletion and type checking.
 
 ### Get a run's configuration
 
@@ -151,12 +158,12 @@ The `get` method can be used to get a run's configuration.
 
 ### Implementation of the run
 
-Optionally, you can specify the implementation of the run.
-Use the `Run[C, I]` class to specify the implementation type.
-The second argument `impl_factory` is the implementation factory.
-which can be a class or a function to generate the implementation.
-The `impl_factory` is called with the run's artifacts directory
-as the first and only argument.
+Optionally, you can specify the implementation of the run. Use the
+`Run[C, I]` class to specify the implementation type. The second
+argument `impl_factory` is the implementation factory, which can be a
+class or a function to generate the implementation. The `impl_factory`
+is called with the run's artifacts directory as the first and only
+argument.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from pathlib import Path
@@ -170,13 +177,13 @@ as the first and only argument.
 >>> print(run)
 ```
 
-The representation of the `Run` instance includes the implementation type
-as shown above.
+The representation of the `Run` instance includes the implementation
+type as shown above.
 
-If you specify the implementation type, the `run.impl` attribute
-is lazily initialized at the first time of the `run.impl` attribute access.
-The `run.impl` attribute is recognized as `I` type in IDEs,
-which provides autocompletion and type checking.
+If you specify the implementation type, the `run.impl` attribute is
+lazily initialized at the first time of the `run.impl` attribute access.
+The `run.impl` attribute is recognized as `I` type in IDEs, which
+provides autocompletion and type checking.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.impl)
@@ -185,8 +192,8 @@ which provides autocompletion and type checking.
 >>> # run.impl.[TAB]
 ```
 
-The `impl_factory` can accept two arguments: the run's artifacts directory
-and the run's configuration.
+The `impl_factory` can accept two arguments: the run's artifacts
+directory and the run's configuration.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from dataclasses import dataclass, field
@@ -204,8 +211,8 @@ and the run's configuration.
 
 ### Collect runs
 
-You can collect multiple `Run` instances from run directories
-as a collection of runs [`RunCollection`][hydraflow.RunCollection].
+You can collect multiple `Run` instances from run directories as a
+collection of runs [`RunCollection`][hydraflow.RunCollection].
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import RunCollection
@@ -214,47 +221,46 @@ as a collection of runs [`RunCollection`][hydraflow.RunCollection].
 >>> print(rc)
 ```
 
-In the above example, the `load` class method is called with an
-iterable of run directories and the implementation type.
-The `load` class method returns a `RunCollection` instance
-instead of a single `Run` instance.
-The representation of the `RunCollection` instance includes
-the run collection type and the number of runs in the collection.
+In the above example, the `load` class method is called with an iterable
+of run directories and the implementation type. The `load` class method
+returns a `RunCollection` instance instead of a single `Run` instance.
+The representation of the `RunCollection` instance includes the run
+collection type and the number of runs in the collection.
 
 ### Handle a run collection
 
-The `RunCollection` instance has a
-[`first`][hydraflow.RunCollection.first] and
-[`last`][hydraflow.RunCollection.last] method that
-returns the first and last run in the collection.
+The `RunCollection` instance has a [`first`][hydraflow.RunCollection.first]
+and [`last`][hydraflow.RunCollection.last] method that returns the first
+and last run in the collection.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.first())
 >>> print(rc.last())
 ```
 
-The [`filter`][hydraflow.RunCollection.filter] method
-filters the runs by the given key-value pairs.
+The [`filter`][hydraflow.RunCollection.filter] method filters the runs
+by the given key-value pairs.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.filter(width=400))
 ```
 
-If the value is a list, the run will be included if the value is in the list.
+If the value is a list, the run will be included if the value is in the
+list.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.filter(height=[100, 300]))
 ```
 
-If the value is a tuple, the run will be included if the value is between the tuple.
-The start and end of the tuple are inclusive.
+If the value is a tuple, the run will be included if the value is
+between the tuple. The start and end of the tuple are inclusive.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.filter(height=(100, 300)))
 ```
 
-The [`get`][hydraflow.RunCollection.get] method
-returns a single `Run` instance with the given key-value pairs.
+The [`get`][hydraflow.RunCollection.get] method returns a single `Run`
+instance with the given key-value pairs.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> run = rc.get(width=(350, 450), height=(150, 250))
@@ -262,16 +268,16 @@ returns a single `Run` instance with the given key-value pairs.
 >>> print(run.impl)
 ```
 
-The [`to_frame`][hydraflow.RunCollection.to_frame] method
-returns a polars DataFrame of the run collection.
+The [`to_frame`][hydraflow.RunCollection.to_frame] method returns a
+polars DataFrame of the run collection.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.to_frame("width", "height"))
 ```
 
-The `to_frame` method can take keyword arguments to
-customize the DataFrame. Each keyword argument is a callable
-that takes a `Run` instance and returns a value.
+The `to_frame` method can take keyword arguments to customize the
+DataFrame. Each keyword argument is a callable that takes a `Run`
+instance and returns a value.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(rc.to_frame("width", size=lambda run: run.impl.size))
@@ -297,8 +303,8 @@ The callable can also return a dictionary.
 
 ### Group runs
 
-The [`group_by`][hydraflow.RunCollection.group_by]
-method groups the runs by the given key.
+The [`group_by`][hydraflow.RunCollection.group_by] method groups the
+runs by the given key.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> grouped = rc.group_by("width")
@@ -314,9 +320,9 @@ The `group_by` method can also take multiple keys.
 ...     print(key, group)
 ```
 
-The `group_by` method can also take a callable which accepts a sequence of runs
-and returns a value.
-In this case, the `group_by` method returns a polars DataFrame.
+The `group_by` method can also take a callable which accepts a sequence
+of runs and returns a value. In this case, the `group_by` method returns
+a polars DataFrame.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> df = rc.group_by("width", n=lambda runs: len(runs))
