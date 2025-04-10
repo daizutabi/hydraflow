@@ -14,11 +14,13 @@ python train.py
 
 This will:
 
-1. Initialize the Hydra environment
-2. Create a new MLflow run
-3. Load the configuration with default values
+1. Set up an MLflow experiment with the same name as the Hydra job name (using `mlflow.set_experiment`). If the experiment doesn't exist, it will be created automatically
+2. Create a new MLflow run or reuse an existing one based on the configuration
+3. Save the Hydra configuration as an MLflow artifact
 4. Execute your function decorated with `@hydraflow.main`
-5. Save all outputs and logs
+5. Save only `*.log` files from Hydra's output directory as MLflow artifacts
+
+Note that any other artifacts (models, data files, etc.) must be explicitly saved by your code using MLflow's logging functions. The `chdir` option in the `@hydraflow.main` decorator can help with this by changing the working directory to the run's artifact directory, making file operations more convenient.
 
 ## Command-line Override Syntax
 
@@ -93,7 +95,7 @@ mlruns/
 
 ## Customizing Output Directories
 
-You can customize the output directory structure in your Hydra configuration:
+HydraFlow applications inherit Hydra's ability to customize output directory structures. This can be done through your Hydra configuration:
 
 ```yaml
 # conf/config.yaml
@@ -105,10 +107,11 @@ hydra:
     subdir: ${hydra.job.num}
 ```
 
+For more customization options, refer to the [Hydra documentation on output directory configuration](https://hydra.cc/docs/configure_hydra/workdir/).
+
 ## Experiment Name and Tracking
 
-HydraFlow uses the application name as the experiment name in MLflow. You can
-customize this:
+When using HydraFlow, you can leverage MLflow's experiment naming and tracking capabilities:
 
 ```python
 @hydraflow.main(Config, run_name="custom_experiment")
@@ -116,7 +119,7 @@ def train(run, cfg: Config) -> None:
     # Your code here
 ```
 
-You can also set the MLflow tracking URI:
+For remote tracking servers and other MLflow configurations, use MLflow's standard approach:
 
 ```bash
 # Set before running the application
@@ -127,26 +130,26 @@ import mlflow
 mlflow.set_tracking_uri("http://localhost:5000")
 ```
 
+For more MLflow tracking options, see the [MLflow tracking documentation](https://www.mlflow.org/docs/latest/tracking.html).
+
 ## Working with Output Files
 
-HydraFlow automatically changes the working directory to the output directory
-when executing your application. This means you can simply use relative paths
-for output files:
+The default Hydra behavior of changing working directories applies to HydraFlow applications as well. If you've enabled the `chdir` option in the `@hydraflow.main` decorator:
 
 ```python
-@hydraflow.main(Config)
+@hydraflow.main(Config, chdir=True)
 def train(run, cfg: Config) -> None:
     # Files will be saved in the run's output directory
     torch.save(model.state_dict(), "model.pt")
 
-    # To get the original working directory
+    # To get the original working directory (Hydra utility)
     original_dir = hydra.utils.get_original_cwd()
     data_path = os.path.join(original_dir, "data/train.csv")
 ```
 
 ## Logging Metrics and Artifacts
 
-During execution, you can log metrics and artifacts to MLflow:
+Standard MLflow logging functions work seamlessly in HydraFlow applications:
 
 ```python
 @hydraflow.main(Config)
@@ -155,18 +158,18 @@ def train(run, cfg: Config) -> None:
     for epoch in range(cfg.epochs):
         # ...training code...
 
-        # Log metrics
-        hydraflow.log_metric("accuracy", accuracy, step=epoch)
-        hydraflow.log_metric("loss", loss, step=epoch)
+        # Log metrics using MLflow
+        mlflow.log_metric("accuracy", accuracy, step=epoch)
+        mlflow.log_metric("loss", loss, step=epoch)
 
-    # Log artifacts
-    hydraflow.log_artifact("model.pt", "Model checkpoint")
-    hydraflow.log_artifact("results.csv", "Evaluation results")
+    # Log artifacts using MLflow
+    mlflow.log_artifact("model.pt")
+    mlflow.log_artifact("results.csv")
 ```
 
 ## Parallel Execution in Multirun Mode
 
-For large parameter sweeps, you can enable parallel execution:
+Hydra's parallel execution capabilities can be used with HydraFlow applications for efficient parameter sweeps:
 
 ```bash
 # Run with 4 parallel jobs
@@ -183,9 +186,11 @@ hydra:
     n_jobs: 1  # Default value, override on command line
 ```
 
+For more launcher options, see the [Hydra documentation on launchers](https://hydra.cc/docs/plugins/joblib_launcher/).
+
 ## Debugging and Dry Runs
 
-For debugging purposes, you can:
+When debugging HydraFlow applications, you can use Hydra's built-in debugging tools:
 
 1. **Print the resolved configuration**:
 
@@ -205,10 +210,11 @@ python train.py hydra.output_subdir=null hydra.job.num=null
 python train.py -m model=transformer,cnn --info
 ```
 
+These commands use standard Hydra functionality that is available in any HydraFlow application.
+
 ## Error Handling
 
-It's important to handle errors properly in your application to ensure that
-MLflow properly tracks failed runs:
+When using MLflow within HydraFlow applications, proper error handling ensures that run status is accurately recorded:
 
 ```python
 @hydraflow.main(Config)
@@ -217,12 +223,14 @@ def train(run, cfg: Config) -> None:
         # Your training code
         model = train_model(cfg)
         accuracy = evaluate_model(model)
-        hydraflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("accuracy", accuracy)
     except Exception as e:
         # Log the error and re-raise
-        hydraflow.log_param("error", str(e))
+        mlflow.log_param("error", str(e))
         raise
 ```
+
+This approach uses standard MLflow APIs to log the error information before allowing the exception to propagate.
 
 ## Best Practices
 
@@ -243,8 +251,4 @@ def train(run, cfg: Config) -> None:
 
 ## Summary
 
-HydraFlow's execution system, built on Hydra, provides powerful tools for
-running machine learning experiments with different configurations. The
-integration with MLflow ensures that all experiment details are tracked
-consistently, making your research reproducible and your workflow more
-efficient.
+HydraFlow provides a streamlined way to leverage both Hydra's configuration management and MLflow's experiment tracking. The execution system is built on standard Hydra functionality, while experiment tracking utilizes MLflow's capabilities. By combining these tools, HydraFlow enables reproducible and efficient machine learning workflows while maintaining compatibility with the underlying libraries' documentation and ecosystem.
