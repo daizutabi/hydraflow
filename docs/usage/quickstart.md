@@ -58,7 +58,7 @@ $ python apps/quickstart.py -m width=400,600 height=100,200,300
 
 ### Iterate over run's directory
 
-The `hydraflow.iter_run_dirs` function iterates over the run directories.
+The [`hydraflow.iter_run_dirs`][] function iterates over the run directories.
 The first argument is the path to the MLflow tracking root directory
 (in most cases, this is `"mlruns"`).
 

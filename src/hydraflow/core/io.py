@@ -108,43 +108,43 @@ def predicate_experiment_dir(
 
 
 def iter_experiment_dirs(
-    root_dir: str | Path,
+    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the experiment directories in the root directory."""
+    """Iterate over the experiment directories in the tracking directory."""
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
-    for path in Path(root_dir).iterdir():
+    for path in Path(tracking_dir).iterdir():
         if predicate_experiment_dir(path, experiment_names):
             yield path
 
 
 def iter_run_dirs(
-    root_dir: str | Path,
+    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the run directories in the root directory."""
-    for experiment_dir in iter_experiment_dirs(root_dir, experiment_names):
+    """Iterate over the run directories in the tracking directory."""
+    for experiment_dir in iter_experiment_dirs(tracking_dir, experiment_names):
         for path in experiment_dir.iterdir():
             if path.is_dir() and (path / "artifacts").exists():
                 yield path
 
 
 def iter_artifacts_dirs(
-    root_dir: str | Path,
+    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifacts directories in the root directory."""
-    for path in iter_run_dirs(root_dir, experiment_names):
+    """Iterate over the artifacts directories in the tracking directory."""
+    for path in iter_run_dirs(tracking_dir, experiment_names):
         yield path / "artifacts"
 
 
 def iter_artifact_paths(
-    root_dir: str | Path,
+    tracking_dir: str | Path,
     artifact_path: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifact paths in the root directory."""
-    for path in iter_artifacts_dirs(root_dir, experiment_names):
+    """Iterate over the artifact paths in the tracking directory."""
+    for path in iter_artifacts_dirs(tracking_dir, experiment_names):
         yield path / artifact_path
