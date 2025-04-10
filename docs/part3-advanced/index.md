@@ -1,131 +1,78 @@
-# Automating Workflows with HydraFlow
+# Advanced Multi-Run Workflows
 
-As machine learning projects grow in complexity, automating experiment
-workflows becomes essential for efficiency and reproducibility. This section
-covers HydraFlow's advanced features for automating and orchestrating ML
-experiments.
+HydraFlow extends Hydra's capabilities with advanced features for efficient
+multi-run workflows. While Hydra provides basic parameter sweeping, HydraFlow
+offers tools for more complex scenarios, including extended sweep syntax,
+job definitions, and cluster submission.
 
 ## Overview
 
-HydraFlow provides tools for creating automated workflows that can:
+Part 3 focuses on HydraFlow's advanced features for efficient multi-run execution:
 
-- Execute multiple experiments with different configurations
-- Define dependencies between experiment steps
-- Manage experiment resources efficiently
-- Enable large-scale parameter sweeps
-- Provide monitoring and control of experiment execution
+- **Extended Sweep Syntax** - Define complex parameter spaces with numerical
+  ranges, combinations, and engineering notation
+
+- **Job Configuration** - Create reusable job definitions with GitHub
+  Actions-like syntax
+
+- **Batch Submission** - Submit multiple runs efficiently to clusters
+  and job schedulers
+
+These capabilities help you manage complex machine learning experiments
+at scale, making it easier to explore large parameter spaces and run
+on distributed computing resources.
 
 ## Key Components
 
-The main components of HydraFlow's workflow automation tools are:
+HydraFlow's advanced workflow capabilities are built around these components:
 
-1. **Executor**: An engine for running multiple related experiments with
-   defined dependencies and resource constraints.
+1. **Parser** - A powerful syntax parser for complex parameter sweeps,
+   supporting ranges, lists, and combinations
 
-2. **Job Scheduling**: Tools for defining, scheduling, and monitoring
-   experiment jobs with complex dependencies.
+2. **Job Definition** - YAML-based configuration for defining reusable
+   multi-step jobs
 
-3. **Scaling Mechanisms**: Features for efficiently running experiments
-   at scale, including parallelization and resource management.
+3. **CLI Commands** - Commands for managing and executing jobs defined
+   in configuration files
 
-## Basic Workflow Example
-
-```python
-from hydraflow.executor import Executor, Job
-from dataclasses import dataclass
-
-@dataclass
-class PrepConfig:
-    data_path: str
-    split_ratio: float = 0.2
-
-@dataclass
-class TrainConfig:
-    model_type: str = "transformer"
-    learning_rate: float = 0.001
-
-# Define individual jobs
-data_prep = Job(
-    name="data_preparation",
-    target="prepare_data.py",
-    config=PrepConfig(data_path="data/raw")
-)
-
-model_training = Job(
-    name="model_training",
-    target="train_model.py",
-    config=TrainConfig(),
-    depends_on=[data_prep]  # Define dependency
-)
-
-evaluation = Job(
-    name="evaluation",
-    target="evaluate.py",
-    depends_on=[model_training]
-)
-
-# Create and run the executor
-executor = Executor()
-executor.add_jobs([data_prep, model_training, evaluation])
-executor.run()
-```
-
-## Advanced Features
-
-HydraFlow's workflow automation includes several advanced features:
-
-### Parameter Sweeps
+## Basic Workflow
 
 ```python
-# Define parameter sweep for learning rate
-learning_rates = [0.1, 0.01, 0.001, 0.0001]
+# 1. Define a job in .hydraflow.yaml
+jobs:
+  train:
+    run: python train.py
+    steps:
+      - batch: >-
+          model=transformer,lstm
+          learning_rate=0.1:0.01:0.001
+          optimizer=adam,sgd
 
-train_jobs = []
-for lr in learning_rates:
-    job = Job(
-        name=f"train_lr_{lr}",
-        target="train.py",
-        config=TrainConfig(learning_rate=lr)
-    )
-    train_jobs.append(job)
+# 2. Run the job using the CLI
+$ hydraflow run train
 
-executor.add_jobs(train_jobs)
+# 3. Or submit the job to a cluster
+$ hydraflow run train --submit
 ```
 
-### Conditional Execution
+## When to Use Advanced Workflows
 
-```python
-# Only run evaluation if training meets accuracy threshold
-def eval_condition(job_result):
-    return job_result.metrics.get("accuracy", 0) > 0.8
+Consider using HydraFlow's advanced workflow features when:
 
-evaluation = Job(
-    name="evaluation",
-    target="evaluate.py",
-    depends_on=[model_training],
-    condition=eval_condition
-)
-```
-
-### Parallel Execution
-
-```python
-# Run jobs in parallel
-executor = Executor(max_parallel=4)  # Run up to 4 jobs simultaneously
-executor.add_jobs(jobs)
-executor.run()
-```
+- You need to explore complex parameter spaces with many configurations
+- Your experiments require a structured approach with multiple steps
+- You want to leverage distributed computing resources
+- You need reproducible workflow definitions
 
 ## What's Next
 
-In the following pages, we'll explore HydraFlow's workflow automation tools
-in detail:
+The following pages explain HydraFlow's advanced features in detail:
 
-- [Executor](executor.md): Learn about the [`Executor`][hydraflow.executor.Executor]
-  class and how to use it to orchestrate complex workflows.
+- [Extended Sweep Syntax](sweep-syntax.md) - Learn how to define complex
+  parameter spaces using HydraFlow's extended syntax
 
-- [Job Scheduling](job-scheduling.md): Discover how to define, schedule, and
-  monitor experiment jobs with dependencies and conditions.
+- [Job Configuration](job-configuration.md) - Define reusable and maintainable
+  job configurations with steps
 
-- [Scaling](scaling.md): Explore techniques for scaling experiments to handle
-  large-scale parameter sweeps and optimization searches.
+- [Batch Submission](batch-submission.md) - Run jobs efficiently on
+  clusters and job schedulers
