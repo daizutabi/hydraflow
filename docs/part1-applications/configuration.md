@@ -11,6 +11,7 @@ using a Python dataclass:
 
 ```python
 from dataclasses import dataclass
+from mlflow.entities import Run
 import hydraflow
 
 @dataclass
@@ -21,7 +22,7 @@ class Config:
     model_name: str = "transformer"
 
 @hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     # Access configuration parameters
     print(f"Training {cfg.model_name} for {cfg.epochs} epochs")
     print(f"Learning rate: {cfg.learning_rate}, Batch size: {cfg.batch_size}")
@@ -44,8 +45,6 @@ For more complex applications, you can use nested dataclasses to organize
 related parameters:
 
 ```python
-from dataclasses import dataclass
-
 @dataclass
 class ModelConfig:
     name: str = "transformer"
@@ -75,137 +74,33 @@ class Config:
     max_epochs: int = 10
 
 @hydraflow.main(Config)
-def train(run, cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     # Access nested configuration
     model_name = cfg.model.name
     lr = cfg.optimizer.learning_rate
     batch_size = cfg.data.batch_size
 ```
 
-## Hydra Configuration Files
+## Hydra Integration
 
-While dataclasses provide the configuration structure, you can use YAML files
-to define default values. Create a `conf` directory in your project with the
-following structure:
+HydraFlow integrates closely with Hydra for configuration management. For detailed explanations of Hydra's capabilities, please refer to the [Hydra documentation](https://hydra.cc/docs/intro/).
 
-```
-conf/
-├── config.yaml        # Main configuration
-├── model/             # Model configurations
-│   ├── transformer.yaml
-│   └── cnn.yaml
-├── optimizer/         # Optimizer configurations
-│   ├── adam.yaml
-│   └── sgd.yaml
-└── data/              # Dataset configurations
-    ├── mnist.yaml
-    └── cifar10.yaml
-```
+HydraFlow leverages the following Hydra features, but does not modify their behavior:
 
-Example `config.yaml`:
+- **Configuration Files**: Organize configurations in YAML files
+- **Command-line Overrides**: Change parameters without modifying code
+- **Configuration Groups**: Swap entire configuration blocks
+- **Configuration Composition**: Combine configurations from multiple sources
+- **Interpolation**: Reference other configuration values
+- **Multi-run Sweeps**: Run experiments with different parameter combinations
 
-```yaml
-# @package _global_
-defaults:
-  - model: transformer
-  - optimizer: adam
-  - data: mnist
-  - _self_
+When using HydraFlow, remember that:
 
-seed: 42
-max_epochs: 10
-```
+1. Your configuration structure comes from your dataclass definitions
+2. HydraFlow automatically registers your top-level dataclass with Hydra
+3. `@hydraflow.main` sets up the connection between your dataclass and Hydra
 
-Example `model/transformer.yaml`:
-
-```yaml
-# @package _group_
-name: transformer
-hidden_size: 512
-num_layers: 6
-dropout: 0.1
-```
-
-## Command-line Overrides
-
-A key feature of HydraFlow is the ability to override configuration values
-from the command line:
-
-```bash
-# Override single values
-python train.py optimizer.learning_rate=0.0001 max_epochs=20
-
-# Select configuration groups
-python train.py model=cnn optimizer=sgd
-
-# Perform multi-run sweeps
-python train.py -m optimizer.learning_rate=0.1,0.01,0.001 model=transformer,cnn
-```
-
-## Configuration Interpolation
-
-Hydra allows you to reference other configuration values using the
-`${path.to.value}` syntax:
-
-```yaml
-# model/transformer.yaml
-name: transformer
-embedding_size: 512
-hidden_size: ${model.embedding_size}  # References embedding_size
-```
-
-## Environment Variables and Runtime Values
-
-Access environment variables and compute values at runtime:
-
-```yaml
-data:
-  path: ${oc.env:DATA_PATH,/default/path}  # Use env var or default
-  num_workers: ${oc.select:device.type,cpu:4,gpu:8}  # Conditional value
-```
-
-## Advanced Features
-
-### Optional Values
-
-You can make configuration parameters optional using Python's `Optional` type:
-
-```python
-from dataclasses import dataclass
-from typing import Optional
-
-@dataclass
-class Config:
-    checkpoint_path: Optional[str] = None
-    resume_training: bool = False
-```
-
-### Custom Validation
-
-Add validation to your configuration using the `__post_init__` method:
-
-```python
-@dataclass
-class OptimizerConfig:
-    name: str = "adam"
-    learning_rate: float = 0.001
-
-    def __post_init__(self):
-        if self.learning_rate <= 0:
-            raise ValueError(f"Learning rate must be positive, got {self.learning_rate}")
-```
-
-### Configuration Composition
-
-Combine multiple configurations using Hydra's composition system:
-
-```yaml
-# conf/config.yaml
-defaults:
-  - base_config
-  - model: transformer
-  - _self_  # Apply this config last
-```
+For advanced Hydra features and detailed usage examples, we recommend consulting the official Hydra documentation after you become familiar with the basic HydraFlow concepts.
 
 ## Best Practices
 
