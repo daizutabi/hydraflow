@@ -16,18 +16,18 @@ configuration values and filtering runs.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+import inspect
+from collections.abc import Callable, Iterable
 from dataclasses import MISSING
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, cast, overload
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from .run_info import RunInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from typing import Any, Self
 
     from .run_collection import RunCollection
@@ -44,13 +44,13 @@ class Run[C, I = None]:
     info: RunInfo
     """Information about the run, such as run directory, run ID, and job name."""
 
-    impl_factory: Callable[[Path], I]
+    impl_factory: Callable[[Path], I] | Callable[[Path, C], I]
     """Factory function to create the implementation object."""
 
     def __init__(
         self,
         run_dir: Path,
-        impl_factory: Callable[[Path], I] = lambda _: None,
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,
     ) -> None:
         self.info = RunInfo(run_dir)
         self.impl_factory = impl_factory
@@ -77,14 +77,24 @@ class Run[C, I = None]:
     @cached_property
     def impl(self) -> I:
         """The implementation object created by the factory function."""
-        return self.impl_factory(self.info.run_dir / "artifacts")
+        artifacts_dir = self.info.run_dir / "artifacts"
+
+        sig = inspect.signature(self.impl_factory)
+        params = list(sig.parameters.values())
+
+        if len(params) == 1:
+            impl_factory = cast(Callable[[Path], I], self.impl_factory)
+            return impl_factory(artifacts_dir)
+
+        impl_factory = cast(Callable[[Path, C], I], self.impl_factory)
+        return impl_factory(artifacts_dir, self.cfg)
 
     @overload
     @classmethod
     def load(  # type: ignore
         cls,
         run_dir: str | Path,
-        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
     ) -> Self: ...
 
     @overload
@@ -92,7 +102,7 @@ class Run[C, I = None]:
     def load(
         cls,
         run_dir: Iterable[str | Path],
-        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
     ) -> RunCollection[Self]: ...
@@ -101,7 +111,7 @@ class Run[C, I = None]:
     def load(
         cls,
         run_dir: str | Path | Iterable[str | Path],
-        impl_factory: Callable[[Path], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
     ) -> Self | RunCollection[Self]:

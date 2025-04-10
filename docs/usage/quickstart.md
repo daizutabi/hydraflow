@@ -81,7 +81,7 @@ Optionally, you can specify the experiment name(s) to filter the runs.
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import Run
 >>> run_dirs = hydraflow.iter_run_dirs("mlruns", "quickstart")
->>> run_dir = next(run_dirs)
+>>> run_dir = next(run_dirs)  # run_dirs is an iterator
 >>> print(run_dir)
 ```
 
@@ -97,24 +97,42 @@ not an MLflow run.
 >>> print(type(run))
 ```
 
-The `Run` object has an `info` attribute that contains information about the run.
+The `Run` instance has an `info` attribute that contains information about the run.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.info.run_dir)
 >>> print(run.info.run_id)
->>> print(run.info.job_name)  # The Hydra job name = MLflow experiment name
+>>> print(run.info.job_name)  # Hydra job name = MLflow experiment name
 ```
 
-The `Run` object has a `cfg` attribute that contains the Hydra configuration.
+The `Run` instance has a `cfg` attribute that contains the Hydra configuration.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.cfg)
 ```
 
+### Configuration type of the run
+
+Optionally, you can specify the config type of the run using the `Run[C]` class.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> from dataclasses import dataclass
+>>> @dataclass
+... class Config:
+...     width: int = 1024
+...     height: int = 768
+>>> run = Run[Config](run_dir)
+>>> print(run)
+>>> # autocompletion occurs below, for example, run.cfg.height
+>>> # run.cfg.[TAB]
+```
+
+The `Run[C]` class is a generic class that takes a config type `C` as a type parameter. The `run.cfg` attribute is recognized as `C` type in IDEs, which provides autocompletion and type checking.
+
 ### Implementation of the run
 
 Optionally, you can specify the implementation of the run.
-Use the `Run[I]` class to specify the implementation type.
+Use the `Run[C, I]` class to specify the implementation type.
 The second argument `impl_factory` is the implementation factory.
 which can be a class or a function to generate the implementation.
 The `impl_factory` is called with the run's artifacts directory
@@ -126,9 +144,27 @@ as the first and only argument.
 ...     root_dir: Path
 ...     def __init__(self, root_dir: Path):
 ...         self.root_dir = root_dir
->>> run = Run[Impl](run_dir, Impl)
+...     def __repr__(self) -> str:
+...         return f"Impl({self.root_dir.stem!r})"
+>>> run = Run[Config, Impl](run_dir, Impl)
 >>> print(run)
+```
+
+The representation of the `Run` instance includes the implementation type
+as shown above.
+
+If you specify the implementation type, the `run.impl` attribute
+is lazily initialized at the first time of the `run.impl` attribute access.
+The `run.impl` attribute is recognized as `I` type in IDEs, which provides autocompletion and type checking.
+
+```pycon exec="1" source="console" session="quickstart"
+>>> print(run.impl)
 >>> print(run.impl.root_dir)
+```
+
+```pycon exec="1" source="console" session="quickstart"
+>>> # autocompletion occurs below, for example, run.impl.root_dir
+>>> # run.impl.[TAB]
 ```
 
 
@@ -136,7 +172,7 @@ as the first and only argument.
 
 ### Collect runs
 
-The `RunCollection` object is a collection of runs.
+The `RunCollection` instance is a collection of runs.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import RunCollection
@@ -147,7 +183,7 @@ The `RunCollection` object is a collection of runs.
 
 ### Retrieve a run
 
-The `RunCollection` object has a `first` and `last` method that
+The `RunCollection` instance has a `first` and `last` method that
 returns the first and last run in the collection.
 
 ```pycon exec="1" source="console" session="quickstart"

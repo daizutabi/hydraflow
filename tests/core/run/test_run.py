@@ -212,3 +212,27 @@ def test_config(results):
     assert run.get("size.width") == 1
     assert run.get("size.height") == 3
     assert run.get("size") == {"width": 1, "height": 3}
+
+
+class Dummy:
+    pass
+
+
+class ImplConfig:
+    path: Path
+    cfg: Dummy
+
+    def __init__(self, path: Path, cfg: Dummy):
+        self.path = path
+        self.cfg = cfg
+
+
+def test_impl_config(results):
+    run_dir: Path = results[0][0].parent
+    run = Run[Dummy, ImplConfig].load(run_dir, ImplConfig)
+    assert run.impl.path.stem == "artifacts"
+    cfg = run.cfg
+    assert cfg.count == 10  # type: ignore
+    assert cfg.name == "abc"  # type: ignore
+    assert cfg.size.width == 1  # type: ignore
+    assert cfg.size.height == 3  # type: ignore
