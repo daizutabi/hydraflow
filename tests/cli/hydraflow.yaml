@@ -3,7 +3,9 @@ jobs:
     run: python app.py
     steps:
       - args: count=1:3 name=a,b
-      - args: count=4:6 name=c,d
+      - args: >-
+          count=4:6
+          name=c,d
   batch:
     run: python app.py
     steps:
@@ -13,13 +15,17 @@ jobs:
         args: count=100
   parallel:
     run: python app.py
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
+    with: >-
+      hydra/launcher=joblib
+      hydra.launcher.n_jobs=2
     steps:
       - batch: name=a
         args: count=1:4
       - batch: name=b
         args: count=11:14
-        with: hydra/launcher=joblib hydra.launcher.n_jobs=4
+        with: >-
+          hydra/launcher=joblib
+          hydra.launcher.n_jobs=4
   echo:
     call: typer.echo a b c
     steps:
