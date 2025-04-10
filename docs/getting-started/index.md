@@ -41,6 +41,7 @@ Here's a simple example to demonstrate HydraFlow's basic usage:
 
 ```python
 from dataclasses import dataclass
+from mlflow.entities import Run
 import hydraflow
 
 @dataclass
@@ -50,7 +51,7 @@ class Config:
     epochs: int = 10
 
 @hydraflow.main(Config)
-def train(cfg: Config) -> None:
+def train(run: Run, cfg: Config) -> None:
     # Your training code here
     print(f"Training with lr={cfg.learning_rate}, batch_size={cfg.batch_size}")
 

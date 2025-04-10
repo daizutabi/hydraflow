@@ -7,17 +7,27 @@ This guide walks you through installing HydraFlow and its dependencies.
 HydraFlow requires:
 
 - Python 3.13 or higher
-- pip or conda package manager
+- A package manager (pip or uv)
 
 ## Basic Installation
 
-You can install HydraFlow using pip:
+You can install HydraFlow using your preferred package manager:
+
+### Using pip
 
 ```bash
 pip install hydraflow
 ```
 
-This installs the core framework with minimal dependencies.
+### Using uv
+
+[uv](https://github.com/astral-sh/uv) is a modern, fast Python package manager:
+
+```bash
+uv pip install hydraflow
+```
+
+These commands install the core framework with minimal dependencies.
 
 ## Development Installation
 
@@ -25,9 +35,15 @@ For development or to access the latest features, install directly from
 the GitHub repository:
 
 ```bash
+# Clone the repository
 git clone https://github.com/username/hydraflow.git
 cd hydraflow
+
+# Install with pip
 pip install -e ".[dev]"
+
+# Or install with uv
+uv pip install -e ".[dev]"
 ```
 
 Installing with the `[dev]` extra includes development tools like pytest,
@@ -38,11 +54,14 @@ black, and other utilities necessary for contributing to the project.
 HydraFlow offers additional features through optional dependencies:
 
 ```bash
-# Install with visualization support
+# Install with visualization support using pip
 pip install "hydraflow[viz]"
 
+# Install with visualization support using uv
+uv pip install "hydraflow[viz]"
+
 # Install with all optional dependencies
-pip install "hydraflow[all]"
+pip install "hydraflow[all]"  # or use uv pip
 ```
 
 ## Verifying Installation
@@ -64,15 +83,15 @@ While not required, we recommend using a virtual environment:
 ```bash
 python -m venv hydraflow-env
 source hydraflow-env/bin/activate  # On Windows: hydraflow-env\Scripts\activate
-pip install hydraflow
+pip install hydraflow  # or use uv pip
 ```
 
-### Using conda
+### Using uv
 
 ```bash
-conda create -n hydraflow-env python=3.13
-conda activate hydraflow-env
-pip install hydraflow
+uv venv hydraflow-env
+source hydraflow-env/bin/activate  # On Windows: hydraflow-env\Scripts\activate
+uv pip install hydraflow
 ```
 
 ## Troubleshooting
@@ -80,7 +99,9 @@ pip install hydraflow
 If you encounter issues during installation:
 
 1. Ensure your Python version is 3.13 or higher
-2. Update pip: `pip install --upgrade pip`
+2. Update your package manager:
+   - For pip: `pip install --upgrade pip`
+   - For uv: `uv self update`
 3. If installing from source, ensure you have the necessary build tools
    installed for your platform
 
