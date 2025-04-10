@@ -1,266 +1,347 @@
 # Batch Submission
 
-HydraFlow provides powerful tools for submitting parameter sweeps to compute
-clusters and job schedulers. This enables efficient execution of large-scale
-experiments on distributed computing resources.
+HydraFlow provides efficient batch submission capabilities for running
+experiments on clusters and job schedulers. This page explains how to configure
+and use batch submission with HydraFlow.
 
-## Overview
+## Basic Batch Submission
 
-The batch submission capabilities allow you to:
-
-1. Submit multiple parameter configurations as a single batch job
-2. Leverage HPC clusters and job schedulers like SLURM, PBS, etc.
-3. Execute parameter combinations in parallel on distributed resources
-4. Efficiently manage resources for large parameter sweeps
-5. Track and monitor distributed experiment runs
-
-## Basic Submission
-
-To use batch submission, define a job with the `submit` property:
+To submit jobs to a cluster, use the `submit` command in your job definition:
 
 ```yaml
-# hydraflow.yaml
 jobs:
   train:
-    submit: sbatch --partition=gpu --time=4:00:00
-    with: python train.py
-    steps:
+    submit: sbatch --partition=gpu --nodes=1 job.sh
+    sets:
       - batch: >-
-          learning_rate=0.1,0.01,0.001
-          batch_size=32,64
+          model=small,large
+          learning_rate=0.1,0.01
 ```
 
-Run this job using the HydraFlow CLI:
-
-```bash
-hydraflow run train
-```
+This configuration will submit the generated commands to the cluster using
+the `sbatch` command.
 
 ## How Batch Submission Works
 
-When you run a job with the `submit` property:
+When using the `submit` command:
 
-1. HydraFlow expands all parameter combinations from the job steps
-2. Creates a temporary text file containing each command line as a separate row
-3. Executes a single command passing this file as an argument: `your_submit_command temp_file.txt`
-4. Your command is responsible for processing the file contents
+1. HydraFlow generates all parameter combinations based on your sets
+2. These combinations are written to a temporary file
+3. Your submission command is executed with the temporary file as input
+4. The scheduler processes each line as a separate job
 
-For example, if your job definition is:
+This approach is optimal for efficiently submitting many jobs to a cluster.
+
+## Cluster-Specific Examples
+
+### Slurm
+
+Slurm is one of the most common job schedulers. Here's an example of
+submitting jobs to a Slurm cluster:
 
 ```yaml
 jobs:
   train:
-    submit: sbatch --partition=gpu
+    submit: sbatch --partition=gpu --nodes=1 --ntasks=1 --cpus-per-task=4 --gres=gpu:1
     with: python train.py
-    steps:
-      - batch: model=resnet,vgg learning_rate=0.1,0.01
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
 ```
 
-HydraFlow will:
-1. Create a temporary file with contents:
-   ```
-   python train.py model=resnet learning_rate=0.1
-   python train.py model=resnet learning_rate=0.01
-   python train.py model=vgg learning_rate=0.1
-   python train.py model=vgg learning_rate=0.01
-   ```
-2. Execute: `sbatch --partition=gpu temp_file.txt`
+This submits a batch file to Slurm that processes all combinations,
+allocating the specified resources.
 
-The key point is that HydraFlow does not dictate how your batch job runs - it simply formats the
-commands and passes them to your specified submission tool. This means you have complete control
-over your batch execution environment by choosing the appropriate submission command.
+### PBS/Torque
 
-## Submission Commands
-
-HydraFlow supports various batch submission commands:
-
-```yaml
-# SLURM
-submit: sbatch --partition=gpu
-
-# PBS
-submit: qsub -q gpu
-
-# LSF
-submit: bsub -q gpu
-
-# Basic shell (for local execution)
-submit: bash
-```
-
-## Common Submission Patterns
-
-### SLURM Example
+For PBS/Torque clusters:
 
 ```yaml
 jobs:
-  train_large:
-    submit: >-
-      sbatch
-      --partition=gpu
-      --time=12:00:00
-      --gres=gpu:2
-      --mem=32G
-      --cpus-per-task=4
+  train:
+    submit: qsub -l select=1:ncpus=4:ngpus=1 -q gpu_queue
     with: python train.py
-    steps:
-      - batch: >-
-          model=large,xlarge
-          learning_rate=0.1,0.01,0.001
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
 ```
 
-### PBS Example
+### SGE (Sun Grid Engine)
+
+For SGE clusters:
 
 ```yaml
 jobs:
-  train_distributed:
-    submit: >-
-      qsub
-      -l nodes=1:ppn=4:gpus=1
-      -l walltime=8:00:00
-      -q gpu
+  train:
+    submit: qsub -l gpu=1 -q ml.q
     with: python train.py
-    steps:
-      - batch: dataset=imagenet,cifar100
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
 ```
 
-## Passing Additional Arguments
+### LSF
 
-You can pass additional arguments when running a job:
+For LSF clusters:
+
+```yaml
+jobs:
+  train:
+    submit: bsub -q gpu -n 4 -gpu "num=1"
+    with: python train.py
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
+```
+
+## Using Job Templates
+
+Many schedulers support job templates or script files. You can use these
+with HydraFlow:
+
+```yaml
+jobs:
+  train:
+    submit: sbatch job_template.sh
+    sets:
+      - batch: model=resnet,vgg
+```
+
+Where `job_template.sh` might look like:
 
 ```bash
-# Add arguments to the job
-hydraflow run train_large --seed=42 --debug
+#!/bin/bash
+#SBATCH --partition=gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:1
+#SBATCH --time=24:00:00
+#SBATCH --mem=16G
+
+# This script receives the HydraFlow command as input
+eval "$@"
 ```
 
-These arguments will be passed to each command in the batch.
+## Resource Allocation
 
-## Dry Runs
+You can specify different resources for different parameter combinations:
 
-Before submitting jobs to a cluster, it's a good practice to perform a dry run:
+```yaml
+jobs:
+  train:
+    submit: sbatch
+    sets:
+      # Small models use less resources
+      - batch: model=small
+        with: SBATCH="--partition=gpu --gres=gpu:1 --mem=8G"
 
-```bash
-hydraflow run train_large --dry-run
+      # Large models need more resources
+      - batch: model=large
+        with: SBATCH="--partition=gpu --gres=gpu:2 --mem=32G"
 ```
-
-This will output:
-
-1. The submission command
-2. The contents of the temporary file with all parameter combinations
 
 ## Environment Variables
 
-The submission command can use environment variables:
+You can set environment variables for your jobs:
 
 ```yaml
 jobs:
   train:
-    submit: sbatch --partition=${PARTITION} --time=${MAX_TIME}
-    with: python train.py
+    submit: sbatch job.sh
+    sets:
+      - batch: model=small,large
+      - with: >-
+          CUDA_VISIBLE_DEVICES=0
+          OMP_NUM_THREADS=4
 ```
 
-Then run with:
+## Job Arrays
+
+Some schedulers support job arrays for efficiently submitting many
+similar jobs. HydraFlow can work with these as well:
+
+```yaml
+jobs:
+  train:
+    submit: sbatch --array=0-3 job_array.sh
+    sets:
+      - batch: model=small,large learning_rate=0.1,0.01
+```
+
+In your job script, you would access the array index:
 
 ```bash
-PARTITION=gpu MAX_TIME=4:00:00 hydraflow run train
+#!/bin/bash
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+
+# Get command from the temporary file based on array index
+COMMAND=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$1")
+eval "$COMMAND"
 ```
 
-## Resource Management
+## Local Parallel Execution
 
-For large parameter sweeps, be mindful of:
-
-1. **Total Job Count**: A single batch job can contain hundreds or thousands of
-   parameter combinations
-2. **Memory Requirements**: Ensure your submission requests enough memory
-3. **Time Limits**: Set appropriate time limits based on the most demanding
-   parameter combination
-4. **Storage Needs**: Consider output data size for all runs combined
-
-## Integration with MLflow
-
-HydraFlow automatically sets the MLflow experiment name to the job name:
-
-```python
-# This happens automatically before job execution
-mlflow.set_experiment(job.name)
-```
-
-This ensures that all runs from the batch job are grouped under the same
-experiment in MLflow.
-
-## Custom Python Functions
-
-Instead of shell commands, you can submit Python functions:
+You can use GNU Parallel for local parallelization:
 
 ```yaml
 jobs:
-  analyze:
-    submit: python -m dispatch.worker
-    call: analysis.process_results
-    steps:
-      - batch: dataset=train,test,validation
+  train:
+    submit: parallel -j 4
+    with: python train.py
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
 ```
 
-The `call` property specifies the Python function to execute.
+## Custom Submission Systems
 
-## Advanced Configuration
-
-### Array Jobs (SLURM)
-
-For SLURM clusters, you can use array jobs:
+You can create a custom submission script for any environment:
 
 ```yaml
 jobs:
-  train_array:
-    submit: >-
-      sbatch
-      --array=0-100%10
-      --partition=gpu
-    with: python train.py --array-index=$SLURM_ARRAY_TASK_ID
+  train:
+    submit: ./my_custom_submitter.py --resource=gpu
+    with: python train.py
+    sets:
+      - batch: model=resnet,vgg dataset=imagenet,cifar
 ```
 
-### Multi-Node Jobs
+## Handling Job Dependencies
 
-For distributed training across nodes:
+For workflows with dependencies, you can use the scheduler's dependency
+features:
 
 ```yaml
 jobs:
-  train_distributed:
-    submit: >-
-      sbatch
-      --nodes=2
-      --ntasks-per-node=1
-      --cpus-per-task=4
-      --gres=gpu:4
-    with: python -m torch.distributed.launch train.py
+  preprocess:
+    submit: sbatch --parsable job.sh
+    with: python preprocess.py
+    sets:
+      - batch: dataset=imagenet,cifar
+
+  train:
+    submit: sbatch --dependency=afterok:$PREPROCESS_JOB_ID job.sh
+    with: python train.py
+    sets:
+      - batch: model=resnet,vgg
 ```
+
+You would need to capture and store the job ID from the first submission.
+
+## Monitoring Submitted Jobs
+
+Most job schedulers provide commands to monitor job status:
+
+```bash
+# Slurm
+squeue -u $USER
+
+# PBS/Torque
+qstat -u $USER
+
+# SGE
+qstat -u $USER
+
+# LSF
+bjobs
+```
+
+## Controlling Resource Usage
+
+To optimize resource usage, consider:
+
+1. **Grouping similar jobs**: Jobs with similar resource requirements can be grouped
+2. **Job sizing**: Match job requirements to your cluster's node sizes
+3. **Time limits**: Set realistic time limits to help the scheduler
+
+## Handling Failures
+
+For robust batch submission, consider:
+
+1. **Retry logic**: Add retry logic in your job scripts
+2. **Output logs**: Ensure outputs and errors are captured
+3. **Checkpointing**: Implement checkpointing to resume from failures
 
 ## Best Practices
 
-1. **Start Small**: Test with a small parameter sweep before scaling up
-2. **Monitor Resources**: Keep an eye on CPU, GPU, and memory usage
-3. **Use Job Arrays**: For clusters that support job arrays, use them instead
-   of submitting many individual jobs
-4. **Checkpoint Models**: Save intermediate results to resume interrupted jobs
-5. **Log Key Metrics**: Ensure important metrics are logged to MLflow for
-   easy comparison
-6. **Clean Up**: Remove temporary files once jobs complete
+### Validate Before Submission
 
-## Troubleshooting
+Always perform a dry run before submitting to the cluster:
 
-### Common Issues
+```bash
+$ hydraflow run train --dry-run
+```
 
-- **Resource Exceeded**: Request more memory/time or reduce batch size
-- **File Not Found**: Ensure paths are absolute or relative to the working directory
-- **Permission Issues**: Check file permissions for scripts and data
-- **Environment Problems**: Ensure required packages are available in the
-  cluster environment
+### Start Small
 
-### Debugging
+Begin with a small subset of your parameter space to ensure everything works:
 
-To troubleshoot submission issues:
+```yaml
+jobs:
+  test_run:
+    submit: sbatch job.sh
+    sets:
+      - batch: model=small
+      - args: debug=true max_steps=100
+```
 
-1. Use `--dry-run` to see what would be submitted
-2. Check submission logs for errors
-3. Try running a single configuration locally before submitting batch
-4. Verify that your cluster environment has all required dependencies
+### Document Job Requirements
+
+Document resource requirements for different job types:
+
+```yaml
+# Resource requirements:
+# - Small model: 1 GPU, 8GB memory
+# - Medium model: 2 GPUs, 16GB memory
+# - Large model: 4 GPUs, 32GB memory
+jobs:
+  train_small:
+    submit: sbatch --gres=gpu:1 --mem=8G job.sh
+    # ...
+```
+
+### Use Set Environment Variables
+
+Use environment variables to configure your job scripts:
+
+```yaml
+jobs:
+  train:
+    submit: sbatch job.sh
+    sets:
+      - batch: model=small
+        with: >-
+          NUM_GPUS=1
+          MEMORY=8G
+
+      - batch: model=large
+        with: >-
+          NUM_GPUS=4
+          MEMORY=32G
+```
+
+Then in your job script:
+
+```bash
+#!/bin/bash
+#SBATCH --gres=gpu:$NUM_GPUS
+#SBATCH --mem=$MEMORY
+
+# Run the command
+eval "$@"
+```
+
+### Centralize Job Scripts
+
+Maintain job template scripts in a central location:
+
+```
+project/
+├── hydraflow.yaml
+└── cluster/
+    ├── gpu_job.sh
+    ├── cpu_job.sh
+    └── debug_job.sh
+```
+
+### Version Control
+
+Keep your job scripts and `hydraflow.yaml` in version control to ensure
+reproducibility of your experiments.

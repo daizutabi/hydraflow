@@ -49,7 +49,7 @@ configurations:
 jobs:
   train:
     run: python train.py
-    steps:
+    sets:
       # First independent parameter set
       - batch: >-
           model=small,large
@@ -62,20 +62,20 @@ jobs:
 ```
 
 This configuration defines a job named `train` that will execute `train.py` with
-different parameter combinations. Each `step` represents an independent set of
-parameter combinations - the steps do not build upon or depend on each other.
+different parameter combinations. Each `set` represents an independent set of
+parameter combinations - the sets do not build upon or depend on each other.
 
-### Understanding Steps
+### Understanding Sets
 
-Steps in HydraFlow are completely independent from each other. Each step generates
-its own set of commands to execute, and there is no relationship between steps.
+Sets in HydraFlow are completely independent from each other. Each set generates
+its own set of commands to execute, and there is no relationship between sets.
 When you run a job, HydraFlow will:
 
-1. Generate all parameter combinations for the first step
+1. Generate all parameter combinations for the first set
 2. Execute those commands
-3. Move to the second step and generate its combinations
+3. Move to the second set and generate its combinations
 4. Execute those commands
-5. And so on for each step
+5. And so on for each set
 
 This allows you to organize different parameter sweep sets under the same job
 configuration, sharing the same execution command (`run`, `call`, or `submit`).
@@ -102,13 +102,13 @@ $ hydraflow run train
 With the configuration above, this executes the following commands sequentially:
 
 ```bash
-# First step commands
+# First set commands
 $ python train.py model=small learning_rate=0.1
 $ python train.py model=large learning_rate=0.1
 $ python train.py model=small learning_rate=0.2
 $ python train.py model=large learning_rate=0.2
 
-# Second step commands (completely independent from first step)
+# Second set commands (completely independent from first set)
 $ python train.py optimizer=adam dropout=0.1
 $ python train.py optimizer=sgd dropout=0.1
 $ python train.py optimizer=adam dropout=0.2
@@ -124,7 +124,7 @@ parameters in each execution:
 jobs:
   train:
     run: python train.py
-    steps:
+    sets:
       - batch: >-
           model=small,large
       - args: seed=42 debug=true
@@ -147,7 +147,7 @@ jobs to run in parallel on a cluster:
 jobs:
   train:
     submit: sbatch --partition=gpu --nodes=1 job.sh
-    steps:
+    sets:
       - batch: >-
           model=small,large
           learning_rate=0.1,0.2
@@ -177,7 +177,7 @@ The following pages explain HydraFlow's advanced features in detail:
   parameter spaces using HydraFlow's extended syntax
 
 - [Job Configuration](job-configuration.md) - Define reusable and maintainable
-  job configurations with steps
+  job configurations with sets
 
 - [Batch Submission](batch-submission.md) - Run jobs efficiently on
   clusters and job schedulers
