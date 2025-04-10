@@ -27,7 +27,7 @@ def test_iter_args_pipe():
 def job():
     s1 = Step(batch="b=5,6", args="a=1:2")
     s2 = Step(batch="c=7,8", args="a=3:4")
-    return Job(name="test", steps=[s1, s2])
+    return Job(name="test", sets=[s1, s2])
 
 
 @pytest.fixture

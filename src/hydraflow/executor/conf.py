@@ -17,7 +17,7 @@ class Job:
     call: str = ""
     submit: str = ""
     with_: str = ""
-    steps: list[Step] = field(default_factory=list)
+    sets: list[Step] = field(default_factory=list)
 
 
 @dataclass

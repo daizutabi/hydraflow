@@ -2,7 +2,7 @@
 
 This module provides functionality for executing jobs in HydraFlow, including:
 
-- Argument parsing and expansion for job steps
+- Argument parsing and expansion for job parameter sets
 - Batch processing of Hydra configurations
 - Execution of jobs via shell commands or Python functions
 
@@ -11,8 +11,9 @@ The module supports two execution modes:
 1. Shell command execution
 2. Python function calls
 
-Each job can consist of multiple steps, and each step can have its own
-arguments and configurations that will be expanded into multiple runs.
+Each job can consist of multiple parameter sets, and each parameter
+set can have its own arguments and configurations that will be expanded
+into multiple runs.
 """
 
 from __future__ import annotations
@@ -76,10 +77,10 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
     job_name = f"hydra.job.name={job.name}"
     job_configs = shlex.split(job.with_)
 
-    for step in job.steps:
-        configs = shlex.split(step.with_) or job_configs
+    for set_ in job.sets:
+        configs = shlex.split(set_.with_) or job_configs
 
-        for args in iter_args(step.batch, step.args):
+        for args in iter_args(set_.batch, set_.args):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
             yield ["--multirun", *args, job_name, sweep_dir, *configs]
 
