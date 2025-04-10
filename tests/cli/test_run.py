@@ -1,8 +1,7 @@
-import pytest
 from typer.testing import CliRunner
 
-import hydraflow
 from hydraflow.cli import app
+from hydraflow.core.io import iter_run_dirs
 
 runner = CliRunner()
 
@@ -67,36 +66,32 @@ def test_submit_dry_run():
     assert "name=d count=6" in lines[4]
 
 
-@pytest.mark.xdist_group(name="group1")
 def test_run_args():
     result = runner.invoke(app, ["run", "args"])
     assert result.exit_code == 0
-    run_ids = hydraflow.list_run_ids("args")
-    assert len(run_ids) == 12
+    run_dirs = list(iter_run_dirs("mlruns", "args"))
+    assert len(run_dirs) == 12
 
 
-@pytest.mark.xdist_group(name="group2")
 def test_run_batch():
     result = runner.invoke(app, ["run", "batch"])
     assert result.exit_code == 0
-    run_ids = hydraflow.list_run_ids("batch")
-    assert len(run_ids) == 8
+    run_dirs = list(iter_run_dirs("mlruns", "batch"))
+    assert len(run_dirs) == 8
 
 
-@pytest.mark.xdist_group(name="group3")
 def test_run_parallel():
     result = runner.invoke(app, ["run", "parallel"])
     assert result.exit_code == 0
-    run_ids = hydraflow.list_run_ids("parallel")
-    assert len(run_ids) == 8
+    run_dirs = list(iter_run_dirs("mlruns", "parallel"))
+    assert len(run_dirs) == 8
 
     result = runner.invoke(app, ["run", "parallel"])  # skip if already run
     assert result.exit_code == 0
-    run_ids = hydraflow.list_run_ids("parallel")
-    assert len(run_ids) == 8
+    run_dirs = list(iter_run_dirs("mlruns", "parallel"))
+    assert len(run_dirs) == 8
 
 
-@pytest.mark.xdist_group(name="group4")
 def test_run_echo():
     result = runner.invoke(app, ["run", "echo"])
     assert result.exit_code == 0
@@ -109,23 +104,21 @@ def test_run_echo():
     assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[4]
 
 
-@pytest.mark.xdist_group(name="group4")
 def test_submit():
     result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
     out = result.stdout
     lines = out.splitlines()
     assert len(lines) == 1
-    run_ids = hydraflow.list_run_ids("submit")
-    assert len(run_ids) == 4
+    run_dirs = list(iter_run_dirs("mlruns", "submit"))
+    assert len(run_dirs) == 4
 
     result = runner.invoke(app, ["run", "submit"])  # skip if already run
     assert result.exit_code == 0
-    run_ids = hydraflow.list_run_ids("submit")
-    assert len(run_ids) == 4
+    run_dirs = list(iter_run_dirs("mlruns", "submit"))
+    assert len(run_dirs) == 4
 
 
-@pytest.mark.xdist_group(name="group5")
 def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1

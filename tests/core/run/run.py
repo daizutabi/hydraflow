@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 import hydraflow
@@ -11,17 +10,21 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class Size:
+    width: int = 0
+    height: int = 0
+
+
+@dataclass
 class Config:
     count: int = 1
     name: str = "a"
+    size: Size = field(default_factory=Size)
 
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config):
-    path = hydraflow.get_artifact_dir(run) / "a.txt"
-    path.write_text(f"{cfg.count}")
-    path = hydraflow.get_artifact_dir(run) / "b.txt"
-    path.write_text(f"{Path.cwd().absolute().as_posix()}")
+    pass
 
 
 if __name__ == "__main__":

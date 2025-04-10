@@ -5,6 +5,9 @@ import uuid
 from pathlib import Path
 
 import pytest
+from omegaconf import DictConfig, OmegaConf
+
+from hydraflow.core.io import iter_artifacts_dirs
 
 
 @pytest.fixture(scope="module")
@@ -41,11 +44,24 @@ def run_script(experiment_name: str):
 
 
 @pytest.fixture(scope="module")
-def collect(run_script):
-    from hydraflow.core.mlflow import list_runs
-
-    def collect(filename: Path | str, args: list[str]):
+def list_artifacts_dirs(run_script):
+    def artifacts_dirs(filename: Path | str, args: list[str]):
         experiment_name = run_script(filename, args)
-        return list_runs(experiment_name)
+        return list(iter_artifacts_dirs("mlruns", experiment_name))
+
+    return artifacts_dirs
+
+
+def load(path: Path) -> DictConfig:
+    config_file = path / ".hydra/config.yaml"
+    return OmegaConf.load(config_file)  # type: ignore
+
+
+@pytest.fixture(scope="module")
+def collect(list_artifacts_dirs):
+    def collect(filename: Path | str, args: list[str]):
+        artifacts_dirs = list_artifacts_dirs(filename, args)
+        configs = [load(artifacts_dir) for artifacts_dir in artifacts_dirs]
+        return list(zip(artifacts_dirs, configs, strict=True))
 
     return collect

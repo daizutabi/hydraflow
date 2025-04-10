@@ -1,30 +1,24 @@
 from pathlib import Path
 
 import pytest
-from mlflow.entities import Run
-
-from hydraflow.entities.run_collection import RunCollection
-
-pytestmark = pytest.mark.xdist_group(name="group4")
+from omegaconf import DictConfig
 
 
 @pytest.fixture(scope="module")
-def rc(collect):
+def results(collect):
     file = Path(__file__).parent / "chdir.py"
     return collect(file, ["-m", "count=1,2"])
 
 
-def test_rc_len(rc: RunCollection):
-    assert len(rc) == 2
+def test_len(results):
+    assert len(results) == 2
 
 
-@pytest.fixture(scope="module", params=[1, 2])
-def run(rc: RunCollection, request: pytest.FixtureRequest):
-    return rc.get(count=request.param)
+@pytest.fixture(scope="module", params=range(2))
+def result(results, request: pytest.FixtureRequest):
+    return results[request.param]
 
 
-def test_run_count(run: Run):
-    from hydraflow.core.io import get_artifact_path
-
-    text = get_artifact_path(run, "a.txt").read_text()
-    assert text == run.data.params["count"]
+def test_first(result: tuple[Path, DictConfig]):
+    path, cfg = result
+    assert int(path.joinpath("a.txt").read_text()) == cfg.count
