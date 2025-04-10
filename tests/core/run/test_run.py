@@ -194,6 +194,11 @@ def test_load_impl_collection(n_jobs: int):
     assert rc[1].impl.path == Path("a/b/d/artifacts")
 
 
+def test_impl_collection_repr():
+    rc = Run[Config, Impl].load(["a/b/c", "a/b/d"], Impl)
+    assert repr(rc) == "RunCollection(Run[Impl], n=2)"
+
+
 @pytest.fixture(scope="module")
 def results(collect):
     file = Path(__file__).parent / "run.py"
@@ -227,11 +232,19 @@ class ImplConfig:
         self.cfg = cfg
 
 
-def test_impl_config(results):
+@pytest.fixture(scope="module")
+def run_impl_config(results):
     run_dir: Path = results[0][0].parent
-    run = Run[Dummy, ImplConfig].load(run_dir, ImplConfig)
-    assert run.impl.path.stem == "artifacts"
-    cfg = run.cfg
+    return Run[Dummy, ImplConfig].load(run_dir, ImplConfig)
+
+
+def test_impl_config_repr(run_impl_config: Run[Dummy, ImplConfig]):
+    assert repr(run_impl_config).startswith("Run[ImplConfig]('")
+
+
+def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]):
+    assert run_impl_config.impl.path.stem == "artifacts"
+    cfg = run_impl_config.cfg
     assert cfg.count == 10  # type: ignore
     assert cfg.name == "abc"  # type: ignore
     assert cfg.size.width == 1  # type: ignore

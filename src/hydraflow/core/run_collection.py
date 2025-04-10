@@ -487,7 +487,10 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         if not kwargs:
             return gp
 
-        df = DataFrame(dict(zip(keys, k, strict=True)) for k in gp)
+        if len(keys) == 1:
+            df = DataFrame({keys[0]: list(gp)})
+        else:
+            df = DataFrame(dict(zip(keys, k, strict=True)) for k in gp)
         columns = [pl.Series(k, [v(r) for r in gp.values()]) for k, v in kwargs.items()]
         return df.with_columns(*columns)
 

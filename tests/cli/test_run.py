@@ -67,7 +67,6 @@ def test_submit_dry_run():
     assert "name=d count=6" in lines[4]
 
 
-@pytest.mark.xdist_group(name="group1")
 def test_run_args():
     result = runner.invoke(app, ["run", "args"])
     assert result.exit_code == 0
@@ -75,7 +74,6 @@ def test_run_args():
     assert len(run_dirs) == 12
 
 
-@pytest.mark.xdist_group(name="group2")
 def test_run_batch():
     result = runner.invoke(app, ["run", "batch"])
     assert result.exit_code == 0
@@ -83,7 +81,6 @@ def test_run_batch():
     assert len(run_dirs) == 8
 
 
-@pytest.mark.xdist_group(name="group3")
 def test_run_parallel():
     result = runner.invoke(app, ["run", "parallel"])
     assert result.exit_code == 0
@@ -96,7 +93,6 @@ def test_run_parallel():
     assert len(run_dirs) == 8
 
 
-@pytest.mark.xdist_group(name="group4")
 def test_run_echo():
     result = runner.invoke(app, ["run", "echo"])
     assert result.exit_code == 0
@@ -109,7 +105,6 @@ def test_run_echo():
     assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[4]
 
 
-@pytest.mark.xdist_group(name="group4")
 def test_submit():
     result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
@@ -125,7 +120,6 @@ def test_submit():
     assert len(run_dirs) == 4
 
 
-@pytest.mark.xdist_group(name="group5")
 def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1

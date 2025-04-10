@@ -250,8 +250,16 @@ def test_group_by_dict(rc: Rc):
 
 
 def test_group_by_frame(rc: Rc):
+    df = rc.group_by("count", x=lambda rc: len(rc))
+    assert isinstance(df, DataFrame)
+    assert df.shape == (2, 2)
+    assert df["x"].to_list() == [6, 6]
+
+
+def test_group_by_frame_multi(rc: Rc):
     df = rc.group_by("count", "name", x=lambda rc: len(rc))
     assert isinstance(df, DataFrame)
+    assert df.shape == (4, 3)
     assert df["x"].to_list() == [3, 3, 3, 3]
 
 
