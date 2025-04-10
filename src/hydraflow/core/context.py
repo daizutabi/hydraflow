@@ -22,14 +22,14 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def log_run(run: Run) -> Iterator[None]:
-    """Log the parameters from the given configuration object.
+    """Log the parameters from the given configuration instance.
 
-    This context manager logs the parameters from the provided configuration object
+    This context manager logs the parameters from the provided configuration instance
     using MLflow. It also manages the MLflow run context, ensuring that artifacts
     are logged and the run is properly closed.
 
     Args:
-        run (Run): The run object.
+        run (Run): The run instance.
 
     Yields:
         None
@@ -69,13 +69,13 @@ def start_run(
     description: str | None = None,
     log_system_metrics: bool | None = None,
 ) -> Iterator[Run]:
-    """Start an MLflow run and log parameters using the provided configuration object.
+    """Start an MLflow run and log parameters using the provided configuration instance.
 
     This context manager starts an MLflow run and logs parameters using the specified
-    configuration object. It ensures that the run is properly closed after completion.
+    configuration instance. It ensures that the run is properly closed after completion.
 
     Args:
-        config (object): The configuration object to log parameters from.
+        config (object): The configuration instance to log parameters from.
         chdir (bool): Whether to change the current working directory to the
             artifact directory of the current run. Defaults to False.
         run_id (str | None): The existing run ID. Defaults to None.
@@ -91,7 +91,7 @@ def start_run(
             Defaults to None.
 
     Yields:
-        Run: An MLflow Run object representing the started run.
+        Run: An MLflow Run instance representing the started run.
 
     """
     import mlflow

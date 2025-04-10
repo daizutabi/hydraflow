@@ -7,7 +7,7 @@ various formats such as DataFrames.
 
 The RunCollection class implements the Sequence protocol, allowing it to be
 used like a standard Python list while providing specialized methods for
-working with Run objects.
+working with Run instances.
 
 Example:
     ```python
@@ -55,19 +55,19 @@ if TYPE_CHECKING:
 
 
 class RunCollection[R: Run[Any, Any]](Sequence[R]):
-    """A collection of Run objects that implements the Sequence protocol.
+    """A collection of Run instances that implements the Sequence protocol.
 
     RunCollection provides methods for filtering, sorting, grouping, and analyzing
     runs, as well as converting run data to various formats such as DataFrames.
 
     Args:
-        runs (Iterable[Run]): An iterable of Run objects to include in
+        runs (Iterable[Run]): An iterable of Run instances to include in
             the collection.
 
     """
 
     runs: list[R]
-    """A list containing the Run objects in this collection."""
+    """A list containing the Run instances in this collection."""
 
     def __init__(self, runs: Iterable[R]) -> None:
         self.runs = list(runs)
@@ -84,7 +84,7 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         return f"{class_name}({type_name}, n={len(self)})"
 
     def __len__(self) -> int:
-        """Return the number of Run objects in the collection.
+        """Return the number of Run instances in the collection.
 
         Returns:
             int: The number of runs.
@@ -93,7 +93,7 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         return len(self.runs)
 
     def __bool__(self) -> bool:
-        """Return whether the collection contains any Run objects.
+        """Return whether the collection contains any Run instances.
 
         Returns:
             bool: True if the collection is not empty, False otherwise.
@@ -134,7 +134,7 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         """Return an iterator over the Runs in the collection.
 
         Returns:
-            Iterator[R]: An iterator yielding Run objects.
+            Iterator[R]: An iterator yielding Run instances.
 
         """
         return iter(self.runs)
@@ -493,13 +493,13 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
 
 
 def to_hashable(value: Any) -> Hashable:
-    """Convert a value to a hashable object.
+    """Convert a value to a hashable instance.
 
     This function handles various types of values and converts them to
     hashable equivalents for use in dictionaries and sets.
 
     Args:
-        value: The value to convert to a hashable object.
+        value: The value to convert to a hashable instance.
 
     Returns:
         A hashable version of the input value.

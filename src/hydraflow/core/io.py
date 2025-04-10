@@ -29,7 +29,7 @@ def get_artifact_dir(run: Run) -> Path:
     This function uses MLflow to get the artifact directory for the given run.
 
     Args:
-        run (Run | None): The run object. Defaults to None.
+        run (Run | None): The run instance. Defaults to None.
 
     Returns:
         The local path to the directory where the artifacts are downloaded.
@@ -49,7 +49,7 @@ def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
     Append the text files to the existing text file in the artifact directory.
 
     Args:
-        run (Run): The run object.
+        run (Run): The run instance.
         from_dir (Path): The directory to find the logs in.
         pattern (str): The pattern to match the logs.
 

@@ -77,25 +77,31 @@ Optionally, you can specify the experiment name(s) to filter the runs.
 
 ### Load a run
 
+[`Run`][hydraflow.core.run.Run] is a class that represents a *Hydraflow* run,
+not an MLflow run.
+A `Run` instance is created by passing a `pathlib.Path`
+instance that points to the run directory to the `Run` constructor.
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import Run
 >>> run_dirs = hydraflow.iter_run_dirs("mlruns", "quickstart")
 >>> run_dir = next(run_dirs)  # run_dirs is an iterator
->>> print(run_dir)
+>>> run = Run(run_dir)
+>>> print(run)
+>>> print(type(run))
 ```
 
+You can use `load` class method to load a `Run` instance,
+which accepts a `str` as well as `pathlib.Path`.
+
 ```pycon exec="1" source="console" session="quickstart"
->>> run = Run(run_dir)
+>>> Run.load(str(run_dir))
 >>> print(run)
 ```
 
-Here, `Run` is a class that represents a *Hydraflow* run,
-not an MLflow run.
+!!! note
+    The use case of `Run.load` is to load multiple `Run` instances from run directories as described below.
 
-```pycon exec="1" source="console" session="quickstart"
->>> print(type(run))
-```
 
 The `Run` instance has an `info` attribute that contains information about the run.
 
@@ -160,19 +166,29 @@ The `run.impl` attribute is recognized as `I` type in IDEs, which provides autoc
 ```pycon exec="1" source="console" session="quickstart"
 >>> print(run.impl)
 >>> print(run.impl.root_dir)
-```
-
-```pycon exec="1" source="console" session="quickstart"
 >>> # autocompletion occurs below, for example, run.impl.root_dir
 >>> # run.impl.[TAB]
 ```
 
+The `impl_factory` can accept two arguments: the run's artifacts directory
+and the run's configuration.
 
-
+```pycon exec="1" source="console" session="quickstart"
+>>> from dataclasses import dataclass, field
+>>> @dataclass
+>>> class ImplConfig:
+...     root_dir: Path = field(repr=False)
+...     cfg: Config
+>>> run = Run[Config, ImplConfig].load(run_dir, ImplConfig)
+>>> print(run)
+>>> print(run.impl)
+```
 
 ### Collect runs
 
-The `RunCollection` instance is a collection of runs.
+You can collect multiple `Run` instances from run directories
+as a collection of runs [`RunCollection`][hydraflow.RunCollection].
+
 
 ```pycon exec="1" source="console" session="quickstart"
 >>> from hydraflow import RunCollection

@@ -126,7 +126,7 @@ def get_run_id(uri: str, config: Any, overrides: list[str] | None) -> str | None
 
     Args:
         uri (str): The URI of the experiment.
-        config (object): The configuration object.
+        config (object): The configuration instance.
         overrides (list[str] | None): The task overrides.
 
     Returns:
@@ -146,7 +146,7 @@ def equals(run_dir: Path, config: Any, overrides: list[str] | None) -> bool:
 
     Args:
         run_dir (Path): The run directory.
-        config (object): The configuration object.
+        config (object): The configuration instance.
         overrides (list[str] | None): The task overrides.
 
     Returns:

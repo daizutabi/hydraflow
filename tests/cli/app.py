@@ -34,11 +34,11 @@ def app(run: Run, cfg: Config):
 
     1. Define a configuration using dataclasses
     2. Use the Hydraflow decorator to integrate with MLflow
-    3. Access the MLflow run object and configuration
+    3. Access the MLflow run instance and configuration
 
     Args:
-        run: MLflow run object for tracking metrics and parameters
-        cfg: Configuration object containing run parameters
+        run: MLflow run instance for tracking metrics and parameters
+        cfg: Configuration instance containing run parameters
     """
     # Start the run
     log.info("start")
