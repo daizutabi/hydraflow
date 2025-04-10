@@ -40,24 +40,24 @@ if TYPE_CHECKING:
     from .conf import Job
 
 
-def iter_args(batch: str, args: str) -> Iterator[list[str]]:
+def iter_args(each: str, all_: str) -> Iterator[list[str]]:
     """Iterate over combinations generated from parsed arguments.
 
     Generate all possible combinations of arguments by parsing and
     expanding each one, yielding them as an iterator.
 
     Args:
-        batch (str): The batch to parse.
-        args (str): The arguments to parse.
+        each (str): The 'each' parameter to parse.
+        all_ (str): The 'all' parameter to parse.
 
     Yields:
         list[str]: a list of the parsed argument combinations.
 
     """
-    args_ = collect(args)
+    all_params = collect(all_)
 
-    for batch_ in expand(batch):
-        yield [*batch_, *args_]
+    for each_params in expand(each):
+        yield [*each_params, *all_params]
 
 
 def iter_batches(job: Job) -> Iterator[list[str]]:
@@ -75,12 +75,12 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     """
     job_name = f"hydra.job.name={job.name}"
-    job_configs = shlex.split(job.with_)
+    job_configs = shlex.split(job.add)
 
     for set_ in job.sets:
-        configs = shlex.split(set_.with_) or job_configs
+        configs = shlex.split(set_.add) or job_configs
 
-        for args in iter_args(set_.batch, set_.args):
+        for args in iter_args(set_.each, set_.all):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
             yield ["--multirun", *args, job_name, sweep_dir, *configs]
 

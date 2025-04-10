@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from hydraflow.executor.conf import Job, Step
+from hydraflow.executor.conf import Job, Set
 
 
 def test_iter_args():
@@ -25,8 +25,8 @@ def test_iter_args_pipe():
 
 @pytest.fixture
 def job():
-    s1 = Step(batch="b=5,6", args="a=1:2")
-    s2 = Step(batch="c=7,8", args="a=3:4")
+    s1 = Set(each="b=5,6", all="a=1:2")
+    s2 = Set(each="c=7,8", all="a=3:4")
     return Job(name="test", sets=[s1, s2])
 
 

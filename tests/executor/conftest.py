@@ -23,8 +23,8 @@ def config(chdir):
 @pytest.fixture(scope="module")
 def args(config):
     def args(text: str):
-        text = f"jobs:\n  a:\n    sets:\n      - args: {text}\n"
+        text = f"jobs:\n  a:\n    sets:\n      - all: {text}\n"
         cfg: HydraflowConf = config(text)
-        return cfg.jobs["a"].sets[0].args
+        return cfg.jobs["a"].sets[0].all
 
     return args
