@@ -324,7 +324,7 @@ def collect_parentheses(arg: str) -> list[str]:
         list[str]: A list of the collected values.
 
     Examples:
-        >>> collect_parentheses("(1:3,5:2:9,20)k")
+        >>> collect_parentheses("(1:3,5:9:2,20)k")
         ['1e3', '2e3', '3e3', '5e3', '7e3', '9e3', '20e3']
         >>> collect_parentheses("2e(-1,-2,-3)")
         ['2e-1', '2e-2', '2e-3']
@@ -353,7 +353,7 @@ def collect_values(arg: str) -> list[str]:
     Examples:
         >>> collect_values("1:4")
         ['1', '2', '3', '4']
-        >>> collect_values("1.2:0.1:1.4:k")
+        >>> collect_values("1.2:1.4:0.1:k")
         ['1.2e3', '1.3e3', '1.4e3']
         >>> collect_values("0.1")
         ['0.1']
