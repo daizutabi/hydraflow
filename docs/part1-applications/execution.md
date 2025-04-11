@@ -75,7 +75,7 @@ python train.py -m learning_rate=1:5:m  # 0.001 to 0.005
 python train.py -m model=(cnn,transformer)_(small,large)
 ```
 
-See [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md) for a complete reference on these powerful features.
+See [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md) for a complete reference on these powerful features.
 
 ### Managing Complex Experiment Workflows
 
@@ -94,7 +94,7 @@ jobs:
 hydraflow run train
 ```
 
-This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part3-advanced/job-configuration.md) in Part 2.
+This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part2-advanced/job-configuration.md) in Part 2.
 
 ## Output Organization
 
@@ -179,5 +179,5 @@ efficient machine learning workflows while maintaining
 compatibility with the underlying libraries' documentation and ecosystem.
 
 For more advanced execution capabilities, see:
-- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md)
-- [Job Configuration](../part3-advanced/job-configuration.md) in Part 2
+- [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md)
+- [Job Configuration](../part2-advanced/job-configuration.md) in Part 2

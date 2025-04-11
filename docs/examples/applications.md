@@ -136,12 +136,11 @@ $ tree -L 3 --dirsfirst
 
 Now that you've learned how to create and run a basic application, you can move on to:
 
-- Explore complex parameter spaces with [Parameter Sweeps](parameter-sweeps.md)
-- Analyze experiment results using Run and RunCollection classes in [Results Analysis](results-analysis.md)
-- Create reusable job definitions with YAML configuration in [Advanced Workflows](advanced-workflows.md)
+- Create reusable job definitions with YAML configuration in [Advanced Workflows](advanced.md)
+- Analyze experiment results using Run and RunCollection classes in [Results Analysis](analysis.md)
 
 For detailed documentation, refer to:
 
 - [Part 1: Running Applications](../part1-applications/index.md)
-- [Part 2: Automating Workflows](../part3-advanced/index.md)
-- [Part 3: Analyzing Results](../part2-analysis/index.md)
+- [Part 2: Automating Workflows](../part2-advanced/index.md)
+- [Part 3: Analyzing Results](../part3-analysis/index.md)

@@ -72,10 +72,10 @@ in detail:
 
 Once you've mastered the basics, you may want to explore HydraFlow's more advanced features:
 
-- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md): Define complex parameter spaces using
+- [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md): Define complex parameter spaces using
   HydraFlow's powerful syntax for numerical ranges, combinations, and more.
 
-- [Job Configuration](../part3-advanced/job-configuration.md): Create reusable job definitions for
+- [Job Configuration](../part2-advanced/job-configuration.md): Create reusable job definitions for
   repeated experiment workflows using a declarative YAML format.
 
-These advanced features are covered in detail in [Part 2: Automating Workflows](../part3-advanced/index.md).
+These advanced features are covered in detail in [Part 2: Automating Workflows](../part2-advanced/index.md).

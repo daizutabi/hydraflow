@@ -16,7 +16,7 @@ your experiment workflows:
   Actions-like syntax
 
 These advanced features build upon the basics covered in [Part 1: Running Applications](../part1-applications/index.md)
-and work seamlessly with the analysis capabilities from [Part 3: Analyzing Results](../part2-analysis/index.md).
+and work seamlessly with the analysis capabilities from [Part 3: Analyzing Results](../part3-analysis/index.md).
 
 ## Extended Sweep Syntax
 
@@ -75,7 +75,7 @@ These advanced features integrate with the rest of the HydraFlow ecosystem:
 1. **Configuration** → **Execution** → **Analysis** workflow:
    - Define configurations in Python dataclasses ([Part 1](../part1-applications/configuration.md))
    - Execute experiments with advanced sweep syntax and job definitions ([Part 2](job-configuration.md))
-   - Analyze results with structured APIs ([Part 3](../part2-analysis/run-collection.md))
+   - Analyze results with structured APIs ([Part 3](../part3-analysis/run-collection.md))
 
 2. **Type-safety throughout**:
    - Configuration is type-checked via dataclasses

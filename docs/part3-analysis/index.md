@@ -121,7 +121,7 @@ model = run.impl.load_model()
 results = run.impl.analyze_performance()
 ```
 
-The analysis capabilities covered in Part 3 are designed to work seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md) and the advanced workflow automation from [Part 2](../part3-advanced/index.md).
+The analysis capabilities covered in Part 3 are designed to work seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md) and the advanced workflow automation from [Part 2](../part2-advanced/index.md).
 
 ## What's Next
 
