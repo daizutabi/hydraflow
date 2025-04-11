@@ -185,6 +185,15 @@ param_groups = runs.group_by("model_type", "learning_rate")
 transformer_001_group = param_groups[("transformer", 0.001)]
 ```
 
+When no aggregation functions are provided, `group_by` returns a dictionary mapping keys to `RunCollection` instances. This intentional design allows you to:
+
+- Work with each group as a separate `RunCollection` with all the filtering, sorting, and analysis capabilities
+- Perform custom operations on each group that might not be expressible as simple aggregation functions
+- Chain additional operations on specific groups that interest you
+- Implement multi-stage analysis workflows where you need to maintain the full run information at each step
+
+This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
+
 ## Aggregation with Group By
 
 Combine `group_by` with aggregation for powerful analysis:
@@ -204,6 +213,16 @@ results = runs.group_by(
     accuracy=mean_accuracy
 )
 ```
+
+When aggregation functions are provided as keyword arguments, `group_by` returns a Polars DataFrame with the group keys and aggregated values. This design choice offers several advantages:
+
+- Directly produces analysis-ready results with all aggregations computed in a single operation
+- Enables efficient downstream analysis using Polars' powerful DataFrame operations
+- Simplifies visualization and reporting workflows
+- Reduces memory usage by computing only the requested aggregations rather than maintaining full RunCollections
+- Creates a clean interface that separates grouping from additional analysis steps
+
+The DataFrame output is particularly useful for final analysis steps where you need to summarize results across many runs or prepare data for visualization.
 
 ## Type-Safe Run Collections
 
