@@ -93,6 +93,7 @@ nav:
           - Updating Run Configurations: part2-analysis/updating-runs.md
   - Examples:
       - Overview: examples/index.md
-      - Example: examples/example.md
-      - HydraFlow CLI: examples/cli.md
+      - Basic Application: examples/basic-application.md
+      - Parameter Sweeps: examples/parameter-sweeps.md
+      - Results Analysis: examples/results-analysis.md
   - API Reference: $api/hydraflow.***

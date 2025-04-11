@@ -101,16 +101,17 @@ This approach helps you organize complex experiments, track execution history, a
 By default, Hydra organizes outputs in the following directory structure for HydraFlow applications:
 
 ```
-outputs_or_multirun/
-├── YYYY-MM-DD/              # Date
-│   └── HH-MM-SS/            # Time
-│       └── .hydra/          # Hydra configuration
+ROOT_DIR/
+├── outputs/                 # Created in single run mode
+│   └── YYYY-MM-DD/          # Date
+│       └── HH-MM-SS/        # Time
+│           └── .hydra/      # Hydra configuration
 └── multirun/                # Created in multirun mode
-    └── YYYY-MM-DD/
-        └── HH-MM-SS/
-            ├── 0/           # Run 0
+    └── YYYY-MM-DD/          # Date
+        └── HH-MM-SS/        # Time
+            ├── 0/           # Sweep run 0
             │   └── .hydra/
-            ├── 1/           # Run 1
+            ├── 1/           # Sweep run 1
             │   └── .hydra/
             └── ...
 ```
@@ -124,6 +125,7 @@ mlruns/
 │   │   ├── artifacts/
 │   │   │   └── .hydra/      # Hydra config copied here
 │   │   │       ├── config.yaml
+│   │   │       ├── hydra.yaml
 │   │   │       └── overrides.yaml
 │   │   ├── metrics/
 │   │   ├── params/
@@ -131,8 +133,7 @@ mlruns/
 │   ├── run_id_2/
 │   │   └── artifacts/
 │   │       └── .hydra/
-│   └── meta.yaml            # Contains Hydra job name
-└── meta.yaml
+:   └── meta.yaml            # Contains Hydra job name
 ```
 
 **Important**: In HydraFlow, the MLflow run's `artifacts` directory serves
