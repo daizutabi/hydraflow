@@ -1,87 +1,144 @@
-# Basic Application
+# Basic HydraFlow Application
+
+This tutorial demonstrates how to create and run a basic HydraFlow application.
 
 ```bash exec="1" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
 ```
 
-## Project structure
+## Project Structure
+
+First, let's examine the project structure:
 
 ```console exec="1" source="console" workdir="examples"
 $ tree
 ```
-## Hydra application
 
-The following example demonstrates how to use a Hydraflow application.
+## Creating a HydraFlow Application
+
+Here's an example of a basic HydraFlow application that defines a simple configuration class and integrates Hydra with MLflow:
 
 ```python title="example.py" linenums="1"
 --8<-- "examples/example.py"
 ```
 
-### Hydraflow's `main` decorator
+### Application Components
 
-[`hydraflow.main`][] starts a new MLflow run that logs the Hydra
-configuration. The decorated function must have two arguments: `run` and
-`cfg`. The `run` argument is the current MLflow run with type
-`mlflow.entities.Run`. The `cfg` argument is the Hydra configuration
-with type `omegaconf.DictConfig`. You can annotate the arguments with
-`Run` and `Config` to get type checking and autocompletion in your IDE,
-although the `cfg` argument is not actually an instance of `Config`
-(duck typing is used).
+The code above consists of the following key elements:
+
+1. **Configuration Class**: Define typed settings using [`dataclass`](https://docs.python.org/3/library/dataclasses.html)
+   ```python
+   @dataclass
+   class Config:
+       width: int = 1024
+       height: int = 768
+   ```
+
+2. **Configuration Registration**: Register the config class with Hydra's `ConfigStore`
+   ```python
+   cs = ConfigStore.instance()
+   cs.store(name="config", node=Config)
+   ```
+
+3. **Main Function**: Integrate MLflow and Hydra with the [`hydraflow.main`][hydraflow.main] decorator
+   ```python
+   @hydraflow.main(Config)
+   def app(run: Run, cfg: Config) -> None:
+       log.info(run.info.run_id)
+       log.info(cfg)
+   ```
+
+### Role of the hydraflow.main Decorator
+
+The [`hydraflow.main`][hydraflow.main] decorator serves several purposes:
+
+- Loads and parses Hydra configuration
+- Sets up and executes MLflow runs
+- Logs Hydra configuration as MLflow artifacts
+- Provides type-safe configuration access
+
+The decorated function always takes two arguments:
+- `run`: The current MLflow run (type `mlflow.entities.Run`)
+- `cfg`: The Hydra configuration (type annotated by your config class)
 
 ```python
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config) -> None:
-    pass
+    # Application logic
 ```
 
-## Run the application
+For more details about the decorator, see the [Main Decorator](../part1-applications/main-decorator.md) documentation.
 
-### Single-run
+## Running the Application
 
-Run the Hydraflow application as a normal Python script.
+### Single-run Mode
+
+Run the HydraFlow application as a normal Python script:
 
 ```console exec="1" source="console" workdir="examples"
 $ python example.py
 ```
 
-Check the MLflow CLI to view the experiment.
+Use the MLflow CLI to check the created experiment:
 
 ```console exec="1" source="console" workdir="examples"
 $ mlflow experiments search
 ```
 
-The experiment name comes from the name of the Hydra job.
+The experiment name is automatically set from the Hydra job name (in this case, `example`).
 
-Check the current directory structure.
+Let's examine the current directory structure:
 
 ```console exec="1" source="console" workdir="examples"
 $ tree -a -L 5 --dirsfirst -I '.trash|tags'
 ```
 
-- `outputs` directory is created in single run mode by Hydra.
-- `mlruns` directory is created by MLflow.
-- The contents in the `artifacts` directory is
-copied from the `outputs` directory by HydraFlow.
+Key points about the directory structure after execution:
 
-### Multi-run
+- **`outputs` directory**: Temporary output location created by Hydra in single-run mode
+- **`mlruns` directory**: Persistent experiment data storage created by MLflow
+- **`artifacts` directory**: Contains configuration files and other artifacts copied from `outputs` by HydraFlow
 
-Run the Hydraflow application in multi-run mode.
+In HydraFlow, the MLflow `artifacts` directory serves as the single source of truth for experiment data. For more details, see the [Execution](../part1-applications/execution.md#output-organization) documentation.
+
+### Multi-run Mode
+
+Run the application with multiple parameter combinations using Hydra's `-m` (or `--multirun`) flag:
 
 ```console exec="1" source="console" workdir="examples"
 $ python example.py -m width=400,600 height=100,200
 ```
 
-Check the current directory structure.
+This example runs with four combinations:
+- width=400, height=100
+- width=400, height=200
+- width=600, height=100
+- width=600, height=200
+
+Check the created directory structure:
 
 ```console exec="1" source="console" workdir="examples"
 $ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml'
 ```
 
-The four runs are added to the same experiment.
+All runs are added to the same MLflow experiment, making it easy to compare results from related parameter sweeps.
 
-Now you can safely delete the `outputs` and `multirun` directories.
+With HydraFlow, all important data is stored in MLflow, so you can safely delete the Hydra output directories:
 
 ```console exec="1" source="console" workdir="examples"
 $ rm -rf outputs multirun
 $ tree -L 3 --dirsfirst
 ```
+
+## Next Steps
+
+Now that you've learned how to create and run a basic application, you can move on to:
+
+- Explore complex parameter spaces with [Parameter Sweeps](parameter-sweeps.md)
+- Analyze experiment results using Run and RunCollection classes in [Results Analysis](results-analysis.md)
+- Create reusable job definitions with YAML configuration in [Advanced Workflows](advanced-workflows.md)
+
+For detailed documentation, refer to:
+- [Part 1: Running Applications](../part1-applications/index.md)
+- [Part 2: Automating Workflows](../part3-advanced/index.md)
+- [Part 3: Analyzing Results](../part2-analysis/index.md)
