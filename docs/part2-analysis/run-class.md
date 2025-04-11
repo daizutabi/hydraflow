@@ -55,7 +55,19 @@ learning_rate = run.get("learning_rate")
 
 # Nested access with dot notation
 model_type = run.get("model.type")
+
+# Access implementation attributes or run info
+metric_value = run.get("accuracy")  # From impl or cfg
+run_id = run.get("run_id")  # From RunInfo
 ```
+
+The `get` method searches for values in the following order:
+
+1. First in the configuration (`cfg`)
+2. Then in the implementation instance (`impl`)
+3. Finally in the run information (`info`)
+
+This provides a unified access interface regardless of where the data is stored.
 
 ## Type-Safe Configuration Access
 
@@ -177,8 +189,13 @@ runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
 3. **Use Parallel Loading**: For large numbers of runs, use the
    `n_jobs` parameter with `load` to speed up loading.
 
-4. **Access Dot Notation**: Use the `get` method with dot notation
-   (e.g., `run.get("model.type")`) to access nested configuration values.
+4. **Unified Data Access**: Use the `get` method as a unified interface
+   to access data from all components (configuration, implementation, and run info).
+   It provides a consistent way to retrieve values regardless of where they are stored,
+   with a clear precedence order (cfg → impl → info).
+
+5. **Default Values**: When accessing potentially missing keys, use the
+   `get` method's default parameter: `run.get("key", default_value)`.
 
 ## Summary
 
