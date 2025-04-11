@@ -165,25 +165,26 @@ SUFFIX_EXPONENT = {
 
 
 def _get_range(arg: str) -> tuple[float, float, float]:
+    """Return a tuple of (start, stop, step)."""
     args = [to_number(x) for x in arg.split(":")]
 
     if len(args) == 2:
         if args[0] > args[1]:
             raise ValueError("start cannot be greater than stop")
 
-        return (args[0], 1, args[1])
+        return (args[0], args[1], 1)
 
-    if args[1] == 0:
+    if args[2] == 0:
         raise ValueError("step cannot be zero")
-    if args[1] > 0 and args[0] > args[2]:
+    if args[2] > 0 and args[0] > args[1]:
         raise ValueError("start cannot be greater than stop")
-    if args[1] < 0 and args[0] < args[2]:
+    if args[2] < 0 and args[0] < args[1]:
         raise ValueError("start cannot be less than stop")
 
     return args[0], args[1], args[2]
 
 
-def _arange(start: float, step: float, stop: float) -> list[float]:
+def _arange(start: float, stop: float, step: float) -> list[float]:
     """Generate a range of floating point numbers.
 
     This function generates a range of floating point numbers
@@ -191,8 +192,8 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
 
     Args:
         start (float): The starting value.
-        step (float): The step size.
         stop (float): The end value (inclusive).
+        step (float): The step size.
 
     Returns:
         list[float]: A list of floating point numbers from start to stop
