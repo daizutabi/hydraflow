@@ -199,6 +199,17 @@ This approach preserves all information in each group, giving you maximum flexib
 Combine `group_by` with aggregation for powerful analysis:
 
 ```python
+# Simple aggregation function using get method
+def mean_accuracy(runs: RunCollection) -> float:
+    return runs.to_numpy("accuracy").mean()
+
+# Complex aggregation from implementation or configuration
+def combined_metric(runs: RunCollection) -> float:
+    accuracies = runs.to_numpy("accuracy")  # Could be from impl or cfg
+    precisions = runs.to_numpy("precision")  # Could be from impl or cfg
+    return (accuracies.mean() + precisions.mean()) / 2
+
+
 # Group by model type and calculate average accuracy
 model_accuracies = runs.group_by(
     "model_type",
@@ -210,9 +221,12 @@ results = runs.group_by(
     "model_type",
     "learning_rate",
     count=len,
-    accuracy=mean_accuracy
+    accuracy=mean_accuracy,
+    combined=combined_metric
 )
 ```
+
+With the enhanced `get` method that can access both configuration and implementation attributes, writing aggregation functions becomes more straightforward. You no longer need to worry about whether a metric comes from configuration, implementation, or run information - the `get` method provides a unified access interface.
 
 When aggregation functions are provided as keyword arguments, `group_by` returns a Polars DataFrame with the group keys and aggregated values. This design choice offers several advantages:
 
