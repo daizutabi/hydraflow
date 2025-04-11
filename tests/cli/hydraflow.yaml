@@ -46,3 +46,13 @@ jobs:
     sets:
       - each: name=a
         all: count=1:3tep
+  paren:
+    run: python app.py
+    sets:
+      - each: >-
+          model=(cnn,transformer)_(small,large)
+  pipe:
+    run: python app.py
+    sets:
+      - each: >-
+          model=small,medium|large
