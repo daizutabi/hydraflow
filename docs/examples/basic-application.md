@@ -58,6 +58,7 @@ The [`hydraflow.main`][hydraflow.main] decorator serves several purposes:
 - Provides type-safe configuration access
 
 The decorated function always takes two arguments:
+
 - `run`: The current MLflow run (type `mlflow.entities.Run`)
 - `cfg`: The Hydra configuration (type annotated by your config class)
 
@@ -110,6 +111,7 @@ $ python example.py -m width=400,600 height=100,200
 ```
 
 This example runs with four combinations:
+
 - width=400, height=100
 - width=400, height=200
 - width=600, height=100
@@ -139,6 +141,7 @@ Now that you've learned how to create and run a basic application, you can move 
 - Create reusable job definitions with YAML configuration in [Advanced Workflows](advanced-workflows.md)
 
 For detailed documentation, refer to:
+
 - [Part 1: Running Applications](../part1-applications/index.md)
 - [Part 2: Automating Workflows](../part3-advanced/index.md)
 - [Part 3: Analyzing Results](../part2-analysis/index.md)
