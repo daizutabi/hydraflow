@@ -126,7 +126,8 @@ HydraFlow supports three types of parameters for configuring your commands:
   can also use the sweep syntax, but all parameters are included as-is in each command.
 
 - **`add`**: Additional arguments appended to the end of each command, primarily used
-  for Hydra configuration. These are passed as-is, without any expansion.
+  for Hydra configuration. When specified at both job and set levels, they are merged
+  with set-level values taking precedence for the same keys.
 
 Example of the three parameter types:
 
@@ -140,10 +141,10 @@ jobs:
       - each: model=small  # Creates a command
       - all: seed=42       # Included in the command
 
-      # Second set - overrides job-level add with set-level add
+      # Second set - merges job-level add with set-level add
       - each: model=large
       - all: seed=43
-      - add: hydra.job.num_nodes=1  # Completely replaces job-level add
+      - add: hydra/launcher=submitit hydra.job.num_nodes=1  # Merges with job-level add
 ```
 
 This generates:
@@ -152,11 +153,11 @@ This generates:
 # First set - uses job-level add
 $ python train.py model=small seed=42 hydra/launcher=joblib hydra.launcher.n_jobs=2
 
-# Second set - only uses set-level add (job-level add is ignored)
-$ python train.py model=large seed=43 hydra.job.num_nodes=1
+# Second set - merges job-level add with set-level add (hydra/launcher is overridden)
+$ python train.py model=large seed=43 hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
 ```
 
-**Important**: When a set has its own `add` parameter, it completely overrides the job-level `add`. The job-level `add` is entirely ignored for that set, not merged or selectively replaced.
+**Important**: When a set has its own `add` parameter, it is merged with the job-level `add`. If the same parameter key appears in both, the set-level value takes precedence. This allows you to define common parameters at the job level while customizing specific parameters for each set.
 
 ### 6. Parallelize with Submission Commands
 
@@ -177,6 +178,7 @@ jobs:
 ```
 
 This approach offers several advantages:
+
 - **Parallelization**: Execute multiple parameter combinations simultaneously
 - **Resource Optimization**: Allocate appropriate resources to each job
 - **Scalability**: Easily scale to hundreds or thousands of experiments

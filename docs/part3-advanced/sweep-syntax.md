@@ -46,7 +46,7 @@ python train.py batch_size=48
 python train.py batch_size=128
 ```
 
-The format is `start:stop:step`, similar to Python's range notation.
+The format is `start:stop:step`, similar to Python's range notation. **Note that unlike Python's range, the stop value is inclusive** - the range includes both the start and stop values if they align with the step size.
 
 ## Logarithmic Ranges
 

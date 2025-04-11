@@ -153,15 +153,15 @@ def test_impl_none(run: Run[Config]):
 
 
 class Impl:
-    path: Path
+    path: str
 
     def __init__(self, path: Path):
-        self.path = path
+        self.path = str(path)
 
 
 def test_impl():
     run = Run[Config, Impl](Path(), Impl)
-    assert run.impl.path == Path("artifacts")
+    assert run.impl.path == "artifacts"
 
 
 def test_repr_impl():
@@ -186,7 +186,12 @@ def test_load_collection(n_jobs: int):
 
 def test_load_impl():
     run = Run[Config, Impl].load("a/b/c", Impl)
-    assert run.impl.path == Path("a/b/c/artifacts")
+    assert run.impl.path == "a/b/c/artifacts"
+
+
+def test_get_impl():
+    run = Run[Config, Impl].load("a/b/c", Impl)
+    assert run.get("path") == "a/b/c/artifacts"
 
 
 @pytest.mark.parametrize("n_jobs", [0, 1, 2])
@@ -194,8 +199,8 @@ def test_load_impl_collection(n_jobs: int):
     rc = Run[Config, Impl].load([Path("a/b/c"), Path("a/b/d")], Impl, n_jobs=n_jobs)
     assert isinstance(rc, RunCollection)
     assert len(rc) == 2
-    assert rc[0].impl.path == Path("a/b/c/artifacts")
-    assert rc[1].impl.path == Path("a/b/d/artifacts")
+    assert rc[0].impl.path == "a/b/c/artifacts"
+    assert rc[1].impl.path == "a/b/d/artifacts"
 
 
 def test_impl_collection_repr():

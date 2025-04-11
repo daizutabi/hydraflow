@@ -272,6 +272,9 @@ class Run[C, I = None]:
         if value is not MISSING:
             return value
 
+        if self.impl and hasattr(self.impl, key):
+            return getattr(self.impl, key)
+
         info = self.info.to_dict()
         if key in info:
             return info[key]
@@ -306,32 +309,35 @@ class Run[C, I = None]:
 
         """
         attr = self.get(key)
-
-        if callable(value):
-            return bool(value(attr))
-
-        if isinstance(value, ListConfig):
-            value = list(value)
-
-        if isinstance(value, list | set) and not _is_iterable(attr):
-            return attr in value
-
-        if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
-            return value[0] <= attr <= value[1]
-
-        if _is_iterable(value):
-            value = list(value)
-
-        if _is_iterable(attr):
-            attr = list(attr)
-
-        return attr == value
+        return _predicate(attr, value)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the Run to a dictionary."""
         info = self.info.to_dict()
         cfg = OmegaConf.to_container(self.cfg)
         return info | _flatten_dict(cfg)  # type: ignore
+
+
+def _predicate(attr: Any, value: Any) -> bool:
+    if callable(value):
+        return bool(value(attr))
+
+    if isinstance(value, ListConfig):
+        value = list(value)
+
+    if isinstance(value, list | set) and not _is_iterable(attr):
+        return attr in value
+
+    if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
+        return value[0] <= attr <= value[1]
+
+    if _is_iterable(value):
+        value = list(value)
+
+    if _is_iterable(attr):
+        attr = list(attr)
+
+    return attr == value
 
 
 def _is_iterable(value: Any) -> bool:
