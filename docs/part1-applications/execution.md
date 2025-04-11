@@ -60,10 +60,41 @@ python train.py -m optimizer.learning_rate=0.1,0.01 model=transformer,cnn
 The above command will run your application 6 times with all combinations
 of the specified parameters (2 learning rates × 3 model types).
 
-HydraFlow provides CLI tools to work with multirun mode more efficiently than
-using long command lines. These tools automatically track execution history and
-make it easier to manage complex parameter sweeps. For details on these advanced
-capabilities, see Part 3 of the documentation.
+### Advanced Parameter Sweeps
+
+For more complex parameter spaces, HydraFlow provides an extended sweep syntax that goes beyond Hydra's basic capabilities:
+
+```bash
+# Define numerical ranges with start:stop:step
+python train.py -m batch_size=16:128:16
+
+# Use SI prefixes for scientific notation
+python train.py -m learning_rate=1:5:m  # 0.001 to 0.005
+
+# Create parameter combinations
+python train.py -m model=(cnn,transformer)_(small,large)
+```
+
+See [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md) for a complete reference on these powerful features.
+
+### Managing Complex Experiment Workflows
+
+HydraFlow provides CLI tools to work with multirun mode more efficiently than using long command lines:
+
+```bash
+# Define jobs in hydraflow.yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: model=small,large
+      - all: seed=42,43
+
+# Run the defined job
+hydraflow run train
+```
+
+This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part3-advanced/job-configuration.md).
 
 ## Output Organization
 
@@ -130,8 +161,8 @@ Hydra output directories have been deleted.
 3. **Version Control Configurations**: Store configuration files in version
    control to ensure reproducibility.
 
-4. **Organize Complex Sweeps**: For complex parameter sweeps, create separate
-   configuration files rather than using long command lines.
+4. **Organize Complex Sweeps**: For complex parameter sweeps, use HydraFlow's
+   extended sweep syntax and job configurations rather than long command lines.
 
 5. **Monitor Resource Usage**: Be mindful of resource usage when running large
    parameter sweeps, especially with parallel execution.
@@ -145,3 +176,7 @@ while experiment tracking utilizes MLflow's capabilities.
 By combining these tools, HydraFlow enables reproducible and
 efficient machine learning workflows while maintaining
 compatibility with the underlying libraries' documentation and ecosystem.
+
+For more advanced execution capabilities, see:
+- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md)
+- [Job Configuration](../part3-advanced/job-configuration.md)

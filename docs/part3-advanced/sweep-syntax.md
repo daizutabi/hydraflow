@@ -19,14 +19,35 @@ jobs:
 This generates commands for each parameter value:
 
 ```bash
-python train.py model=small
-python train.py model=medium
-python train.py model=large
+python train.py -m model=small
+python train.py -m model=medium
+python train.py -m model=large
+```
+
+When using multiple parameters with `each`, all possible combinations (cartesian product) will be generated:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          model=small,medium
+          learning_rate=0.1,0.01
+```
+
+This generates all four combinations:
+
+```bash
+python train.py -m model=small learning_rate=0.1
+python train.py -m model=small learning_rate=0.01
+python train.py -m model=medium learning_rate=0.1
+python train.py -m model=medium learning_rate=0.01
 ```
 
 ## Numerical Ranges
 
-For numerical parameters, you can use range notation:
+For numerical parameters, you can use range notation with colons:
 
 ```yaml
 jobs:
@@ -39,65 +60,62 @@ jobs:
 This generates:
 
 ```bash
-python train.py batch_size=16
-python train.py batch_size=32
-python train.py batch_size=48
+python train.py -m batch_size=16
+python train.py -m batch_size=32
+python train.py -m batch_size=48
 ...
-python train.py batch_size=128
+python train.py -m batch_size=128
 ```
 
-The format is `start:stop:step`, similar to Python's range notation. **Note that unlike Python's range, the stop value is inclusive** - the range includes both the start and stop values if they align with the step size.
+The format is `start:stop:step`, similar to Python's range
+notation. **Note that unlike Python's range, the stop value
+is inclusive** - the range includes both the start and stop
+values if they align with the step size.
 
-## Logarithmic Ranges
-
-For learning rates and other parameters that benefit from logarithmic spacing,
-use the `logspace` function:
+You can omit the start value to default to 0:
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      - each: >-
-          learning_rate=logspace(0.0001,0.1,5)
+      - each: steps=:5  # Equivalent to steps=0:5:1
 ```
 
-This generates logarithmically spaced values:
+Generates:
 
 ```bash
-python train.py learning_rate=0.0001
-python train.py learning_rate=0.001
-python train.py learning_rate=0.01
-python train.py learning_rate=0.1
+python train.py -m steps=0
+python train.py -m steps=1
+python train.py -m steps=2
+python train.py -m steps=3
+python train.py -m steps=4
+python train.py -m steps=5
 ```
 
-## Linear Ranges
-
-For linearly spaced values, use the `linspace` function:
+You can also use negative steps to create descending ranges:
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      - each: >-
-          dropout=linspace(0.0,0.5,6)
+      - each: lr=5:1:-1
 ```
 
-This generates evenly spaced values:
+Generates:
 
 ```bash
-python train.py dropout=0.0
-python train.py dropout=0.1
-python train.py dropout=0.2
-python train.py dropout=0.3
-python train.py dropout=0.4
-python train.py dropout=0.5
+python train.py -m lr=5
+python train.py -m lr=4
+python train.py -m lr=3
+python train.py -m lr=2
+python train.py -m lr=1
 ```
 
-## Scientific Notation
+## SI Prefixes (Engineering Notation)
 
-You can use scientific notation for very small or large numbers:
+You can use SI prefixes to represent large or small numbers concisely:
 
 ```yaml
 jobs:
@@ -105,21 +123,74 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          weight_decay=0,1e-4,1e-5,1e-6
+          weight_decay=1:3:n     # nano (1e-9)
+          max_tokens=1:3:k       # kilo (1e3)
+          model_dim=1:3:M        # mega (1e6)
+```
+
+This generates all combinations (total of 27 different commands).
+
+Supported SI prefixes:
+
+- `f`: femto (1e-15)
+- `p`: pico (1e-12)
+- `n`: nano (1e-9)
+- `u`: micro (1e-6)
+- `m`: milli (1e-3)
+- `k`: kilo (1e3)
+- `M`: mega (1e6)
+- `G`: giga (1e9)
+- `T`: tera (1e12)
+
+You can also use fractional steps with SI prefixes:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: learning_rate=0.1:0.4:0.1:m  # From 0.1e-3 to 0.4e-3 by 0.1e-3
+```
+
+## Prefix Notation
+
+You can apply an SI prefix to all values in a parameter using the prefix notation:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          lr/m=1,2,5,10           # Applies milli (1e-3) to all values
+          batch_size/k=4,8        # Applies kilo (1e3) to all values
+```
+
+This is useful when all values for a parameter share the same exponent.
+
+## Grouping with Parentheses
+
+You can use parentheses to create combinations of values:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          model=(cnn,transformer)_(small,large)  # Combines model types and sizes
 ```
 
 This generates:
 
 ```bash
-python train.py weight_decay=0
-python train.py weight_decay=0.0001
-python train.py weight_decay=0.00001
-python train.py weight_decay=0.000001
+python train.py -m model=cnn_small
+python train.py -m model=cnn_large
+python train.py -m model=transformer_small
+python train.py -m model=transformer_large
 ```
 
-## Combining Multiple Parameters
-
-You can combine multiple parameters in a single each:
+Parentheses are particularly useful for combining values with SI prefixes:
 
 ```yaml
 jobs:
@@ -127,269 +198,83 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          model=small,large
-          learning_rate=0.1,0.01,0.001
+          weight_decay=(1,4)k,(6,8)M  # Combines values with different prefixes
 ```
 
-This generates a grid of all combinations:
+## Pipe Operator for Multiple Parameter Sets
+
+The pipe operator (`|`) allows you to specify completely
+different parameter sets that are executed independently:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          model=small,large|lr=0.1,0.2|dropout=1:5:2 decay=1,2
+```
+
+This generates separate Hydra multirun commands:
 
 ```bash
-python train.py model=small learning_rate=0.1
-python train.py model=small learning_rate=0.01
-python train.py model=small learning_rate=0.001
-python train.py model=large learning_rate=0.1
-python train.py model=large learning_rate=0.01
-python train.py model=large learning_rate=0.001
+# The pipe operator creates separate Hydra multirun commands
+python train.py -m model=small,large decay=1
+python train.py -m model=small,large decay=2
+python train.py -m lr=0.1,0.2 decay=1
+python train.py -m lr=0.1,0.2 decay=2
+python train.py -m dropout=1,3,5 decay=1
+python train.py -m dropout=1,3,5 decay=2
 ```
 
-## Mixed Parameter Types
+The pipe operator splits the expression into separate
+Hydra multirun commands.
+Each section before a pipe becomes a separate command
+with its own grid sweep.
+Parameters that appear after all pipes
+(like `decay=1,2` in the example) are applied to
+every section and expanded as well.
 
-You can mix different parameter types and notations:
+This is fundamentally different from `each` without
+pipes, which would create a single grid of all combinations.
+The pipe operator allows you to run completely independent
+parameter sweeps in the same job.
+
+A practical use case is to group similar configurations
+while separating dissimilar ones:
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      - each: >-
-          model=small,large
-          learning_rate=logspace(0.0001,0.1,4)
-          dropout=0.0:0.5:0.1
+      - each: model=small,medium|large
 ```
 
-This combines all parameter types in a single grid.
-
-## Nested Parameters
-
-You can sweep over nested parameters using dot notation:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model.type=cnn,transformer
-          model.layers=2,4,8
-```
-
-This generates:
+This is equivalent to `model=small,medium|model=large` and
+would generate two separate command sets:
 
 ```bash
-python train.py model.type=cnn model.layers=2
-python train.py model.type=cnn model.layers=4
-python train.py model.type=cnn model.layers=8
-python train.py model.type=transformer model.layers=2
-python train.py model.type=transformer model.layers=4
-python train.py model.type=transformer model.layers=8
+python train.py -m model=small,medium
+python train.py -m model=large
 ```
 
-## Boolean Parameters
+This allows you to group smaller models (small and medium) in
+one job while running the large model in a separate job,
+which is useful when you want to allocate resources
+differently based on model size.
 
-Boolean parameters can be specified:
+## Summary
 
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: use_augmentation=true,false
-```
+HydraFlow's extended sweep syntax provides several powerful features for parameter space exploration:
 
-This generates:
+1. **Basic comma-separated lists** - Simple way to enumerate discrete parameter values
+2. **Numerical ranges** - Define continuous ranges with start:stop:step notation (inclusive of stop value)
+3. **SI prefixes** - Use scientific notation shortcuts (n, u, m, k, M, G, etc.) for large/small numbers
+4. **Prefix notation** - Apply SI prefixes to all values in a parameter list
+5. **Parentheses grouping** - Create combinations of values and nested structures
+6. **Pipe operator** - Run multiple independent parameter sweeps in the same job
 
-```bash
-python train.py use_augmentation=true
-python train.py use_augmentation=false
-```
+All of these can be combined to create complex, expressive parameter sweeps with minimal configuration. Remember that using the `each` keyword creates a cartesian product of all parameters (all possible combinations), while the pipe operator (`|`) creates separate, independent parameter sweeps.
 
-## Expressions and Calculations
-
-You can use simple mathematical expressions:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          learning_rate=0.01,0.01*0.1,0.01*0.01
-```
-
-This generates:
-
-```bash
-python train.py learning_rate=0.01
-python train.py learning_rate=0.001
-python train.py learning_rate=0.0001
-```
-
-## Using Variables
-
-You can define variables and use them in parameter sweeps:
-
-```yaml
-variables:
-  base_lr: 0.01
-  models: small,large
-
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=${models}
-          learning_rate=${base_lr},${base_lr}*0.1
-```
-
-Variables are expanded when the configuration is loaded.
-
-## Understanding `each`, `all`, and `add`
-
-HydraFlow uses three different parameter types:
-
-1. **`each`**: Creates separate executions for each parameter combination.
-2. **`all`**: Parameters included in every command but can still use sweep syntax.
-3. **`add`**: Additional arguments appended to each command (no sweep expansion). When specified at both job and set levels, they are merged with set-level values taking precedence for the same keys.
-
-Example with all three types:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    add: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level add
-    sets:
-      # First set: uses job-level add
-      - each: model=small
-      - all: seed=42,43 epochs=100
-
-      # Second set: merges with job-level add (set-level takes precedence for conflicts)
-      - each: model=large
-      - all: seed=44
-      - add: hydra/launcher=submitit hydra.job.num_nodes=1
-```
-
-This generates:
-
-```bash
-# First set: with job-level add
-python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2
-
-# Second set: merges job-level and set-level add (hydra/launcher is overridden by set-level)
-python train.py model=large seed=44 hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
-```
-
-**Important**: When a set has its own `add` parameter, it is merged with the job-level `add`. If the same parameter key appears in both, the set-level value takes precedence. Parameters unique to either the job-level or set-level `add` are preserved in the final command.
-
-## Advanced Examples
-
-### Complex Parameter Grid
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=resnet18,resnet50
-          optimizer=adam,sgd
-          learning_rate=logspace(0.0001,0.1,3)
-          batch_size=16:128:16
-```
-
-### Specialized Configuration Sets
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      # Sweep over model architectures
-      - each: >-
-          model.type=cnn,transformer,mlp
-          model.size=small,medium,large
-
-      # Sweep over optimization parameters
-      - each: >-
-          optimizer=adam,sgd,adagrad
-          learning_rate=logspace(0.0001,0.1,4)
-```
-
-### Conditional Parameters
-
-You can create conditional parameters using multiple sets:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      # CNN-specific parameters
-      - each: model.type=cnn
-      - all: model.kernel_size=3,5,7
-
-      # Transformer-specific parameters
-      - each: model.type=transformer
-      - all: model.num_heads=4,8
-```
-
-## Best Practices
-
-### Keep Sets Manageable
-
-While it's possible to create very large parameter spaces, try to keep them
-manageable:
-
-```yaml
-# Instead of this (creates 1000 combinations)
-sets:
-  - each: >-
-      param1=1:10:1
-      param2=1:10:1
-      param3=1:10:1
-
-# Consider this (creates 30 combinations)
-sets:
-  - each: param1=1:10:1
-  - each: param2=1:10:1
-  - each: param3=1:10:1
-```
-
-### Use Descriptive Parameter Names
-
-Choose descriptive parameter names to make your sweeps more understandable:
-
-```yaml
-# Less clear
-sets:
-  - each: >-
-      lr=0.1,0.01
-      bs=32,64
-
-# More clear
-sets:
-  - each: >-
-      learning_rate=0.1,0.01
-      batch_size=32,64
-```
-
-### Document Parameter Ranges
-
-Add comments to explain parameter ranges and their significance:
-
-```yaml
-sets:
-  # Exploring learning rate impact on convergence
-  - each: >-
-      # Range covers typical values for Adam optimizer
-      learning_rate=logspace(0.0001,0.01,5)
-```
-
-### Validate Your Sweeps
-
-Always validate your parameter sweeps with a dry run before executing:
-
-```bash
-$ hydraflow run train --dry-run
-```
+When using these features, HydraFlow will automatically generate the appropriate Hydra multirun commands with the `-m` flag.

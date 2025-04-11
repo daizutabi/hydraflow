@@ -25,9 +25,11 @@ from hydraflow import Run
 # Load an existing run
 run = Run.load("path/to/run")
 
-# Access configuration
-learning_rate = run.get("learning_rate")
-model_type = run.get("model.type")  # Access nested config with dot notation
+# Access configuration, implementation attributes, or run info
+learning_rate = run.get("learning_rate")  # From config
+model_type = run.get("model.type")        # Access nested config with dot notation
+accuracy = run.get("accuracy")            # Could be from implementation
+run_dir = run.get("run_dir")              # From run info
 
 # For MLflow specific data, you can use the underlying MLflow client
 import mlflow

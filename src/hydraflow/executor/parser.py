@@ -165,25 +165,26 @@ SUFFIX_EXPONENT = {
 
 
 def _get_range(arg: str) -> tuple[float, float, float]:
+    """Return a tuple of (start, stop, step)."""
     args = [to_number(x) for x in arg.split(":")]
 
     if len(args) == 2:
         if args[0] > args[1]:
             raise ValueError("start cannot be greater than stop")
 
-        return (args[0], 1, args[1])
+        return (args[0], args[1], 1)
 
-    if args[1] == 0:
+    if args[2] == 0:
         raise ValueError("step cannot be zero")
-    if args[1] > 0 and args[0] > args[2]:
+    if args[2] > 0 and args[0] > args[1]:
         raise ValueError("start cannot be greater than stop")
-    if args[1] < 0 and args[0] < args[2]:
+    if args[2] < 0 and args[0] < args[1]:
         raise ValueError("start cannot be less than stop")
 
     return args[0], args[1], args[2]
 
 
-def _arange(start: float, step: float, stop: float) -> list[float]:
+def _arange(start: float, stop: float, step: float) -> list[float]:
     """Generate a range of floating point numbers.
 
     This function generates a range of floating point numbers
@@ -191,8 +192,8 @@ def _arange(start: float, step: float, stop: float) -> list[float]:
 
     Args:
         start (float): The starting value.
-        step (float): The step size.
         stop (float): The end value (inclusive).
+        step (float): The step size.
 
     Returns:
         list[float]: A list of floating point numbers from start to stop
@@ -323,7 +324,7 @@ def collect_parentheses(arg: str) -> list[str]:
         list[str]: A list of the collected values.
 
     Examples:
-        >>> collect_parentheses("(1:3,5:2:9,20)k")
+        >>> collect_parentheses("(1:3,5:9:2,20)k")
         ['1e3', '2e3', '3e3', '5e3', '7e3', '9e3', '20e3']
         >>> collect_parentheses("2e(-1,-2,-3)")
         ['2e-1', '2e-2', '2e-3']
@@ -352,7 +353,7 @@ def collect_values(arg: str) -> list[str]:
     Examples:
         >>> collect_values("1:4")
         ['1', '2', '3', '4']
-        >>> collect_values("1.2:0.1:1.4:k")
+        >>> collect_values("1.2:1.4:0.1:k")
         ['1.2e3', '1.3e3', '1.4e3']
         >>> collect_values("0.1")
         ['0.1']

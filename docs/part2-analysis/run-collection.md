@@ -185,11 +185,31 @@ param_groups = runs.group_by("model_type", "learning_rate")
 transformer_001_group = param_groups[("transformer", 0.001)]
 ```
 
+When no aggregation functions are provided, `group_by` returns a dictionary mapping keys to `RunCollection` instances. This intentional design allows you to:
+
+- Work with each group as a separate `RunCollection` with all the filtering, sorting, and analysis capabilities
+- Perform custom operations on each group that might not be expressible as simple aggregation functions
+- Chain additional operations on specific groups that interest you
+- Implement multi-stage analysis workflows where you need to maintain the full run information at each step
+
+This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
+
 ## Aggregation with Group By
 
 Combine `group_by` with aggregation for powerful analysis:
 
 ```python
+# Simple aggregation function using get method
+def mean_accuracy(runs: RunCollection) -> float:
+    return runs.to_numpy("accuracy").mean()
+
+# Complex aggregation from implementation or configuration
+def combined_metric(runs: RunCollection) -> float:
+    accuracies = runs.to_numpy("accuracy")  # Could be from impl or cfg
+    precisions = runs.to_numpy("precision")  # Could be from impl or cfg
+    return (accuracies.mean() + precisions.mean()) / 2
+
+
 # Group by model type and calculate average accuracy
 model_accuracies = runs.group_by(
     "model_type",
@@ -201,9 +221,22 @@ results = runs.group_by(
     "model_type",
     "learning_rate",
     count=len,
-    accuracy=mean_accuracy
+    accuracy=mean_accuracy,
+    combined=combined_metric
 )
 ```
+
+With the enhanced `get` method that can access both configuration and implementation attributes, writing aggregation functions becomes more straightforward. You no longer need to worry about whether a metric comes from configuration, implementation, or run information - the `get` method provides a unified access interface.
+
+When aggregation functions are provided as keyword arguments, `group_by` returns a Polars DataFrame with the group keys and aggregated values. This design choice offers several advantages:
+
+- Directly produces analysis-ready results with all aggregations computed in a single operation
+- Enables efficient downstream analysis using Polars' powerful DataFrame operations
+- Simplifies visualization and reporting workflows
+- Reduces memory usage by computing only the requested aggregations rather than maintaining full RunCollections
+- Creates a clean interface that separates grouping from additional analysis steps
+
+The DataFrame output is particularly useful for final analysis steps where you need to summarize results across many runs or prepare data for visualization.
 
 ## Type-Safe Run Collections
 
