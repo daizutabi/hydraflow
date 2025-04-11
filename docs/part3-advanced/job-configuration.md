@@ -64,17 +64,34 @@ The specified function will be imported and called with the parameters.
 
 ### `submit`
 
-The `submit` command is used for submitting jobs to a cluster scheduler:
+The `submit` command collects all parameter combinations into a text file and passes this file to the specified command:
 
 ```yaml
 jobs:
   train:
-    submit: sbatch --partition=gpu job.sh
+    submit: python submit_handler.py
     sets:
       - each: model=small,large
 ```
 
-The parameters will be passed to the submit command.
+When executed, this will:
+
+1. Generate all parameter combinations from the sets
+2. Write these combinations to a text file (one combination per line)
+3. Execute the specified command once, passing the text file as an argument
+
+The command (e.g., `submit_handler.py` in the example) is responsible for:
+
+1. Reading the parameter file
+2. Processing the parameter sets in any way it chooses
+3. Optionally distributing the work (via cluster jobs, local parallelization, etc.)
+
+The key difference between `run` and `submit`:
+
+- `run`: Executes the command once per parameter combination
+- `submit`: Executes the command once, with all parameter combinations provided in a file
+
+This gives you complete flexibility in how parameter combinations are processed. Your handler script can implement any logic - from simple sequential processing to complex distributed execution across a cluster.
 
 ## Parameter Sets
 
@@ -207,306 +224,36 @@ For example, with the configuration above:
 Notice how `hydra/launcher` is overridden by the set-level value, while `hydra.launcher.n_jobs` from the job-level is retained.
 
 This behavior allows you to:
+
 1. Define common parameters at the job level
 2. Override or add specific parameters at the set level
 3. Keep all non-conflicting parameters from both levels
 
 This merging behavior makes it easy to maintain common configuration options while customizing specific aspects for different parameter sets.
 
-## Extended Sweep Syntax
+## Summary
 
-HydraFlow supports an extended syntax for defining parameter sweeps:
+HydraFlow's job configuration system provides a powerful way to define and manage complex parameter sweeps:
 
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=small,large
-          learning_rate=logspace(0.1,0.001,4)
-          weight_decay=0,1e-4,1e-5
-```
+1. **Execution Commands**:
 
-This uses HydraFlow's extended sweep syntax to generate a grid of
-parameters. See [Extended Sweep Syntax](sweep-syntax.md) for details.
+    - `run`: Executes a command once per parameter combination (most common usage)
+    - `call`: Calls a Python function once per parameter combination
+    - `submit`: Passes all parameter combinations as a text file to a handler script, executed once
 
-## Job Inheritance
+2. **Parameter Types**:
 
-You can define a base job and inherit from it:
+    - `each`: Generates a grid of parameter combinations (cartesian product)
+    - `all`: Specifies parameters included in every command
+    - `add`: Arguments appended to the end of each command (primarily for Hydra configuration)
 
-```yaml
-jobs:
-  base_train:
-    run: python train.py
-    sets:
-      - all: batch_size=32 seed=42
+3. **Multiple Sets and Merging Behavior**:
 
-  finetune:
-    run: python train.py
-    inherit: base_train
-    sets:
-      - each: model=small,large
-      - all: learning_rate=0.0001
-```
+    - Define multiple independent parameter sets
+    - Job-level and set-level `add` parameters are merged
+    - Set-level values take precedence for the same keys
 
-The `finetune` job inherits the `run` command and the parameter sets from
-`base_train`, and adds its own parameter sets.
-
-## Overriding Inherited Sets
-
-When inheriting, you can override specific elements:
-
-```yaml
-jobs:
-  base_train:
-    run: python train.py
-    sets:
-      - all: batch_size=32 seed=42
-
-  finetune:
-    # Override the command
-    run: python finetune.py
-    inherit: base_train
-    sets:
-      # Add new parameter sets
-      - each: model=small,large
-```
-
-## Inheritance Chains
-
-You can create chains of inheritance:
-
-```yaml
-jobs:
-  base:
-    run: python train.py
-    sets:
-      - all: batch_size=32
-
-  train:
-    inherit: base
-    sets:
-      - all: seed=42
-
-  finetune:
-    inherit: train
-    sets:
-      - each: model=small,large
-```
-
-## Using Variables
-
-You can define variables at the top level and use them in jobs:
-
-```yaml
-variables:
-  base_lr: 0.001
-  models: small,large
-
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=${models}
-          learning_rate=${base_lr}
-```
-
-Variables are interpolated when the configuration is loaded.
-
-## Conditional Sets
-
-You can conditionally include sets based on environment variables:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: model=small,large
-
-      # Only included if DEBUG=1 is set
-      - if: ${env:DEBUG} == 1
-        all: debug=true verbose=true
-```
-
-The condition is evaluated when the job is executed.
-
-## Including External Configurations
-
-You can include external configuration files:
-
-```yaml
-# Main hydraflow.yaml
-include:
-  - path: configs/base.yaml
-  - path: configs/custom.yaml
-
-jobs:
-  # Local job definitions
-  custom_job:
-    run: python custom.py
-```
-
-The included files should have the same structure as the main file.
-
-## Reusing Sets
-
-You can define reusable parameter sets and reference them:
-
-```yaml
-param_sets:
-  common:
-    all: seed=42 batch_size=32
-
-  models:
-    each: model=small,large
-
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - use: common
-      - use: models
-```
-
-This allows you to define parameter sets once and reuse them across
-multiple jobs.
-
-## Complete Example
-
-Here's a complete example that demonstrates many of the features:
-
-```yaml
-variables:
-  base_lr: 0.001
-  models: small,large,xlarge
-
-param_sets:
-  common:
-    all: seed=42 batch_size=32 epochs=100
-
-  optimization:
-    each: >-
-      optimizer=adam,sgd
-      learning_rate=${base_lr},${base_lr}*0.1
-
-jobs:
-  # Base job definition
-  base_train:
-    run: python train.py
-    add: hydra/launcher=joblib hydra.launcher.n_jobs=2
-    sets:
-      - use: common
-
-  # Training job
-  train:
-    inherit: base_train
-    sets:
-      - each: model=${models}
-      - use: optimization
-
-  # Evaluation job
-  evaluate:
-    run: python evaluate.py
-    sets:
-      - use: common
-      - each: model=${models}
-      - all: eval_split=test
-
-  # Fine-tuning job with higher parallelism
-  finetune:
-    inherit: train
-    run: python finetune.py
-    sets:
-      # This set completely overrides the job-level add from base_train
-      - each: model=large,xlarge
-        add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=8
-      - all: pretrained=true learning_rate=${base_lr}*0.01
-```
-
-## Best Practices
-
-### Organize Related Parameters
-
-Group related parameters together in the same set:
-
-```yaml
-sets:
-  # Model architecture parameters
-  - each: >-
-      model=small,large
-      num_layers=2,4,6
-
-  # Optimization parameters
-  - each: >-
-      optimizer=adam,sgd
-      learning_rate=0.1,0.01
-```
-
-### Use Descriptive Job Names
-
-Choose descriptive names for your jobs:
-
-```yaml
-jobs:
-  pretrain_transformer:
-    # ...
-
-  finetune_classification:
-    # ...
-
-  evaluate_test_set:
-    # ...
-```
-
-### Validate with Dry Run
-
-Always validate your job configuration with a dry run before executing:
-
-```bash
-$ hydraflow run train --dry-run
-```
-
-### Use Variables for Shared Values
-
-Define variables for values used across multiple jobs:
-
-```yaml
-variables:
-  base_epochs: 100
-  base_batch_size: 32
-
-jobs:
-  train:
-    # ...
-    sets:
-      - all: epochs=${base_epochs} batch_size=${base_batch_size}
-```
-
-### Document Your Configurations
-
-Add comments to explain complex configurations:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    # Use parallel execution for faster processing
-    add: hydra/launcher=joblib hydra.launcher.n_jobs=4
-    sets:
-      # These parameters control the model architecture
-      - each: >-
-          model=small,large  # Model size
-          num_layers=2,4     # Number of transformer layers
-
-      # These control the optimization process
-      - each: >-
-          optimizer=adam,sgd  # Optimization algorithm
-```
-
-### Version Control Your Job Configurations
-
-Keep your `hydraflow.yaml` files in version control to ensure
-reproducibility of your experiments.
+These features combined allow you to define complex
+experiment configurations concisely and execute
+them efficiently. Reusing configurations ensures
+reproducibility and consistency across your experiments.

@@ -2,8 +2,8 @@
 
 HydraFlow extends Hydra's capabilities with advanced features for efficient
 multi-run workflows. While Hydra provides basic parameter sweeping, HydraFlow
-offers tools for more complex scenarios, including extended sweep syntax,
-job definitions, and cluster submission.
+offers tools for more complex scenarios, including extended sweep syntax
+and reusable job definitions.
 
 ## Overview
 
@@ -14,13 +14,6 @@ Part 3 focuses on HydraFlow's advanced features for efficient multi-run executio
 
 - **Job Configuration** - Create reusable job definitions with GitHub
   Actions-like syntax
-
-- **Batch Submission** - Submit multiple runs efficiently to clusters
-  and job schedulers
-
-These capabilities help you manage complex machine learning experiments
-at scale, making it easier to explore large parameter spaces and run
-on distributed computing resources.
 
 ## Key Components
 
@@ -159,17 +152,14 @@ $ python train.py model=large seed=43 hydra/launcher=submitit hydra.launcher.n_j
 
 **Important**: When a set has its own `add` parameter, it is merged with the job-level `add`. If the same parameter key appears in both, the set-level value takes precedence. This allows you to define common parameters at the job level while customizing specific parameters for each set.
 
-### 6. Parallelize with Submission Commands
+### 6. Batch Processing with Submit Command
 
-The true power of HydraFlow's workflow management emerges when using job submission
-commands like `sbatch` or `qsub`. Instead of running sequentially, you can submit
-jobs to run in parallel on a cluster:
+HydraFlow's `submit` command provides a way to handle multiple parameter combinations as a batch:
 
 ```yaml title="hydraflow.yaml"
 jobs:
   train:
-    submit: sbatch --partition=gpu --nodes=1 job.sh
-    add: hydra/launcher=submitit_slurm
+    submit: python batch_processor.py
     sets:
       - each: >-
           model=small,large
@@ -177,12 +167,45 @@ jobs:
       - all: seed=42
 ```
 
-This approach offers several advantages:
+Unlike the `run` command which executes once per parameter combination, the `submit` command:
 
-- **Parallelization**: Execute multiple parameter combinations simultaneously
-- **Resource Optimization**: Allocate appropriate resources to each job
-- **Scalability**: Easily scale to hundreds or thousands of experiments
-- **Fault Isolation**: Failures in one job don't affect others
+1. Collects all parameter combinations from the sets
+2. Writes these combinations to a text file (one combination per line)
+3. Executes the specified command once, passing the text file as an argument
+
+The key difference is:
+
+- `run`: Each parameter combination triggers a separate command execution
+- `submit`: All parameter combinations are passed to a single command execution
+
+The custom handler script (e.g., `batch_processor.py` in the example) has complete freedom in how it processes the parameter file:
+
+- It can read the parameter combinations and process them sequentially
+- It can implement custom parallelization logic for local execution
+- It can submit jobs to a cluster scheduler (like SLURM's sbatch)
+- It can group parameter combinations for efficient resource utilization
+
+For example, your handler script might:
+```python
+# Example batch_processor.py
+import sys
+import subprocess
+
+# Read parameter combinations from the file passed as an argument
+with open(sys.argv[1]) as f:
+    param_combinations = f.read().splitlines()
+
+# Process each combination however you want
+for params in param_combinations:
+    # Example: Submit to SLURM
+    args = ["sbatch", "--job-name=train", "--wrap", f"python train.py {params}"]
+    subprocess.run(args)
+
+    # Or run locally in parallel
+    # subprocess.Popen(f"python train.py {params}", shell=True)
+```
+
+This approach gives you complete flexibility in how parameters are processed and executed.
 
 ## When to Use Advanced Workflows
 
@@ -202,6 +225,3 @@ The following pages explain HydraFlow's advanced features in detail:
 
 - [Job Configuration](job-configuration.md) - Define reusable and maintainable
   job configurations with sets
-
-- [Batch Submission](batch-submission.md) - Run jobs efficiently on
-  clusters and job schedulers
