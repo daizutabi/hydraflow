@@ -62,10 +62,10 @@ The HydraFlow documentation is organized into three main parts:
 
 - :material-rocket-launch: [**Part 1: Running Applications**](part1-applications/index.md)
   Define and execute HydraFlow applications
-- :material-magnify: [**Part 2: Analyzing Results**](part2-analysis/index.md)
-  Collect and analyze experiment results
-- :material-cogs: [**Part 3: Automating Workflows**](part3-advanced/index.md)
+- :material-cogs: [**Part 2: Automating Workflows**](part3-advanced/index.md)
   Build advanced experiment workflows
+- :material-magnify: [**Part 3: Analyzing Results**](part2-analysis/index.md)
+  Collect and analyze experiment results
 
 </div>
 

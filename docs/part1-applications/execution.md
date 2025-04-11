@@ -94,7 +94,7 @@ jobs:
 hydraflow run train
 ```
 
-This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part3-advanced/job-configuration.md).
+This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part3-advanced/job-configuration.md) in Part 2.
 
 ## Output Organization
 
@@ -179,4 +179,4 @@ compatibility with the underlying libraries' documentation and ecosystem.
 
 For more advanced execution capabilities, see:
 - [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md)
-- [Job Configuration](../part3-advanced/job-configuration.md)
+- [Job Configuration](../part3-advanced/job-configuration.md) in Part 2

@@ -6,7 +6,7 @@ powerful tools for accessing, analyzing, and visualizing experiment data.
 
 ## Overview
 
-HydraFlow provides a comprehensive API for working with experiment results,
+Part 3 provides a comprehensive API for working with experiment results,
 enabling you to:
 
 - Load and access experiment data from MLflow runs
@@ -120,6 +120,8 @@ run = Run[MyConfig, ModelAnalyzer].load("path/to/run", ModelAnalyzer)
 model = run.impl.load_model()
 results = run.impl.analyze_performance()
 ```
+
+The analysis capabilities covered in Part 3 are designed to work seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md) and the advanced workflow automation from [Part 2](../part3-advanced/index.md).
 
 ## What's Next
 

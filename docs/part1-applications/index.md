@@ -77,3 +77,5 @@ Once you've mastered the basics, you may want to explore HydraFlow's more advanc
 
 - [Job Configuration](../part3-advanced/job-configuration.md): Create reusable job definitions for
   repeated experiment workflows using a declarative YAML format.
+
+These advanced features are covered in detail in [Part 2: Automating Workflows](../part3-advanced/index.md).
