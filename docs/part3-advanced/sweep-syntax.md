@@ -26,7 +26,7 @@ python train.py model=large
 
 ## Numerical Ranges
 
-For numerical parameters, you can use range notation:
+For numerical parameters, you can use range notation with colons:
 
 ```yaml
 jobs:
@@ -48,56 +48,50 @@ python train.py batch_size=128
 
 The format is `start:stop:step`, similar to Python's range notation. **Note that unlike Python's range, the stop value is inclusive** - the range includes both the start and stop values if they align with the step size.
 
-## Logarithmic Ranges
-
-For learning rates and other parameters that benefit from logarithmic spacing,
-use the `logspace` function:
+You can omit the start value to default to 0:
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      - each: >-
-          learning_rate=logspace(0.0001,0.1,5)
+      - each: steps=:5  # Equivalent to steps=0:5:1
 ```
 
-This generates logarithmically spaced values:
+Generates:
 
 ```bash
-python train.py learning_rate=0.0001
-python train.py learning_rate=0.001
-python train.py learning_rate=0.01
-python train.py learning_rate=0.1
+python train.py steps=0
+python train.py steps=1
+python train.py steps=2
+python train.py steps=3
+python train.py steps=4
+python train.py steps=5
 ```
 
-## Linear Ranges
-
-For linearly spaced values, use the `linspace` function:
+You can also use negative steps to create descending ranges:
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      - each: >-
-          dropout=linspace(0.0,0.5,6)
+      - each: lr=5:1:-1
 ```
 
-This generates evenly spaced values:
+Generates:
 
 ```bash
-python train.py dropout=0.0
-python train.py dropout=0.1
-python train.py dropout=0.2
-python train.py dropout=0.3
-python train.py dropout=0.4
-python train.py dropout=0.5
+python train.py lr=5
+python train.py lr=4
+python train.py lr=3
+python train.py lr=2
+python train.py lr=1
 ```
 
-## Scientific Notation
+## SI Prefixes (Engineering Notation)
 
-You can use scientific notation for very small or large numbers:
+You can use SI prefixes to represent large or small numbers concisely:
 
 ```yaml
 jobs:
@@ -105,21 +99,45 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          weight_decay=0,1e-4,1e-5,1e-6
+          learning_rate=1:5:m    # milli (1e-3)
+          weight_decay=1:3:n     # nano (1e-9)
+          max_tokens=1:3:k       # kilo (1e3)
+          model_dim=1:3:M        # mega (1e6)
 ```
 
 This generates:
 
 ```bash
-python train.py weight_decay=0
-python train.py weight_decay=0.0001
-python train.py weight_decay=0.00001
-python train.py weight_decay=0.000001
+python train.py learning_rate=1e-3 weight_decay=1e-9 max_tokens=1e3 model_dim=1e6
+python train.py learning_rate=2e-3 weight_decay=2e-9 max_tokens=2e3 model_dim=2e6
+python train.py learning_rate=3e-3 weight_decay=3e-9 max_tokens=3e3 model_dim=3e6
+...
 ```
 
-## Combining Multiple Parameters
+Supported SI prefixes:
+- `f`: femto (1e-15)
+- `p`: pico (1e-12)
+- `n`: nano (1e-9)
+- `u`: micro (1e-6)
+- `m`: milli (1e-3)
+- `k`: kilo (1e3)
+- `M`: mega (1e6)
+- `G`: giga (1e9)
+- `T`: tera (1e12)
 
-You can combine multiple parameters in a single each:
+You can also use fractional steps with SI prefixes:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: learning_rate=0.1:0.4:0.1:m  # From 0.1e-3 to 0.4e-3 by 0.1e-3
+```
+
+## Prefix Notation
+
+You can apply an SI prefix to all values in a parameter using the prefix notation:
 
 ```yaml
 jobs:
@@ -127,24 +145,102 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          model=small,large
-          learning_rate=0.1,0.01,0.001
+          lr/m=1,2,5,10           # Applies milli (1e-3) to all values
+          batch_size/k=4,8,16,32  # Applies kilo (1e3) to all values
 ```
 
-This generates a grid of all combinations:
+This generates:
+
+```bash
+python train.py lr=1e-3 batch_size=4e3
+python train.py lr=2e-3 batch_size=8e3
+...
+```
+
+This is useful when all values for a parameter share the same exponent.
+
+## Grouping with Parentheses
+
+You can use parentheses to create combinations of values:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          dropout=(0.1,0.2,0.3)(small,large)  # Combines all values
+```
+
+This generates:
+
+```bash
+python train.py dropout=0.1small
+python train.py dropout=0.2small
+python train.py dropout=0.3small
+python train.py dropout=0.1large
+python train.py dropout=0.2large
+python train.py dropout=0.3large
+```
+
+You can also combine parentheses with SI prefixes:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: learning_rate=(1:3,5:7:2)m  # 1e-3, 2e-3, 3e-3, 5e-3, 7e-3
+```
+
+Or use them with exponents:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: learning_rate=(1,2)e(-1,-2,-3)  # 1e-1, 2e-1, 1e-2, 2e-2, 1e-3, 2e-3
+```
+
+## Pipe Operator for Multiple Parameter Sets
+
+The pipe operator (`|`) allows you to specify completely different parameter sets that don't form a grid:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          model=small learning_rate=0.1|model=medium learning_rate=0.01|model=large learning_rate=0.001
+```
+
+This generates:
 
 ```bash
 python train.py model=small learning_rate=0.1
-python train.py model=small learning_rate=0.01
-python train.py model=small learning_rate=0.001
-python train.py model=large learning_rate=0.1
-python train.py model=large learning_rate=0.01
+python train.py model=medium learning_rate=0.01
 python train.py model=large learning_rate=0.001
 ```
 
-## Mixed Parameter Types
+The pipe operator is useful when you want to create specific parameter combinations rather than a full grid search.
 
-You can mix different parameter types and notations:
+You can continue parameter specifications after a pipe by omitting the parameter name:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: model=small|medium|large
+```
+
+This is equivalent to `model=small|model=medium|model=large`.
+
+## Combining Multiple Features
+
+You can combine all these features for complex parameter sweeps:
 
 ```yaml
 jobs:
@@ -152,16 +248,27 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          model=small,large
-          learning_rate=logspace(0.0001,0.1,4)
-          dropout=0.0:0.5:0.1
+          model/type=transformer,lstm|cnn,gru
+          learning_rate/m=1:5:1|6:10:2
+          dropout=(0.1:0.5:0.1)(before,after)
+          batch_size/k=1,2,4,8
 ```
 
-This combines all parameter types in a single grid.
+This creates a sophisticated parameter space with specific combinations of models, learning rates, dropout values and positions, and batch sizes.
 
-## Nested Parameters
+## Practical Examples
 
-You can sweep over nested parameters using dot notation:
+### Learning Rate Sweep with SI Prefixes
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: learning_rate/m=1,5,10,50,100  # 1e-3, 5e-3, 10e-3, 50e-3, 100e-3
+```
+
+### Model Size and Decoder Layers Grid
 
 ```yaml
 jobs:
@@ -169,226 +276,45 @@ jobs:
     run: python train.py
     sets:
       - each: >-
-          model.type=cnn,transformer
-          model.layers=2,4,8
-```
-
-This generates:
-
-```bash
-python train.py model.type=cnn model.layers=2
-python train.py model.type=cnn model.layers=4
-python train.py model.type=cnn model.layers=8
-python train.py model.type=transformer model.layers=2
-python train.py model.type=transformer model.layers=4
-python train.py model.type=transformer model.layers=8
-```
-
-## Boolean Parameters
-
-Boolean parameters can be specified:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: use_augmentation=true,false
-```
-
-This generates:
-
-```bash
-python train.py use_augmentation=true
-python train.py use_augmentation=false
-```
-
-## Expressions and Calculations
-
-You can use simple mathematical expressions:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          learning_rate=0.01,0.01*0.1,0.01*0.01
-```
-
-This generates:
-
-```bash
-python train.py learning_rate=0.01
-python train.py learning_rate=0.001
-python train.py learning_rate=0.0001
-```
-
-## Using Variables
-
-You can define variables and use them in parameter sweeps:
-
-```yaml
-variables:
-  base_lr: 0.01
-  models: small,large
-
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=${models}
-          learning_rate=${base_lr},${base_lr}*0.1
-```
-
-Variables are expanded when the configuration is loaded.
-
-## Understanding `each`, `all`, and `add`
-
-HydraFlow uses three different parameter types:
-
-1. **`each`**: Creates separate executions for each parameter combination.
-2. **`all`**: Parameters included in every command but can still use sweep syntax.
-3. **`add`**: Additional arguments appended to each command (no sweep expansion). When specified at both job and set levels, they are merged with set-level values taking precedence for the same keys.
-
-Example with all three types:
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    add: hydra/launcher=joblib hydra.launcher.n_jobs=2  # Job-level add
-    sets:
-      # First set: uses job-level add
-      - each: model=small
-      - all: seed=42,43 epochs=100
-
-      # Second set: merges with job-level add (set-level takes precedence for conflicts)
-      - each: model=large
-      - all: seed=44
-      - add: hydra/launcher=submitit hydra.job.num_nodes=1
-```
-
-This generates:
-
-```bash
-# First set: with job-level add
-python train.py model=small seed=42,43 epochs=100 hydra/launcher=joblib hydra.launcher.n_jobs=2
-
-# Second set: merges job-level and set-level add (hydra/launcher is overridden by set-level)
-python train.py model=large seed=44 hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.job.num_nodes=1
-```
-
-**Important**: When a set has its own `add` parameter, it is merged with the job-level `add`. If the same parameter key appears in both, the set-level value takes precedence. Parameters unique to either the job-level or set-level `add` are preserved in the final command.
-
-## Advanced Examples
-
-### Complex Parameter Grid
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      - each: >-
-          model=resnet18,resnet50
-          optimizer=adam,sgd
-          learning_rate=logspace(0.0001,0.1,3)
-          batch_size=16:128:16
-```
-
-### Specialized Configuration Sets
-
-```yaml
-jobs:
-  train:
-    run: python train.py
-    sets:
-      # Sweep over model architectures
-      - each: >-
-          model.type=cnn,transformer,mlp
           model.size=small,medium,large
-
-      # Sweep over optimization parameters
-      - each: >-
-          optimizer=adam,sgd,adagrad
-          learning_rate=logspace(0.0001,0.1,4)
+          model.decoder_layers=2:12:2  # 2, 4, 6, 8, 10, 12
 ```
 
-### Conditional Parameters
-
-You can create conditional parameters using multiple sets:
+### Targeted Combinations without Full Grid
 
 ```yaml
 jobs:
   train:
     run: python train.py
     sets:
-      # CNN-specific parameters
-      - each: model.type=cnn
-      - all: model.kernel_size=3,5,7
-
-      # Transformer-specific parameters
-      - each: model.type=transformer
-      - all: model.num_heads=4,8
+      - each: >-
+          model=small lr/m=10|model=medium lr/m=5|model=large lr/m=1
 ```
 
-## Best Practices
-
-### Keep Sets Manageable
-
-While it's possible to create very large parameter spaces, try to keep them
-manageable:
+### Exponential Decay Rates
 
 ```yaml
-# Instead of this (creates 1000 combinations)
-sets:
-  - each: >-
-      param1=1:10:1
-      param2=1:10:1
-      param3=1:10:1
-
-# Consider this (creates 30 combinations)
-sets:
-  - each: param1=1:10:1
-  - each: param2=1:10:1
-  - each: param3=1:10:1
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: decay_rate=0.9,0.99,0.999,0.9999
 ```
 
-### Use Descriptive Parameter Names
-
-Choose descriptive parameter names to make your sweeps more understandable:
+### Combined Hyperparameters
 
 ```yaml
-# Less clear
-sets:
-  - each: >-
-      lr=0.1,0.01
-      bs=32,64
-
-# More clear
-sets:
-  - each: >-
-      learning_rate=0.1,0.01
-      batch_size=32,64
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          optimizer=(adam,sgd)(lr/m=1,10)
 ```
 
-### Document Parameter Ranges
+This creates combinations like `optimizer=adamlr=1e-3`, `optimizer=adamlr=10e-3`, etc.
 
-Add comments to explain parameter ranges and their significance:
-
-```yaml
-sets:
-  # Exploring learning rate impact on convergence
-  - each: >-
-      # Range covers typical values for Adam optimizer
-      learning_rate=logspace(0.0001,0.01,5)
-```
-
-### Validate Your Sweeps
-
-Always validate your parameter sweeps with a dry run before executing:
+Remember to use `--dry-run` to verify your parameter sweeps before execution:
 
 ```bash
 $ hydraflow run train --dry-run
