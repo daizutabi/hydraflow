@@ -178,6 +178,35 @@ runs = Run.load(run_dirs, n_jobs=4)  # Use 4 parallel jobs for loading
 runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
 ```
 
+### Finding Runs with `iter_run_dirs`
+
+HydraFlow provides the [`iter_run_dirs`][hydraflow.core.io.iter_run_dirs] function to easily discover runs in your MLflow tracking directory:
+
+```python
+from hydraflow.core.io import iter_run_dirs
+from hydraflow import Run
+
+# Find all runs in the tracking directory
+tracking_dir = "mlruns"
+run_dirs = list(iter_run_dirs(tracking_dir))
+runs = Run.load(run_dirs)
+
+# Filter runs by experiment name
+# - Use a single experiment name
+runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
+
+# - Use multiple experiment names (with pattern matching)
+runs = Run.load(iter_run_dirs(tracking_dir, ["train_*", "eval_*"]))
+
+# - Use a custom filtering function
+def filter_experiments(name: str) -> bool:
+    return name.startswith("train_") and "v2" in name
+
+runs = Run.load(iter_run_dirs(tracking_dir, filter_experiments))
+```
+
+The `iter_run_dirs` function yields paths to run directories that can be directly passed to `Run.load`. This makes it easy to find and load runs based on experiment names or custom filtering criteria.
+
 ## Best Practices
 
 1. **Use Type Parameters**: Specify configuration types with `Run[Config]`

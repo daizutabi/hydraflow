@@ -48,6 +48,27 @@ df = runs.to_frame("learning_rate", "batch_size", accuracy=lambda run: run.get("
 best_run = df.sort("accuracy", descending=True).first()
 ```
 
+## Finding and Loading Runs
+
+HydraFlow provides utilities to easily find and load runs from your MLflow tracking directory:
+
+```python
+from hydraflow import Run
+from hydraflow.core.io import iter_run_dirs
+
+# Find all runs in the tracking directory
+tracking_dir = "mlruns"
+runs = Run.load(iter_run_dirs(tracking_dir))
+
+# Load runs from specific experiments
+runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
+
+# Load runs from multiple experiments using patterns
+runs = Run.load(iter_run_dirs(tracking_dir, ["training_*", "finetuning_*"]))
+```
+
+This approach makes it easy to gather all relevant runs for analysis without having to manually specify each run directory.
+
 ## Type-Safe Analysis
 
 HydraFlow supports type-safe analysis through type parameters:
