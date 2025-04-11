@@ -156,7 +156,7 @@ class Impl:
     path: str
 
     def __init__(self, path: Path):
-        self.path = str(path)
+        self.path = path.as_posix()
 
 
 def test_impl():
