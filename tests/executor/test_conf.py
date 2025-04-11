@@ -25,11 +25,11 @@ def test_none():
 
 
 def test_job(config):
-    cfg = config("jobs:\n  a:\n    run: a.test\n    with: --opt1 --opt2\n")
+    cfg = config("jobs:\n  a:\n    run: a.test\n    add: --opt1 --opt2\n")
     assert cfg.jobs["a"].run == "a.test"
-    assert cfg.jobs["a"].with_ == "--opt1 --opt2"
+    assert cfg.jobs["a"].add == "--opt1 --opt2"
 
 
-def test_step(config):
-    cfg = config("jobs:\n  a:\n    steps:\n      - with: --opt1 --opt2\n")
-    assert cfg.jobs["a"].steps[0].with_ == "--opt1 --opt2"
+def test_set(config):
+    cfg = config("jobs:\n  a:\n    sets:\n      - add: --opt1 --opt2\n")
+    assert cfg.jobs["a"].sets[0].add == "--opt1 --opt2"

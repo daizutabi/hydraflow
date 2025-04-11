@@ -2,7 +2,7 @@
 
 This module provides functionality for executing jobs in HydraFlow, including:
 
-- Argument parsing and expansion for job steps
+- Argument parsing and expansion for job parameter sets
 - Batch processing of Hydra configurations
 - Execution of jobs via shell commands or Python functions
 
@@ -11,8 +11,9 @@ The module supports two execution modes:
 1. Shell command execution
 2. Python function calls
 
-Each job can consist of multiple steps, and each step can have its own
-arguments and configurations that will be expanded into multiple runs.
+Each job can consist of multiple parameter sets, and each parameter
+set can have its own arguments and configurations that will be expanded
+into multiple runs.
 """
 
 from __future__ import annotations
@@ -39,24 +40,24 @@ if TYPE_CHECKING:
     from .conf import Job
 
 
-def iter_args(batch: str, args: str) -> Iterator[list[str]]:
+def iter_args(each: str, all_: str) -> Iterator[list[str]]:
     """Iterate over combinations generated from parsed arguments.
 
     Generate all possible combinations of arguments by parsing and
     expanding each one, yielding them as an iterator.
 
     Args:
-        batch (str): The batch to parse.
-        args (str): The arguments to parse.
+        each (str): The 'each' parameter to parse.
+        all_ (str): The 'all' parameter to parse.
 
     Yields:
         list[str]: a list of the parsed argument combinations.
 
     """
-    args_ = collect(args)
+    all_params = collect(all_)
 
-    for batch_ in expand(batch):
-        yield [*batch_, *args_]
+    for each_params in expand(each):
+        yield [*each_params, *all_params]
 
 
 def iter_batches(job: Job) -> Iterator[list[str]]:
@@ -74,14 +75,40 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
 
     """
     job_name = f"hydra.job.name={job.name}"
-    job_configs = shlex.split(job.with_)
+    job_add = shlex.split(job.add)
 
-    for step in job.steps:
-        configs = shlex.split(step.with_) or job_configs
+    for set_ in job.sets:
+        add = merge_args(job_add, shlex.split(set_.add)) if set_.add else job_add
 
-        for args in iter_args(step.batch, step.args):
+        for args in iter_args(set_.each, set_.all):
             sweep_dir = f"hydra.sweep.dir=multirun/{ulid.ULID()}"
-            yield ["--multirun", *args, job_name, sweep_dir, *configs]
+            yield ["--multirun", *args, job_name, sweep_dir, *add]
+
+
+def merge_args(first: list[str], second: list[str]) -> list[str]:
+    """Merge two lists of arguments.
+
+    This function merges two lists of arguments by checking for conflicts
+    and resolving them by keeping the values from the second list.
+
+    Args:
+        first (list[str]): The first list of arguments.
+        second (list[str]): The second list of arguments.
+
+    Returns:
+        list[str]: A merged list of arguments.
+
+    """
+    merged = {}
+
+    for item in [*first, *second]:
+        if "=" in item:
+            key, value = item.split("=", 1)
+            merged[key] = value
+        else:
+            merged[item] = None
+
+    return [k if v is None else f"{k}={v}" for k, v in merged.items()]
 
 
 @dataclass

@@ -249,29 +249,40 @@ class Run[C, I = None]:
             if force or OmegaConf.select(cfg, k, default=MISSING) is MISSING:
                 OmegaConf.update(cfg, k, v, force_add=True)
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str, default: Any = MISSING) -> Any:
         """Get a value from the information or configuration.
 
         Args:
-            key: The key to look for. Can use dot notation for nested keys
-                in configuration.
+            key: The key to look for. Can use dot notation for
+                nested keys in configuration.
+            default: Value to return if the key is not found.
+                If not provided, AttributeError will be raised.
 
         Returns:
-            Any: The value associated with the key.
+            Any: The value associated with the key, or the
+            default value if the key is not found and a default
+            is provided.
 
         Raises:
-            AttributeError: If the key is not found in any of the components.
+            AttributeError: If the key is not found and
+                no default is provided.
 
         """
         value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
         if value is not MISSING:
             return value
 
+        if self.impl and hasattr(self.impl, key):
+            return getattr(self.impl, key)
+
         info = self.info.to_dict()
         if key in info:
             return info[key]
 
-        msg = f"Key not found: {key}"
+        if default is not MISSING:
+            return default
+
+        msg = f"No such key: {key}"
         raise AttributeError(msg)
 
     def predicate(self, key: str, value: Any) -> bool:
@@ -298,32 +309,35 @@ class Run[C, I = None]:
 
         """
         attr = self.get(key)
-
-        if callable(value):
-            return bool(value(attr))
-
-        if isinstance(value, ListConfig):
-            value = list(value)
-
-        if isinstance(value, list | set) and not _is_iterable(attr):
-            return attr in value
-
-        if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
-            return value[0] <= attr <= value[1]
-
-        if _is_iterable(value):
-            value = list(value)
-
-        if _is_iterable(attr):
-            attr = list(attr)
-
-        return attr == value
+        return _predicate(attr, value)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the Run to a dictionary."""
         info = self.info.to_dict()
         cfg = OmegaConf.to_container(self.cfg)
         return info | _flatten_dict(cfg)  # type: ignore
+
+
+def _predicate(attr: Any, value: Any) -> bool:
+    if callable(value):
+        return bool(value(attr))
+
+    if isinstance(value, ListConfig):
+        value = list(value)
+
+    if isinstance(value, list | set) and not _is_iterable(attr):
+        return attr in value
+
+    if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
+        return value[0] <= attr <= value[1]
+
+    if _is_iterable(value):
+        value = list(value)
+
+    if _is_iterable(attr):
+        attr = list(attr)
+
+    return attr == value
 
 
 def _is_iterable(value: Any) -> bool:

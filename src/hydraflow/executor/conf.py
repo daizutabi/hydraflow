@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class Step:
-    batch: str = ""
-    args: str = ""
-    with_: str = ""
+class Set:
+    each: str = ""
+    all: str = ""
+    add: str = ""
 
 
 @dataclass
@@ -16,8 +16,8 @@ class Job:
     run: str = ""
     call: str = ""
     submit: str = ""
-    with_: str = ""
-    steps: list[Step] = field(default_factory=list)
+    add: str = ""
+    sets: list[Set] = field(default_factory=list)
 
 
 @dataclass

@@ -1,42 +1,48 @@
 jobs:
   args:
     run: python app.py
-    steps:
-      - args: count=1:3 name=a,b
-      - args: count=4:6 name=c,d
+    sets:
+      - all: count=1:3 name=a,b
+      - all: >-
+          count=4:6
+          name=c,d
   batch:
     run: python app.py
-    steps:
-      - batch: name=a,b
-        args: count=1,2
-      - batch: name=c,d|e,f
-        args: count=100
+    sets:
+      - each: name=a,b
+        all: count=1,2
+      - each: name=c,d|e,f
+        all: count=100
   parallel:
     run: python app.py
-    with: hydra/launcher=joblib hydra.launcher.n_jobs=2
-    steps:
-      - batch: name=a
-        args: count=1:4
-      - batch: name=b
-        args: count=11:14
-        with: hydra/launcher=joblib hydra.launcher.n_jobs=4
+    add: >-
+      hydra/launcher=joblib
+      hydra.launcher.n_jobs=2
+    sets:
+      - each: name=a
+        all: count=1:4
+      - each: name=b
+        all: count=11:14
+        add: >-
+          hydra/launcher=joblib
+          hydra.launcher.n_jobs=4
   echo:
     call: typer.echo a b c
-    steps:
-      - batch: name=a,b
-        args: count=1:3
-      - batch: name=c,d
-        args: count=4:6
+    sets:
+      - each: name=a,b
+        all: count=1:3
+      - each: name=c,d
+        all: count=4:6
   submit:
     submit: python submit.py
-    steps:
-      - batch: name=a,b
-        args: count=1
-      - batch: name=c
-        args: count=5
-      - batch: name=d
-        args: count=6
+    sets:
+      - each: name=a,b
+        all: count=1
+      - each: name=c
+        all: count=5
+      - each: name=d
+        all: count=6
   error:
-    steps:
-      - batch: name=a
-        args: count=1:3
+    sets:
+      - each: name=a
+        all: count=1:3tep
