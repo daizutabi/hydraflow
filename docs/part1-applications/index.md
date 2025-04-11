@@ -67,3 +67,13 @@ in detail:
 
 - [Execution](execution.md): Understand how to run applications, override
   configurations, and perform parameter sweeps for experimentation.
+
+## Advanced Application Features
+
+Once you've mastered the basics, you may want to explore HydraFlow's more advanced features:
+
+- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md): Define complex parameter spaces using
+  HydraFlow's powerful syntax for numerical ranges, combinations, and more.
+
+- [Job Configuration](../part3-advanced/job-configuration.md): Create reusable job definitions for
+  repeated experiment workflows using a declarative YAML format.
