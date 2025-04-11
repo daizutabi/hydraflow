@@ -77,9 +77,9 @@ The HydraFlow documentation is organized into three main parts:
   Install and set up HydraFlow
 - :material-school: [**Core Concepts**](getting-started/concepts.md)
   Learn the key concepts and design principles of HydraFlow
-- :material-code-tags: [**API Reference**](api/hydraflow)
+- :material-code-tags: [**API Reference**](api/hydraflow/README.md)
   Detailed documentation of classes and methods
-- :material-file-code: [**Examples**](examples/index.md)
+- :material-file-code: [**Examples**](examples/example.md)
   Practical code samples and explanations
 
 </div>

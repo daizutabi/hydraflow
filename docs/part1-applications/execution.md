@@ -101,7 +101,7 @@ This approach helps you organize complex experiments, track execution history, a
 By default, Hydra organizes outputs in the following directory structure for HydraFlow applications:
 
 ```
-outputs/
+outputs_or_multirun/
 ├── YYYY-MM-DD/              # Date
 │   └── HH-MM-SS/            # Time
 │       └── .hydra/          # Hydra configuration
