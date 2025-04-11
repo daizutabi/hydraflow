@@ -19,9 +19,30 @@ jobs:
 This generates commands for each parameter value:
 
 ```bash
-python train.py model=small
-python train.py model=medium
-python train.py model=large
+python train.py -m model=small
+python train.py -m model=medium
+python train.py -m model=large
+```
+
+When using multiple parameters with `each`, all possible combinations (cartesian product) will be generated:
+
+```yaml
+jobs:
+  train:
+    run: python train.py
+    sets:
+      - each: >-
+          model=small,medium
+          learning_rate=0.1,0.01
+```
+
+This generates all four combinations:
+
+```bash
+python train.py -m model=small learning_rate=0.1
+python train.py -m model=small learning_rate=0.01
+python train.py -m model=medium learning_rate=0.1
+python train.py -m model=medium learning_rate=0.01
 ```
 
 ## Numerical Ranges
@@ -39,11 +60,11 @@ jobs:
 This generates:
 
 ```bash
-python train.py batch_size=16
-python train.py batch_size=32
-python train.py batch_size=48
+python train.py -m batch_size=16
+python train.py -m batch_size=32
+python train.py -m batch_size=48
 ...
-python train.py batch_size=128
+python train.py -m batch_size=128
 ```
 
 The format is `start:stop:step`, similar to Python's range notation. **Note that unlike Python's range, the stop value is inclusive** - the range includes both the start and stop values if they align with the step size.
@@ -61,12 +82,12 @@ jobs:
 Generates:
 
 ```bash
-python train.py steps=0
-python train.py steps=1
-python train.py steps=2
-python train.py steps=3
-python train.py steps=4
-python train.py steps=5
+python train.py -m steps=0
+python train.py -m steps=1
+python train.py -m steps=2
+python train.py -m steps=3
+python train.py -m steps=4
+python train.py -m steps=5
 ```
 
 You can also use negative steps to create descending ranges:
@@ -82,11 +103,11 @@ jobs:
 Generates:
 
 ```bash
-python train.py lr=5
-python train.py lr=4
-python train.py lr=3
-python train.py lr=2
-python train.py lr=1
+python train.py -m lr=5
+python train.py -m lr=4
+python train.py -m lr=3
+python train.py -m lr=2
+python train.py -m lr=1
 ```
 
 ## SI Prefixes (Engineering Notation)
@@ -105,14 +126,18 @@ jobs:
           model_dim=1:3:M        # mega (1e6)
 ```
 
-This generates:
+This generates all combinations (total of 81 commands):
 
 ```bash
-python train.py learning_rate=1e-3 weight_decay=1e-9 max_tokens=1e3 model_dim=1e6
-python train.py learning_rate=2e-3 weight_decay=2e-9 max_tokens=2e3 model_dim=2e6
-python train.py learning_rate=3e-3 weight_decay=3e-9 max_tokens=3e3 model_dim=3e6
+python train.py -m learning_rate=1e-3 weight_decay=1e-9 max_tokens=1e3 model_dim=1e6
+python train.py -m learning_rate=1e-3 weight_decay=1e-9 max_tokens=1e3 model_dim=2e6
+python train.py -m learning_rate=1e-3 weight_decay=1e-9 max_tokens=1e3 model_dim=3e6
+python train.py -m learning_rate=1e-3 weight_decay=1e-9 max_tokens=2e3 model_dim=1e6
 ...
+python train.py -m learning_rate=5e-3 weight_decay=3e-9 max_tokens=3e3 model_dim=3e6
 ```
+
+Note: The `each` parameter creates a grid of all possible combinations (cartesian product) of the parameter values. The example above would generate 3×3×3×3=81 different commands in total.
 
 Supported SI prefixes:
 - `f`: femto (1e-15)
@@ -152,8 +177,8 @@ jobs:
 This generates:
 
 ```bash
-python train.py lr=1e-3 batch_size=4e3
-python train.py lr=2e-3 batch_size=8e3
+python train.py -m lr=1e-3 batch_size=4e3
+python train.py -m lr=2e-3 batch_size=8e3
 ...
 ```
 
@@ -175,12 +200,12 @@ jobs:
 This generates:
 
 ```bash
-python train.py dropout=0.1small
-python train.py dropout=0.2small
-python train.py dropout=0.3small
-python train.py dropout=0.1large
-python train.py dropout=0.2large
-python train.py dropout=0.3large
+python train.py -m dropout=0.1small
+python train.py -m dropout=0.2small
+python train.py -m dropout=0.3small
+python train.py -m dropout=0.1large
+python train.py -m dropout=0.2large
+python train.py -m dropout=0.3large
 ```
 
 You can also combine parentheses with SI prefixes:
@@ -216,15 +241,15 @@ jobs:
           model=small learning_rate=0.1|model=medium learning_rate=0.01|model=large learning_rate=0.001
 ```
 
-This generates:
+This generates exactly these three commands (unlike `each` which would create a grid of 9 combinations):
 
 ```bash
-python train.py model=small learning_rate=0.1
-python train.py model=medium learning_rate=0.01
-python train.py model=large learning_rate=0.001
+python train.py -m model=small learning_rate=0.1
+python train.py -m model=medium learning_rate=0.01
+python train.py -m model=large learning_rate=0.001
 ```
 
-The pipe operator is useful when you want to create specific parameter combinations rather than a full grid search.
+The pipe operator is useful when you want to create specific parameter combinations rather than a full grid search. It lets you precisely control which combinations to run, unlike `each` without pipes which generates all possible combinations.
 
 You can continue parameter specifications after a pipe by omitting the parameter name:
 
