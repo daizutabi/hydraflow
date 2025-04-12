@@ -5,12 +5,12 @@
 - 🚀 **Define and Run Experiments**
   Combine Hydra's configuration management with MLflow's experiment
   tracking for streamlined experiment workflows
-- 📊 **Collect and Analyze Results**
-  Gather, filter, and analyze experiment results with type-safe APIs
-  for comprehensive insights
 - 🔄 **Automate Workflows**
   Define reusable experiment workflows with YAML configuration and
   leverage extended sweep syntax for parameter exploration
+- 📊 **Collect and Analyze Results**
+  Gather, filter, and analyze experiment results with type-safe APIs
+  for comprehensive insights
 
 </div>
 
