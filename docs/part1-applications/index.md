@@ -53,6 +53,14 @@ if __name__ == "__main__":
     app()
 ```
 
+## Practical Examples
+
+If you prefer learning by example, check out our [Practical Tutorials](../practical-tutorials/index.md) section, which includes:
+
+- [Creating Your First HydraFlow Application](../practical-tutorials/applications.md): A step-by-step guide to building a basic application
+- [Automating Complex Workflows](../practical-tutorials/advanced.md): How to define and execute complex experiment workflows
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): Working with experiment results
+
 ## What's Next
 
 In the following pages, we'll explore each aspect of HydraFlow applications
@@ -72,8 +80,10 @@ in detail:
 
 Once you've mastered the basics, you may want to explore HydraFlow's more advanced features:
 
-- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md): Define complex parameter spaces using
+- [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md): Define complex parameter spaces using
   HydraFlow's powerful syntax for numerical ranges, combinations, and more.
 
-- [Job Configuration](../part3-advanced/job-configuration.md): Create reusable job definitions for
+- [Job Configuration](../part2-advanced/job-configuration.md): Create reusable job definitions for
   repeated experiment workflows using a declarative YAML format.
+
+These advanced features are covered in detail in [Part 2: Automating Workflows](../part2-advanced/index.md).

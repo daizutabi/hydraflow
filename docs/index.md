@@ -5,12 +5,12 @@
 - 🚀 **Define and Run Experiments**
   Combine Hydra's configuration management with MLflow's experiment
   tracking for streamlined experiment workflows
+- 🔄 **Automate Workflows**
+  Define reusable experiment workflows with YAML configuration and
+  leverage extended sweep syntax for parameter exploration
 - 📊 **Collect and Analyze Results**
   Gather, filter, and analyze experiment results with type-safe APIs
   for comprehensive insights
-- 🔄 **Automate Workflows**
-  Manage and organize large-scale machine learning experiments
-  efficiently
 
 </div>
 
@@ -56,20 +56,28 @@ pip install hydraflow
 
 ## Documentation Structure
 
-The HydraFlow documentation is organized into three main parts:
+The HydraFlow documentation is organized as follows:
 
 <div class="grid cards" markdown>
 
+- :material-book-open-variant: [**Getting Started**](getting-started/index.md)
+  Install HydraFlow and learn core concepts
+- :material-school: [**Practical Tutorials**](practical-tutorials/index.md)
+  Learn through hands-on examples and real use cases
 - :material-rocket-launch: [**Part 1: Running Applications**](part1-applications/index.md)
   Define and execute HydraFlow applications
-- :material-magnify: [**Part 2: Analyzing Results**](part2-analysis/index.md)
-  Collect and analyze experiment results
-- :material-cogs: [**Part 3: Automating Workflows**](part3-advanced/index.md)
+- :material-cogs: [**Part 2: Automating Workflows**](part2-advanced/index.md)
   Build advanced experiment workflows
+- :material-magnify: [**Part 3: Analyzing Results**](part3-analysis/index.md)
+  Collect and analyze experiment results
+- :material-code-tags: [**API Reference**](api/hydraflow/README.md)
+  Detailed documentation of classes and methods
 
 </div>
 
 ## Getting Started
+
+Begin your journey with HydraFlow through our introductory guides:
 
 <div class="grid cards" markdown>
 
@@ -77,9 +85,7 @@ The HydraFlow documentation is organized into three main parts:
   Install and set up HydraFlow
 - :material-school: [**Core Concepts**](getting-started/concepts.md)
   Learn the key concepts and design principles of HydraFlow
-- :material-code-tags: [**API Reference**](api/hydraflow)
-  Detailed documentation of classes and methods
-- :material-file-code: [**Examples**](examples/index.md)
-  Practical code samples and explanations
+- :material-file-code: [**Practical Tutorials**](practical-tutorials/index.md)
+  Hands-on examples to understand HydraFlow in practice
 
 </div>

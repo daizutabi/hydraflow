@@ -68,5 +68,13 @@ Run this example with:
 python train.py learning_rate=0.001 batch_size=64
 ```
 
+## Next Steps
+
+After installing HydraFlow and understanding its core concepts, you're ready to:
+
+1. Follow our [Practical Tutorials](../practical-tutorials/index.md) to see HydraFlow in action
+2. Explore the detailed [User Guide](../part1-applications/index.md) to learn more about HydraFlow's capabilities
+3. Check the [API Reference](../api/hydraflow/README.md) for detailed documentation of HydraFlow's API
+
 Continue to the [Installation Guide](installation.md) to get started with
 HydraFlow.

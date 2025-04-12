@@ -6,7 +6,7 @@ powerful tools for accessing, analyzing, and visualizing experiment data.
 
 ## Overview
 
-HydraFlow provides a comprehensive API for working with experiment results,
+Part 3 provides a comprehensive API for working with experiment results,
 enabling you to:
 
 - Load and access experiment data from MLflow runs
@@ -26,6 +26,12 @@ The main components of HydraFlow's analysis tools are:
 
 3. **Data Analysis Integration**: Tools to convert experiment data into
    Polars DataFrames for advanced analysis.
+
+## Practical Examples
+
+For hands-on examples of experiment analysis, check out our [Practical Tutorials](../practical-tutorials/index.md) section, specifically:
+
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): A detailed tutorial demonstrating how to load, filter, group, and analyze experiment data using HydraFlow's APIs
 
 ## Basic Analysis Workflow
 
@@ -47,6 +53,27 @@ df = runs.to_frame("learning_rate", "batch_size", accuracy=lambda run: run.get("
 # Perform analysis on the DataFrame
 best_run = df.sort("accuracy", descending=True).first()
 ```
+
+## Finding and Loading Runs
+
+HydraFlow provides utilities to easily find and load runs from your MLflow tracking directory:
+
+```python
+from hydraflow import Run
+from hydraflow.core.io import iter_run_dirs
+
+# Find all runs in the tracking directory
+tracking_dir = "mlruns"
+runs = Run.load(iter_run_dirs(tracking_dir))
+
+# Load runs from specific experiments
+runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
+
+# Load runs from multiple experiments using patterns
+runs = Run.load(iter_run_dirs(tracking_dir, ["training_*", "finetuning_*"]))
+```
+
+This approach makes it easy to gather all relevant runs for analysis without having to manually specify each run directory.
 
 ## Type-Safe Analysis
 
@@ -100,6 +127,8 @@ model = run.impl.load_model()
 results = run.impl.analyze_performance()
 ```
 
+The analysis capabilities covered in Part 3 are designed to work seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md) and the advanced workflow automation from [Part 2](../part2-advanced/index.md).
+
 ## What's Next
 
 In the following pages, we'll explore HydraFlow's analysis tools in detail:
@@ -110,3 +139,6 @@ In the following pages, we'll explore HydraFlow's analysis tools in detail:
 - [Run Collection](run-collection.md): Discover the powerful features of the
   [`RunCollection`][hydraflow.core.run_collection.RunCollection] class for
   working with multiple runs.
+
+- [Updating Runs](updating-runs.md): Learn how to update existing runs with
+  new metrics, tags, and artifacts.

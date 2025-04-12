@@ -75,7 +75,7 @@ python train.py -m learning_rate=1:5:m  # 0.001 to 0.005
 python train.py -m model=(cnn,transformer)_(small,large)
 ```
 
-See [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md) for a complete reference on these powerful features.
+See [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md) for a complete reference on these powerful features.
 
 ### Managing Complex Experiment Workflows
 
@@ -94,23 +94,24 @@ jobs:
 hydraflow run train
 ```
 
-This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part3-advanced/job-configuration.md).
+This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part2-advanced/job-configuration.md) in Part 2.
 
 ## Output Organization
 
 By default, Hydra organizes outputs in the following directory structure for HydraFlow applications:
 
 ```
-outputs/
-├── YYYY-MM-DD/              # Date
-│   └── HH-MM-SS/            # Time
-│       └── .hydra/          # Hydra configuration
+ROOT_DIR/
+├── outputs/                 # Created in single run mode
+│   └── YYYY-MM-DD/          # Date
+│       └── HH-MM-SS/        # Time
+│           └── .hydra/      # Hydra configuration
 └── multirun/                # Created in multirun mode
-    └── YYYY-MM-DD/
-        └── HH-MM-SS/
-            ├── 0/           # Run 0
+    └── YYYY-MM-DD/          # Date
+        └── HH-MM-SS/        # Time
+            ├── 0/           # Sweep run 0
             │   └── .hydra/
-            ├── 1/           # Run 1
+            ├── 1/           # Sweep run 1
             │   └── .hydra/
             └── ...
 ```
@@ -124,6 +125,7 @@ mlruns/
 │   │   ├── artifacts/
 │   │   │   └── .hydra/      # Hydra config copied here
 │   │   │       ├── config.yaml
+│   │   │       ├── hydra.yaml
 │   │   │       └── overrides.yaml
 │   │   ├── metrics/
 │   │   ├── params/
@@ -131,8 +133,7 @@ mlruns/
 │   ├── run_id_2/
 │   │   └── artifacts/
 │   │       └── .hydra/
-│   └── meta.yaml            # Contains Hydra job name
-└── meta.yaml
+:   └── meta.yaml            # Contains Hydra job name
 ```
 
 **Important**: In HydraFlow, the MLflow run's `artifacts` directory serves
@@ -178,5 +179,5 @@ efficient machine learning workflows while maintaining
 compatibility with the underlying libraries' documentation and ecosystem.
 
 For more advanced execution capabilities, see:
-- [Extended Sweep Syntax](../part3-advanced/sweep-syntax.md)
-- [Job Configuration](../part3-advanced/job-configuration.md)
+- [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md)
+- [Job Configuration](../part2-advanced/job-configuration.md) in Part 2
