@@ -1,0 +1,19 @@
+jobs:
+  job_sequential:
+    run: python example.py
+    sets:
+      - each: width=100,300
+        all: height=100:300:100
+  job_parallel:
+    run: python example.py
+    add: >-
+      hydra/launcher=joblib
+      hydra.launcher.n_jobs=3
+    sets:
+      - each: width=200,400
+        all: height=100:300:100
+  job_submit:
+    submit: python submit.py example.py
+    sets:
+      - each: width=250:350:100
+        all: height=150,250
