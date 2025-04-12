@@ -41,7 +41,8 @@ theme:
 plugins:
   - search
   - markdown-exec
-  - mkapi
+  - mkapi:
+      debug: true
 markdown_extensions:
   - admonition
   - attr_list
