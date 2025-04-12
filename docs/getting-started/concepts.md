@@ -62,6 +62,40 @@ This decorator provides:
 - Storage of Hydra configurations and logs as MLflow artifacts
 - Support for type-safe APIs and IDE integration
 
+## Workflow Automation
+
+HydraFlow allows you to automate experiment workflows using a YAML-based job definition system:
+
+```yaml
+jobs:
+  train_models:
+    run: python train.py
+    sets:
+      - each: model=small,medium,large
+        all: learning_rate=0.001,0.01,0.1
+```
+
+This enables:
+
+- Defining reusable experiment workflows
+- Efficient configuration of parameter sweeps
+- Organization of complex experiment campaigns
+
+You can also define more complex parameter spaces using extended sweep syntax:
+
+```bash
+# Ranges (start:end:step)
+python train.py -m "learning_rate=0.01:0.03:0.01"
+
+# SI prefixes
+python train.py -m "batch_size=1k,2k,4k"
+# 1000, 2000, 4000
+
+# Grid within a single parameter
+python train.py -m "model=(small,large)_(v1,v2)"
+# small_v1, small_v2, large_v1, large_v2
+```
+
 ### Run
 
 The `Run` class represents a single experiment run in HydraFlow. It is distinct from MLflow's `Run` class (`mlflow.entities.Run`), focusing on Hydra integration and configuration management.
@@ -123,38 +157,6 @@ Key features of `RunCollection`:
 - Grouping runs by common attributes
 - Aggregating data across runs
 - Converting to Polars DataFrames for advanced analysis
-
-## Workflow Automation
-
-HydraFlow allows you to automate experiment workflows using a YAML-based job definition system:
-
-```yaml
-jobs:
-  train_models:
-    run: python train.py
-    sets:
-      - each: model=small,medium,large
-        all: learning_rate=0.001:0.1:3
-```
-
-This enables:
-
-- Defining reusable experiment workflows
-- Efficient configuration of parameter sweeps
-- Organization of complex experiment campaigns
-
-You can also define more complex parameter spaces using extended sweep syntax:
-
-```bash
-# Ranges (start:end:step)
-python train.py -m "learning_rate=0.001:0.1:0.001"
-
-# SI prefixes
-python train.py -m "batch_size=1k,2k,4k"  # 1000, 2000, 4000
-
-# Logarithmic spacing
-python train.py -m "learning_rate=log(0.0001:0.1:10)"  # 10 points log-spaced
-```
 
 ## Summary
 
