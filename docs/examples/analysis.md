@@ -1,5 +1,28 @@
 # Results Analysis
 
+```bash exec="1" workdir="examples"
+rm -rf mlruns outputs multirun __pycache__
+```
+
+## Project Structure
+
+we assume that you have executed the three jobs
+described in the [Automated Workflows](advanced.md)
+section, using the following commands:
+
+```console exec="1" source="tabbed-left" workdir="examples" result="nohighlight"
+$ hydraflow run job_sequential
+$ hydraflow run job_parallel
+$ hydraflow run job_submit
+$ rm -rf multirun
+```
+
+Now the project structure should be as follows:
+
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree -L 3 --dirsfirst --noreport
+```
+
 ## Hydra application
 
 ```python title="example.py" linenums="1"

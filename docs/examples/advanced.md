@@ -10,8 +10,8 @@ rm -rf mlruns outputs multirun __pycache__
 
 First, let's examine the project structure:
 
-```console exec="1" source="console" workdir="examples"
-$ tree
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree --noreport
 ```
 
 ## Job Definition File
@@ -54,18 +54,11 @@ HydraFlow solves this problem by creating a unique directory for each job.
 Here's the sequential job configuration from hydraflow.yaml:
 
 ```yaml
-job_sequential:
-  run: python example.py
-  sets:
-    - each: width=100,300
-      all: height=100:300:100
+--8<-- "examples/hydraflow.yaml:2:6"
 ```
 
-```yaml title="hydraflow.yaml"
---8<-- "examples/hydraflow.yaml:1:6"
-```
-
-This job uses the `each` parameter to run multiple configuration combinations in sequence:
+This job uses the `each` and `all` parameters
+to run multiple configuration combinations in sequence:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_sequential
@@ -82,21 +75,10 @@ Results of execution:
 Here's the parallel job configuration from hydraflow.yaml:
 
 ```yaml
-job_parallel:
-  run: python example.py
-  add: >-
-    hydra/launcher=joblib
-    hydra.launcher.n_jobs=3
-  sets:
-    - each: width=200,400
-      all: height=100:300:100
+--8<-- "examples/hydraflow.yaml:7:14"
 ```
 
-```yaml title="hydraflow.yaml"
---8<-- "examples/hydraflow.yaml:1,7:14"
-```
-
-This job combines `each` and `all` parameters while leveraging Hydra's parallel execution features:
+This job uses the `add` parameter to leverage Hydra's parallel execution features:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_parallel --dry-run
@@ -120,15 +102,7 @@ This demonstrates how HydraFlow makes Hydra's powerful features easily accessibl
 Here's the submit job configuration from hydraflow.yaml:
 
 ```yaml
-job_submit:
-  submit: python submit.py example.py
-  sets:
-    - each: width=250:350:100
-      all: height=150,250
-```
-
-```yaml title="hydraflow.yaml"
---8<-- "examples/hydraflow.yaml:1,15:-1"
+--8<-- "examples/hydraflow.yaml:15:-1"
 ```
 
 The `submit` command requires two key components to work:
@@ -158,11 +132,13 @@ python submit.py example.py /tmp/hydraflow_parameters_12345.txt
 ```
 
 Your submit handler (`submit.py` in this case) must:
+
 - Accept the parameter file path as its last argument
 - Process the parameter file according to your requirements
 - Execute jobs using the parameters in the file
 
 This approach provides complete flexibility in how you execute your jobs:
+
 - Submit jobs to compute clusters (SLURM, PBS, etc.)
 - Implement custom scheduling logic
 - Distribute workloads based on resource availability
@@ -174,6 +150,7 @@ $ hydraflow run job_submit --dry-run
 ```
 
 The dry run output shows:
+
 - The command that will be executed with the parameter file path appended
 - The parameter combinations that will be written to the parameter file
 
@@ -184,6 +161,7 @@ $ hydraflow run job_submit
 ```
 
 Our `submit.py` example implements a simple processor that:
+
 1. Accepts two arguments: the application file (`example.py`) and the parameter file
 2. Reads each line from the parameter file
 3. Runs the application with each set of parameters sequentially
@@ -196,9 +174,9 @@ For more details about the `submit` command, see the [Job Configuration document
 
 With HydraFlow, all important data is stored in MLflow, so you can safely delete the Hydra output directories:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
 $ rm -rf multirun
-$ tree -L 3 --dirsfirst
+$ tree -L 3 --dirsfirst --noreport
 ```
 
 After cleanup, you can observe:

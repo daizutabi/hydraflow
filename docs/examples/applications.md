@@ -10,8 +10,8 @@ rm -rf mlruns outputs multirun __pycache__
 
 First, let's examine the project structure:
 
-```console exec="1" source="console" workdir="examples"
-$ tree
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree --noreport
 ```
 
 ## Creating a HydraFlow Application
@@ -90,8 +90,8 @@ The experiment name is automatically set from the Hydra job name (in this case, 
 
 Let's examine the current directory structure:
 
-```console exec="1" source="console" workdir="examples"
-$ tree -a -L 5 --dirsfirst -I '.trash|tags'
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree -a -L 5 --dirsfirst -I '.trash|tags' --noreport
 ```
 
 Key points about the directory structure after execution:
@@ -119,8 +119,8 @@ This example runs with four combinations:
 
 Check the created directory structure:
 
-```console exec="1" source="console" workdir="examples"
-$ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml'
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
 ```
 
 All runs are added to the same MLflow experiment, making it easy to compare results from related parameter sweeps.
@@ -129,14 +129,19 @@ With HydraFlow, all important data is stored in MLflow, so you can safely delete
 
 ```console exec="1" source="console" workdir="examples"
 $ rm -rf outputs multirun
-$ tree -L 3 --dirsfirst
+```
+
+The final directory structure should be:
+
+```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+$ tree -L 3 --dirsfirst --noreport
 ```
 
 ## Next Steps
 
 Now that you've learned how to create and run a basic application, you can move on to:
 
-- Create reusable job definitions with YAML configuration in [Advanced Workflows](advanced.md)
+- Create reusable job definitions with YAML configuration in [Automated Workflows](advanced.md)
 - Analyze experiment results using Run and RunCollection classes in [Results Analysis](analysis.md)
 
 For detailed documentation, refer to:
