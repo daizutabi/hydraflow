@@ -9,8 +9,8 @@
   Gather, filter, and analyze experiment results with type-safe APIs
   for comprehensive insights
 - 🔄 **Automate Workflows**
-  Manage and organize large-scale machine learning experiments
-  efficiently
+  Define reusable experiment workflows with YAML configuration and
+  leverage extended sweep syntax for parameter exploration
 
 </div>
 
