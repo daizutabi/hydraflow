@@ -43,8 +43,7 @@ From the dry run output, we can observe:
 - 2 jobs will be executed (from the `each` parameter combinations)
 - Each job contains 3 sweeps (from the `all` range values)
 - Each job includes additional options:
-    - `hydra.job.name`: The name of the job defined in
-       `hydraflow.yaml`
+    - `hydra.job.name`: The name of the job defined in hydraflow.yaml
     - `hydra.sweep.dir`: A unique directory for each job created by HydraFlow
 
 Standard Hydra creates directories based on the current date and time, which may cause duplication during parallel execution.
@@ -52,8 +51,21 @@ HydraFlow solves this problem by creating a unique directory for each job.
 
 ## Running Jobs Sequentially
 
-This job uses the `each` and `add` parameters
-to run multiple configuration combinations in sequence:
+Here's the sequential job configuration from hydraflow.yaml:
+
+```yaml
+job_sequential:
+  run: python example.py
+  sets:
+    - each: width=100,300
+      all: height=100:300:100
+```
+
+```yaml title="hydraflow.yaml"
+--8<-- "examples/hydraflow.yaml:1:6"
+```
+
+This job uses the `each` parameter to run multiple configuration combinations in sequence:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_sequential
@@ -67,8 +79,24 @@ Results of execution:
 
 ## Running Jobs in Parallel
 
-This job uses the `add` parameter
-to leverage Hydra's parallel execution features:
+Here's the parallel job configuration from hydraflow.yaml:
+
+```yaml
+job_parallel:
+  run: python example.py
+  add: >-
+    hydra/launcher=joblib
+    hydra.launcher.n_jobs=3
+  sets:
+    - each: width=200,400
+      all: height=100:300:100
+```
+
+```yaml title="hydraflow.yaml"
+--8<-- "examples/hydraflow.yaml:1,7:14"
+```
+
+This job combines `each` and `all` parameters while leveraging Hydra's parallel execution features:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_parallel --dry-run
@@ -89,12 +117,28 @@ This demonstrates how HydraFlow makes Hydra's powerful features easily accessibl
 
 ## Using the Submit Command
 
+Here's the submit job configuration from hydraflow.yaml:
+
+```yaml
+job_submit:
+  submit: python submit.py example.py
+  sets:
+    - each: width=250:350:100
+      all: height=150,250
+```
+
+```yaml title="hydraflow.yaml"
+--8<-- "examples/hydraflow.yaml:1,15:-1"
+```
+
 The `submit` command requires two key components to work:
 
 1. Your HydraFlow application (`example.py` in this case)
 2. A command or script defined in `hydraflow.yaml` that will receive and process a parameter file
 
 This pattern separates the experiment definition from the execution strategy.
+
+Here's the implementation of the submit handler:
 
 ```python title="submit.py" linenums="1"
 --8<-- "examples/submit.py"
