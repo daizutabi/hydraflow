@@ -36,26 +36,27 @@ Let's create a simple HydraFlow application that defines a configuration class a
 Let's break down the essential parts of this application:
 
 1. **Configuration Class**: A dataclass that defines the parameters for our experiment
-   ```python
-   @dataclass
-   class Config:
-       width: int = 1024
-       height: int = 768
-   ```
+    ```python
+    @dataclass
+    class Config:
+        width: int = 1024
+        height: int = 768
+    ```
 
-   This class defines the structure and default values for our configuration parameters. Using Python's dataclass gives us type safety and clear structure.
+    This class defines the structure and default values for our configuration parameters. Using Python's dataclass gives us type safety and clear structure.
 
 2. **Main Function**: The core of our application, decorated with `@hydraflow.main`
-   ```python
-   @hydraflow.main(Config)
-   def app(run: Run, cfg: Config) -> None:
-       log.info(run.info.run_id)
-       log.info(cfg)
-   ```
+    ```python
+    @hydraflow.main(Config)
+    def app(run: Run, cfg: Config) -> None:
+        log.info(run.info.run_id)
+        log.info(cfg)
+    ```
 
-   This function will be executed with the provided configuration. It takes two key parameters:
-   - `run`: An MLflow run object that provides access to the current experiment
-   - `cfg`: The configuration object with our parameters
+    This function will be executed with the provided configuration. It takes two key parameters:
+
+    - `run`: An MLflow run object that provides access to the current experiment
+    - `cfg`: The configuration object with our parameters
 
 ### The Power of the Decorator
 
@@ -81,6 +82,7 @@ $ python example.py
 ```
 
 When you run the application, HydraFlow automatically:
+
 1. Creates an MLflow experiment named after your application (in this case, "example")
 2. Starts a run with the provided configuration
 3. Captures logs and artifacts
@@ -91,7 +93,7 @@ Let's use the MLflow CLI to verify that our experiment was created:
 $ mlflow experiments search
 ```
 
-Now, let's examine the directory structure created by HydraFlow:
+Now, let's examine the directory structure created by Hydra and MlFlow:
 
 ```console exec="1" workdir="examples" result="nohighlight"
 $ tree -a -L 5 --dirsfirst -I '.trash|tags' --noreport
@@ -105,7 +107,7 @@ The directory structure shows:
 
 ### Multi-run Mode (Parameter Sweeps)
 
-One of HydraFlow's most powerful features is the ability to run parameter sweeps. Let's try this by overriding our configuration parameters:
+One of Hydra's most powerful features is the ability to run parameter sweeps. Let's try this by overriding our configuration parameters:
 
 ```console exec="1" source="console" workdir="examples"
 $ python example.py -m width=400,600 height=100,200

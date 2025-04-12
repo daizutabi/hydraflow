@@ -63,6 +63,7 @@ You can filter runs by experiment name to focus on specific experiments:
 ```
 
 As shown above, you can:
+
 - Filter by a single experiment name
 - Provide a list of experiment names
 - Use pattern matching with wildcards
@@ -201,7 +202,7 @@ This allows you to define custom analysis methods that use both the run's artifa
 The [`RunCollection`][hydraflow.core.run_collection.RunCollection] class helps you analyze multiple runs:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
->>> run_dirs = hydraflow.iter_run_dirs("mlruns")
+>>> run_dirs = iter_run_dirs("mlruns")
 >>> rc = Run[Config, Size].load(run_dirs, Size)
 >>> print(rc)
 ```
@@ -248,7 +249,7 @@ You can even use custom filter functions:
 The [`get`][hydraflow.core.run_collection.RunCollection.get] method returns a single run matching your criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
->>> run = rc.get(width=(350, 450), height=(150, 250))
+>>> run = rc.get(width=250, height=(100, 200))
 >>> print(run)
 >>> print(run.impl)
 ```

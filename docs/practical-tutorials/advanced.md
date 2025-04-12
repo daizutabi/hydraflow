@@ -17,11 +17,12 @@ Before you begin this tutorial, you should:
 
 First, let's examine our project structure:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree --noreport
 ```
 
 In this tutorial, we'll use:
+
 - `example.py`: Our basic HydraFlow application
 - `hydraflow.yaml`: A configuration file to define our experiment workflows
 - `submit.py`: A helper script for job submission
@@ -100,7 +101,7 @@ job_parallel:
       all: height=100:300:100
 ```
 
-This job leverages Hydra's parallel execution features using a joblib launcher:
+This job leverages Hydra's parallel execution features using a joblib launcher via `add` parameter:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_parallel --dry-run
@@ -144,7 +145,7 @@ Here's our implementation of the submit handler:
 
 How the `submit` command works:
 
-1. HydraFlow generates all parameter combinations based on your `sets` configuration
+1. HydraFlow generates all parameter combinations based on your job configuration
 2. It writes these combinations to a temporary text file (one combination per line)
 3. It runs the command specified in the `submit` field of your `hydraflow.yaml`
 4. It **appends the temporary file path as the last argument** to your command
@@ -168,31 +169,33 @@ $ hydraflow run job_submit
 ```
 
 Our `submit.py` script implements a simple processor that:
+
 1. Accepts two arguments: the application file (`example.py`) and the parameter file
 2. Reads each line from the parameter file
 3. Runs the application with each set of parameters sequentially
 
 In real-world scenarios, you could customize this handler to:
+
 - Submit jobs to compute clusters (SLURM, PBS, etc.)
 - Implement custom scheduling logic
 - Distribute workloads based on resource requirements
 
 ## Reviewing Results
 
-After running our jobs, we can check the directory structure:
-
-```console exec="1" source="console" workdir="examples"
-$ tree -L 3 --dirsfirst --noreport
-```
-
 With HydraFlow, all important data is stored in MLflow, so we can safely delete the Hydra output directories:
 
 ```console exec="1" source="console" workdir="examples"
 $ rm -rf multirun
+```
+
+Let's check the directory structure:
+
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
 ```
 
 After cleanup, we can observe:
+
 - There are three experiments (one for each job type)
 - Each experiment contains multiple runs
 - A total of 16 runs were executed across all jobs
