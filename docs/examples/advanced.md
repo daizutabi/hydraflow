@@ -89,25 +89,45 @@ This demonstrates how HydraFlow makes Hydra's powerful features easily accessibl
 
 ## Using the Submit Command
 
-For complex job execution patterns or submitting jobs to external systems, you can use the `submit` command with your own Python script or any other command:
+The `submit` command requires two key components to work:
+
+1. Your HydraFlow application (`example.py` in this case)
+2. A handler script or command that processes the parameter file (`submit.py` in this example)
+
+This pattern separates the experiment definition from the execution strategy:
 
 ```python title="submit.py" linenums="1"
 --8<-- "examples/submit.py"
 ```
 
-This demonstration `submit.py`:
+This handler script (`submit.py`):
 
-- Receives and executes the submitted command with options
-- In a production environment, it could perform more complex operations like submitting jobs to a cluster
+- Receives two arguments: the application script path and the parameter file path
+- Reads each line from the parameter file
+- Executes the application with each set of parameters separately
+
+When you run a job with the `submit` command, HydraFlow:
+
+1. Creates a temporary file containing all parameter combinations
+2. Passes both your application file and this parameter file to your handler
+3. Lets your handler decide how to distribute or execute the jobs
+
+This separation enables powerful deployment scenarios:
+- Submit jobs to compute clusters (SLURM, PBS, etc.)
+- Implement custom scheduling logic
+- Distribute workloads based on resource availability
+
+Let's see it in action with a dry run:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_submit --dry-run
 ```
 
-Dry run output:
+The dry run output shows:
+- The handler command that will be executed with paths to both your application and the parameter file
+- The parameter combinations that will be written to the parameter file
 
-- First line: The command to be executed, including a temporary file
-- Subsequent lines: Parameter sets that will be written to the temporary file
+Now let's run it:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_submit
