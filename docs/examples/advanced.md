@@ -47,11 +47,11 @@ From the dry run output, we can observe:
     - `hydra.sweep.dir`: A unique directory for each job created by HydraFlow
 
 Standard Hydra creates directories based on the current date and time, which may cause duplication during parallel execution.
-HydraFlow solves this problem by creating a unique directory for each job.
+HydraFlow solves this problem by creating a unique but time-ordered directory for each job.
 
 ## Running Jobs Sequentially
 
-Here's the sequential job configuration from hydraflow.yaml:
+Here's the sequential job configuration from `hydraflow.yaml`:
 
 ```yaml
 --8<-- "examples/hydraflow.yaml:2:6"
@@ -120,8 +120,8 @@ Here's the implementation of the submit handler:
 
 How the `submit` command works:
 
-1. HydraFlow generates all parameter combinations based on your `sets` configuration
-2. It writes these combinations to a temporary text file (one combination per line)
+1. HydraFlow generates all parameter combinations based on your job configuration
+2. It writes parameter combinations to a temporary text file (one combination per line)
 3. It runs the command specified in the `submit` field of your `hydraflow.yaml`
 4. It **appends the temporary file path as the last argument** to your command
 
@@ -174,9 +174,8 @@ For more details about the `submit` command, see the [Job Configuration document
 
 With HydraFlow, all important data is stored in MLflow, so you can safely delete the Hydra output directories:
 
-```console exec="1" workdir="examples" result="nohighlight"
+```console exec="1" source="console" workdir="examples"
 $ rm -rf multirun
-$ tree -L 3 --dirsfirst --noreport
 ```
 
 After cleanup, you can observe:
@@ -185,13 +184,19 @@ After cleanup, you can observe:
 - Each experiment contains 4-6 runs
 - A total of 16 runs were executed
 
-Using HydraFlow automates the storage and organization of experiment data, maintaining a reproducible experiment environment.
+```console exec="1" workdir="examples" result="nohighlight"
+$ tree -L 3 --dirsfirst --noreport
+```
+
+Using HydraFlow automates the storage and organization
+of experiment data, maintaining a reproducible
+experiment environment.
 
 ## Next Steps
 
 After learning about workflow automation, try these next steps:
 
-- Analyze experiment results using the [Run](../part3-analysis/run-class.md) and [RunCollection](../part3-analysis/run-collection.md) classes
+- Analyze experiment results using Run and RunCollection classes in [Results Analysis](analysis.md)
 - For more complex parameter sweep definitions, refer to the [Sweep Syntax](../part2-advanced/sweep-syntax.md) documentation
 
 For detailed documentation, see:

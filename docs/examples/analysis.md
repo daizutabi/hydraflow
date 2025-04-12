@@ -6,35 +6,24 @@ rm -rf mlruns outputs multirun __pycache__
 
 ## Project Structure
 
-we assume that you have executed the three jobs
+We assume that you have executed the three jobs
 described in the [Automated Workflows](advanced.md)
 section, using the following commands:
 
-```console exec="1" source="tabbed-left" workdir="examples" result="ansi"
+```console exec="1" source="tabbed-left" workdir="examples" result="ansi" tabs="Input|Output"
 $ hydraflow run job_sequential
 $ hydraflow run job_parallel
 $ hydraflow run job_submit
-$ rm -rf multirun
+```
+
+```bash exec="1" workdir="examples"
+rm -rf multirun __pycache__
 ```
 
 Now the project structure should be as follows:
 
 ```console exec="1" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
-```
-
-## Hydra application
-
-```python title="example.py" linenums="1"
---8<-- "examples/example.py"
-```
-
-```bash exec="on" workdir="examples"
-rm -rf mlruns outputs multirun
-```
-
-```console exec="1" source="console" workdir="examples"
-$ python example.py -m width=400,600 height=100,200,300
 ```
 
 ## Use Hydraflow API
@@ -46,16 +35,21 @@ directories. The first argument is the path to the MLflow tracking root
 directory (in most cases, this is `"mlruns"`).
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
->>> import hydraflow
->>> for run_dir in hydraflow.iter_run_dirs("mlruns"):
+>>> from hydraflow import iter_run_dirs
+>>> run_dirs = list(iter_run_dirs("mlruns"))
+>>> print(len(run_dirs))
+>>> for run_dir in run_dirs[:4]:
 ...     print(run_dir)
 ```
 
-Optionally, you can specify the experiment name(s) to filter the runs.
+Optionally, you can specify the experiment name(s) to
+filter the runs.
 
-```python
->>> hydraflow.iter_run_dirs("mlruns", "example")
->>> hydraflow.iter_run_dirs("mlruns", ["example1", "example2"])
+```pycon exec="1" source="console" session="results" workdir="examples"
+>>> print(len(list(iter_run_dirs("mlruns", "job_sequential"))))
+>>> names = ["job_sequential", "job_parallel"]
+>>> print(len(list(iter_run_dirs("mlruns", names))))
+>>> print(len(list(iter_run_dirs("mlruns", "job_*"))))
 ```
 
 ### Load a run
@@ -67,7 +61,7 @@ constructor.
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> from hydraflow import Run
->>> run_dirs = hydraflow.iter_run_dirs("mlruns", "example")
+>>> run_dirs = iter_run_dirs("mlruns")
 >>> run_dir = next(run_dirs)  # run_dirs is an iterator
 >>> run = Run(run_dir)
 >>> print(run)
@@ -81,11 +75,6 @@ load a `Run` instance, which accepts a `str` as well as `pathlib.Path`.
 >>> Run.load(str(run_dir))
 >>> print(run)
 ```
-
-!!! note
-    The use case of `Run.load` is to load multiple `Run` instances
-    from run directories as described below.
-
 
 The `Run` instance has an `info` attribute that contains information
 about the run.
@@ -209,7 +198,7 @@ You can collect multiple `Run` instances from run directories as a
 collection of runs [`RunCollection`][hydraflow.RunCollection].
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
->>> run_dirs = hydraflow.iter_run_dirs("mlruns", "example")
+>>> run_dirs = hydraflow.iter_run_dirs("mlruns")
 >>> rc = Run[Config, Size].load(run_dirs, Size)
 >>> print(rc)
 ```
@@ -329,3 +318,11 @@ a polars DataFrame.
 >>> df = rc.group_by("width", n=lambda runs: len(runs))
 >>> print(df)
 ```
+
+## Next Steps
+
+For detailed documentation, see:
+
+- [Part 1: Running Applications](../part1-applications/index.md)
+- [Part 2: Automating Workflows](../part2-advanced/index.md)
+- [Part 3: Analyzing Results](../part3-analysis/index.md)
