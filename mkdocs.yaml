@@ -43,33 +43,24 @@ plugins:
   - markdown-exec
   - mkapi
 markdown_extensions:
-  - pymdownx.magiclink
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       use_pygments: true
   - pymdownx.inlinehilite
+  - pymdownx.magiclink
   - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
-  - attr_list
-  - md_in_html
-  - admonition
-  - pymdownx.details
-  - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-      options:
-        custom_icons:
-          - overrides/.icons
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/daizutabi/hydraflow
-  version:
-    provider: mike
 nav:
   - Home: index.md
   - Getting Started:

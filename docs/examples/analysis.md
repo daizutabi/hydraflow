@@ -10,7 +10,7 @@ we assume that you have executed the three jobs
 described in the [Automated Workflows](advanced.md)
 section, using the following commands:
 
-```console exec="1" source="tabbed-left" workdir="examples" result="nohighlight"
+```console exec="1" source="tabbed-left" workdir="examples" result="ansi"
 $ hydraflow run job_sequential
 $ hydraflow run job_parallel
 $ hydraflow run job_submit
@@ -19,7 +19,7 @@ $ rm -rf multirun
 
 Now the project structure should be as follows:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
 ```
 

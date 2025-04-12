@@ -10,7 +10,7 @@ rm -rf mlruns outputs multirun __pycache__
 
 First, let's examine the project structure:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree --noreport
 ```
 
@@ -174,7 +174,7 @@ For more details about the `submit` command, see the [Job Configuration document
 
 With HydraFlow, all important data is stored in MLflow, so you can safely delete the Hydra output directories:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ rm -rf multirun
 $ tree -L 3 --dirsfirst --noreport
 ```

@@ -10,9 +10,11 @@ rm -rf mlruns outputs multirun __pycache__
 
 First, let's examine the project structure:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree --noreport
 ```
+
+In this tutorial, we will only use the `example.py` file.
 
 ## Creating a HydraFlow Application
 
@@ -90,7 +92,7 @@ The experiment name is automatically set from the Hydra job name (in this case, 
 
 Let's examine the current directory structure:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree -a -L 5 --dirsfirst -I '.trash|tags' --noreport
 ```
 
@@ -119,7 +121,7 @@ This example runs with four combinations:
 
 Check the created directory structure:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
 ```
 
@@ -133,7 +135,7 @@ $ rm -rf outputs multirun
 
 The final directory structure should be:
 
-```console exec="1" source="tabbed-right" workdir="examples" result="nohighlight"
+```console exec="1" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
 ```
 

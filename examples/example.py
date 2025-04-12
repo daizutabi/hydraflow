@@ -1,15 +1,10 @@
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from hydra.core.config_store import ConfigStore
+from mlflow.entities import Run
 
 import hydraflow
-
-if TYPE_CHECKING:
-    from mlflow.entities import Run
 
 log = logging.getLogger(__name__)
 
