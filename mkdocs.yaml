@@ -67,6 +67,11 @@ nav:
       - Overview: getting-started/index.md
       - Installation: getting-started/installation.md
       - Core Concepts: getting-started/concepts.md
+  - Practical Tutorials:
+      - Overview: practical-tutorials/index.md
+      - Creating Your First Application: practical-tutorials/applications.md
+      - Automating Complex Workflows: practical-tutorials/advanced.md
+      - Analyzing Experiment Results: practical-tutorials/analysis.md
   - User Guide:
       - "Part 1: Running Applications":
           - Overview: part1-applications/index.md
@@ -82,9 +87,4 @@ nav:
           - Run Class: part3-analysis/run-class.md
           - Run Collection: part3-analysis/run-collection.md
           - Updating Run Configurations: part3-analysis/updating-runs.md
-  - Examples:
-      - Overview: examples/index.md
-      - Running Applications: examples/applications.md
-      - Automating Workflows: examples/advanced.md
-      - Analyzing Results: examples/analysis.md
   - API Reference: $api/hydraflow.***

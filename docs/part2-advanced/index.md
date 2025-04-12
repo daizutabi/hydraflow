@@ -1,102 +1,88 @@
-# Advanced Multi-Run Workflows
+# Automating Workflows
 
-HydraFlow extends Hydra's capabilities with advanced features for efficient
-multi-run workflows. While Hydra provides basic parameter sweeping, HydraFlow
-offers tools for more complex scenarios, including extended sweep syntax
-and reusable job definitions.
+This section covers advanced techniques for automating and structuring multiple experiments in HydraFlow. It provides tools for defining complex parameter spaces and reusable experiment definitions.
 
 ## Overview
 
-Part 2 focuses on HydraFlow's advanced features for scaling and automating
-your experiment workflows:
+After creating your basic HydraFlow applications, the next step is to automate your experiment workflows. This includes:
 
-- **Extended Sweep Syntax** - Define complex parameter spaces with numerical
-  ranges, combinations, and engineering notation
-- **Job Configuration** - Create reusable job definitions with GitHub
-  Actions-like syntax
+- Creating parameter sweeps across complex combinations
+- Defining reusable experiment configurations
+- Organizing large-scale experiment campaigns
 
-These advanced features build upon the basics covered in [Part 1: Running Applications](../part1-applications/index.md)
-and work seamlessly with the analysis capabilities from [Part 3: Analyzing Results](../part3-analysis/index.md).
+## Key Components
+
+The main components for workflow automation in HydraFlow are:
+
+1. **Extended Sweep Syntax**: A powerful syntax for defining parameter spaces beyond simple comma-separated values.
+
+2. **Job Configuration**: A YAML-based definition system for creating reusable experiment workflows.
+
+## Practical Examples
+
+For hands-on examples of workflow automation, see our [Practical Tutorials](../practical-tutorials/index.md) section, specifically:
+
+- [Automating Complex Workflows](../practical-tutorials/advanced.md): A tutorial that demonstrates how to use `hydraflow.yaml` to define and execute various types of workflows
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): Learn how to work with results from automated experiment runs
 
 ## Extended Sweep Syntax
 
-HydraFlow's extended sweep syntax allows you to define complex parameter spaces
-more concisely than Hydra's basic comma-separated lists:
+HydraFlow extends Hydra's sweep syntax to provide more powerful ways to define parameter spaces:
 
-```yaml
-# Define numerical ranges with colons
-batch_size=16:128:16  # From 16 to 128 in steps of 16
+```bash
+# Range of values (inclusive)
+python train.py -m "learning_rate=0.001:0.1:0.001"  # start:end:step
 
-# Use SI prefixes for large/small numbers
-learning_rate=1:5:m   # 1e-3 to 5e-3
+# SI prefixes
+python train.py -m "batch_size=1k,2k,4k"  # 1000, 2000, 4000
 
-# Define combinations with parentheses
-model=(cnn,transformer)_(small,large)
+# Logarithmic spacing
+python train.py -m "learning_rate=log(0.0001:0.1:10)"  # 10 points log-spaced
 ```
 
-This powerful syntax can dramatically reduce the verbosity of parameter sweeps
-while making them more readable and maintainable.
-
-[Learn more about Extended Sweep Syntax](sweep-syntax.md)
+Learn more about these capabilities in [Sweep Syntax](sweep-syntax.md).
 
 ## Job Configuration
 
-HydraFlow's job configuration system allows you to define reusable experiment
-definitions in YAML format:
+For more complex experiment workflows, you can use HydraFlow's job configuration system:
 
 ```yaml
-# hydraflow.yaml
 jobs:
-  train:
+  train_models:
     run: python train.py
     sets:
-      - each: model=small,large
-      - all: seed=42
+      - each: model=small,medium,large
+        all: seed=42 epochs=10
+
+  evaluate_models:
+    run: python evaluate.py
+    sets:
+      - each: model=small,medium,large
+        all: test_data=validation
 ```
 
-Key concepts in job configuration:
+This approach allows you to define reusable experiment definitions that can be executed with a single command. Learn more in [Job Configuration](job-configuration.md).
 
-- **Execution Commands**: Choose between `run`, `call`, or `submit` for different execution modes
-- **Parameter Sets**: Define independent parameter sets with `each`, `all`, and `add` parameters
-- **Job Organization**: Group related parameters and reuse configurations
+## Executing Workflows
 
-Using the CLI, you can execute defined jobs:
+Once defined, workflows can be executed using the `hydraflow run` command:
 
 ```bash
-$ hydraflow run train
+# Execute a job defined in hydraflow.yaml
+hydraflow run train_models
+
+# Preview execution with dry run
+hydraflow run train_models --dry-run
+
+# Run a job with additional overrides
+hydraflow run train_models seed=123
 ```
-
-[Learn more about Job Configuration](job-configuration.md)
-
-## Integration with HydraFlow Ecosystem
-
-These advanced features integrate with the rest of the HydraFlow ecosystem:
-
-1. **Configuration** → **Execution** → **Analysis** workflow:
-   - Define configurations in Python dataclasses ([Part 1](../part1-applications/configuration.md))
-   - Execute experiments with advanced sweep syntax and job definitions ([Part 2](job-configuration.md))
-   - Analyze results with structured APIs ([Part 3](../part3-analysis/run-collection.md))
-
-2. **Type-safety throughout**:
-   - Configuration is type-checked via dataclasses
-   - Parameters are validated during job execution
-   - Results can be analyzed with type-aware APIs
-
-## When to Use Advanced Workflows
-
-Consider using HydraFlow's advanced workflow features when:
-
-- You need to explore complex parameter spaces with many configurations
-- You want to organize multiple independent parameter sweeps under the same job
-- You need reproducible workflow definitions that can be version-controlled
-- You're running large-scale experiments that benefit from automation
 
 ## What's Next
 
-The following pages explain HydraFlow's advanced features in detail:
+In the following pages, we'll explore workflow automation in detail:
 
-- [Extended Sweep Syntax](sweep-syntax.md) - Learn how to define complex
-  parameter spaces using HydraFlow's extended syntax
+- [Sweep Syntax](sweep-syntax.md): Learn about HydraFlow's extended syntax for defining parameter spaces.
+- [Job Configuration](job-configuration.md): Discover how to create reusable job definitions for your experiments.
 
-- [Job Configuration](job-configuration.md) - Define reusable and maintainable
-  job configurations with sets
+After automating your experiments, you'll want to analyze the results using the tools covered in [Part 3: Analyzing Results](../part3-analysis/index.md).

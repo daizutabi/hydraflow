@@ -1,14 +1,21 @@
-# Results Analysis
+# Analyzing Experiment Results
+
+This tutorial demonstrates how to use HydraFlow's powerful analysis capabilities to work with your experiment results.
 
 ```bash exec="1" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
 ```
 
-## Project Structure
+## Prerequisites
 
-We assume that you have executed the three jobs
-described in the [Automated Workflows](advanced.md)
-section, using the following commands:
+Before you begin this tutorial, you should:
+
+1. Understand the basic structure of a HydraFlow application (from the [Basic Application](applications.md) tutorial)
+2. Be familiar with the concept of job definitions (from the [Automated Workflows](advanced.md) tutorial)
+
+## Project Setup
+
+We'll start by running several experiments that we can analyze. We'll execute the three jobs defined in the [Automated Workflows](advanced.md) tutorial:
 
 ```console exec="1" source="tabbed-left" workdir="examples" result="ansi" tabs="Input|Output"
 $ hydraflow run job_sequential
@@ -20,19 +27,19 @@ $ hydraflow run job_submit
 rm -rf multirun __pycache__
 ```
 
-Now the project structure should be as follows:
+After running these commands, our project structure looks like this:
 
 ```console exec="1" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
 ```
 
-## Use Hydraflow API
+The `mlruns` directory contains all our experiment data. Let's explore how to access and analyze this data using HydraFlow's API.
 
-### Iterate over run's directory
+## Discovering Runs
 
-The [`hydraflow.iter_run_dirs`][] function iterates over the run
-directories. The first argument is the path to the MLflow tracking root
-directory (in most cases, this is `"mlruns"`).
+### Finding Run Directories
+
+HydraFlow provides the [`iter_run_dirs`][hydraflow.iter_run_dirs] function to discover runs in your MLflow tracking directory:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> from hydraflow import iter_run_dirs
@@ -42,8 +49,11 @@ directory (in most cases, this is `"mlruns"`).
 ...     print(run_dir)
 ```
 
-Optionally, you can specify the experiment name(s) to
-filter the runs.
+This function finds all run directories in your MLflow tracking directory, making it easy to collect runs for analysis.
+
+### Filtering by Experiment Name
+
+You can filter runs by experiment name to focus on specific experiments:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(len(list(iter_run_dirs("mlruns", "job_sequential"))))
@@ -52,12 +62,16 @@ filter the runs.
 >>> print(len(list(iter_run_dirs("mlruns", "job_*"))))
 ```
 
-### Load a run
+As shown above, you can:
+- Filter by a single experiment name
+- Provide a list of experiment names
+- Use pattern matching with wildcards
 
-[`Run`][hydraflow.core.run.Run] is a class that represents a *Hydraflow*
-run, not an MLflow run. A `Run` instance is created by passing a
-`pathlib.Path` instance that points to the run directory to the `Run`
-constructor.
+## Working with Individual Runs
+
+### Loading a Run
+
+The [`Run`][hydraflow.core.run.Run] class represents a single experiment run in HydraFlow:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> from hydraflow import Run
@@ -68,16 +82,16 @@ constructor.
 >>> print(type(run))
 ```
 
-You can use the [`load`][hydraflow.core.run.Run.load] class method to
-load a `Run` instance, which accepts a `str` as well as `pathlib.Path`.
+You can also use the [`load`][hydraflow.core.run.Run.load] class method, which accepts both string paths and Path objects:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> Run.load(str(run_dir))
 >>> print(run)
 ```
 
-The `Run` instance has an `info` attribute that contains information
-about the run.
+### Accessing Run Information
+
+Each Run instance provides access to run information and configuration:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(run.info.run_dir)
@@ -85,17 +99,15 @@ about the run.
 >>> print(run.info.job_name)  # Hydra job name = MLflow experiment name
 ```
 
-The `Run` instance has a `cfg` attribute that contains the Hydra
-configuration.
+The configuration is available through the `cfg` attribute:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(run.cfg)
 ```
 
-### Configuration type of the run
+### Type-Safe Configuration Access
 
-Optionally, you can specify the config type of the run using the
-`Run[C]` class.
+For better IDE integration and type checking, you can specify the configuration type:
 
 ```python exec="1" source="console" session="results" workdir="examples"
 from dataclasses import dataclass
@@ -111,27 +123,22 @@ class Config:
 >>> print(run)
 ```
 
-The `Run[C]` class is a generic class that takes a config type `C` as a
-type parameter. The `run.cfg` attribute is recognized as `C` type in
-IDEs, which provides autocompletion and type checking.
+When you use `Run[Config]`, your IDE will recognize `run.cfg` as having the specified type, enabling autocompletion and type checking.
 
-### Get a run's configuration
+### Accessing Configuration Values
 
-The `get` method can be used to get a run's configuration.
+The `get` method provides a unified interface to access values from a run:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(run.get("width"))
 >>> print(run.get("height"))
 ```
 
-### Implementation of the run
+## Adding Custom Implementations
 
-Optionally, you can specify the implementation of the run. Use the
-`Run[C, I]` class to specify the implementation type. The second
-argument `impl_factory` is the implementation factory, which can be a
-class or a function to generate the implementation. The `impl_factory`
-is called with the run's artifacts directory as the first and only
-argument.
+### Basic Implementation
+
+You can extend runs with custom implementation classes to add domain-specific functionality:
 
 ```python exec="1" source="console" session="results" workdir="examples"
 from pathlib import Path
@@ -146,28 +153,21 @@ class Impl:
         return f"Impl({self.root_dir.stem!r})"
 ```
 
-
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run = Run[Config, Impl](run_dir, Impl)
 >>> print(run)
 ```
 
-The representation of the `Run` instance includes the implementation
-type as shown above.
-
-If you specify the implementation type, the `run.impl` attribute is
-lazily initialized at the first time of the `run.impl` attribute access.
-The `run.impl` attribute is recognized as `I` type in IDEs, which
-provides autocompletion and type checking.
+The implementation is lazily initialized when you first access the `impl` attribute:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(run.impl)
 >>> print(run.impl.root_dir)
 ```
 
-The `impl_factory` can accept two arguments: the run's artifacts
-directory and the run's configuration.
+### Configuration-Aware Implementation
 
+Implementations can also access the run's configuration:
 
 ```python exec="1" source="console" session="results" workdir="examples"
 from dataclasses import dataclass, field
@@ -192,10 +192,13 @@ class Size:
 >>> print(run.impl.size)
 ```
 
-### Collect runs
+This allows you to define custom analysis methods that use both the run's artifacts and its configuration.
 
-You can collect multiple `Run` instances from run directories as a
-collection of runs [`RunCollection`][hydraflow.RunCollection].
+## Working with Multiple Runs
+
+### Creating a Run Collection
+
+The [`RunCollection`][hydraflow.core.run_collection.RunCollection] class helps you analyze multiple runs:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run_dirs = hydraflow.iter_run_dirs("mlruns")
@@ -203,54 +206,46 @@ collection of runs [`RunCollection`][hydraflow.RunCollection].
 >>> print(rc)
 ```
 
-In the above example, the `load` class method is called with an iterable
-of run directories and the implementation type. The `load` class method
-returns a `RunCollection` instance instead of a single `Run` instance.
-The representation of the `RunCollection` instance includes the run
-collection type and the number of runs in the collection.
+The `load` method automatically creates a `RunCollection` when given multiple run directories.
 
-### Handle a run collection
+### Basic Run Collection Operations
 
-The `RunCollection` instance has a [`first`][hydraflow.RunCollection.first]
-and [`last`][hydraflow.RunCollection.last] method that returns the first
-and last run in the collection.
+You can perform basic operations on a collection:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.first())
 >>> print(rc.last())
 ```
 
-The [`filter`][hydraflow.RunCollection.filter] method filters the runs
-by the given key-value pairs.
+### Filtering Runs
+
+The [`filter`][hydraflow.core.run_collection.RunCollection.filter] method lets you select runs based on various criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(width=400))
 ```
 
-If the value is a list, the run will be included if the value is in the
-list.
+You can use lists to filter by multiple values (OR logic):
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(height=[100, 300]))
 ```
 
-If the value is a tuple, the run will be included if the value is
-between the tuple. The start and end of the tuple are inclusive.
+Tuples create range filters (inclusive):
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(height=(100, 300)))
 ```
 
-If the value is a callable, the run will be included if the callable
-returns `True`.
-The callable accepts a `Run` instance and returns a boolean value.
+You can even use custom filter functions:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(lambda r: r.impl.is_large()))
 ```
 
-The [`get`][hydraflow.RunCollection.get] method returns a single `Run`
-instance with the given key-value pairs.
+### Finding Specific Runs
+
+The [`get`][hydraflow.core.run_collection.RunCollection.get] method returns a single run matching your criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run = rc.get(width=(350, 450), height=(150, 250))
@@ -258,22 +253,21 @@ instance with the given key-value pairs.
 >>> print(run.impl)
 ```
 
-The [`to_frame`][hydraflow.RunCollection.to_frame] method returns a
-polars DataFrame of the run collection.
+### Converting to DataFrames
+
+For data analysis, you can convert runs to a Polars DataFrame:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.to_frame("width", "height", "size"))
 ```
 
-The `to_frame` method can take keyword arguments to customize the
-DataFrame. Each keyword argument is a callable that takes a `Run`
-instance and returns a value.
+You can add custom columns using callables:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.to_frame("width", "height", is_large=lambda r: r.impl.is_large()))
 ```
 
-The callable can return a list.
+Functions can return lists for multiple values:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> def to_list(run: Run) -> list[int]:
@@ -281,7 +275,7 @@ The callable can return a list.
 >>> print(rc.to_frame("width", from_list=to_list))
 ```
 
-The callable can also return a dictionary.
+Or dictionaries for multiple named columns:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> def to_dict(run: Run) -> dict[int, str]:
@@ -291,10 +285,9 @@ The callable can also return a dictionary.
 >>> print(rc.to_frame("width", from_dict=to_dict))
 ```
 
-### Group runs
+### Grouping Runs
 
-The [`group_by`][hydraflow.RunCollection.group_by] method groups the
-runs by the given key.
+The [`group_by`][hydraflow.core.run_collection.RunCollection.group_by] method organizes runs by common attributes:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> grouped = rc.group_by("width")
@@ -302,7 +295,7 @@ runs by the given key.
 ...     print(key, group)
 ```
 
-The `group_by` method can also take multiple keys.
+You can group by multiple keys:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> grouped = rc.group_by("width", "height")
@@ -310,19 +303,29 @@ The `group_by` method can also take multiple keys.
 ...     print(key, group)
 ```
 
-The `group_by` method can also take a callable which accepts a sequence
-of runs and returns a value. In this case, the `group_by` method returns
-a polars DataFrame.
+Adding aggregation functions transforms the result into a DataFrame:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> df = rc.group_by("width", n=lambda runs: len(runs))
 >>> print(df)
 ```
 
+## Summary
+
+In this tutorial, you've learned how to:
+
+1. Discover experiment runs in your MLflow tracking directory
+2. Load and access information from individual runs
+3. Add custom implementation classes for domain-specific analysis
+4. Filter, group, and analyze collections of runs
+5. Convert run data to DataFrames for advanced analysis
+
+These capabilities enable you to efficiently analyze your experiments and extract valuable insights from your machine learning workflows.
+
 ## Next Steps
 
-For detailed documentation, see:
+Now that you understand HydraFlow's analysis capabilities, you can:
 
-- [Part 1: Running Applications](../part1-applications/index.md)
-- [Part 2: Automating Workflows](../part2-advanced/index.md)
-- [Part 3: Analyzing Results](../part3-analysis/index.md)
+- Dive deeper into the [Run Class](../part3-analysis/run-class.md) and [Run Collection](../part3-analysis/run-collection.md) documentation
+- Explore advanced analysis techniques in the [Analyzing Results](../part3-analysis/index.md) section
+- Apply these analysis techniques to your own machine learning experiments

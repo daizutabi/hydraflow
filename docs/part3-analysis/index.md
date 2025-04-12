@@ -27,6 +27,12 @@ The main components of HydraFlow's analysis tools are:
 3. **Data Analysis Integration**: Tools to convert experiment data into
    Polars DataFrames for advanced analysis.
 
+## Practical Examples
+
+For hands-on examples of experiment analysis, check out our [Practical Tutorials](../practical-tutorials/index.md) section, specifically:
+
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): A detailed tutorial demonstrating how to load, filter, group, and analyze experiment data using HydraFlow's APIs
+
 ## Basic Analysis Workflow
 
 ```python
@@ -133,3 +139,6 @@ In the following pages, we'll explore HydraFlow's analysis tools in detail:
 - [Run Collection](run-collection.md): Discover the powerful features of the
   [`RunCollection`][hydraflow.core.run_collection.RunCollection] class for
   working with multiple runs.
+
+- [Updating Runs](updating-runs.md): Learn how to update existing runs with
+  new metrics, tags, and artifacts.
