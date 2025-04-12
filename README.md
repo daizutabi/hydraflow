@@ -20,29 +20,27 @@
 
 ## Overview
 
-Hydraflow is a library designed to seamlessly integrate
-[Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/), making it easier to
-manage and track machine learning experiments. By combining the flexibility of
-Hydra's configuration management with the robust experiment tracking capabilities
-of MLflow, Hydraflow provides a comprehensive solution for managing complex
-machine learning workflows.
+HydraFlow seamlessly integrates [Hydra](https://hydra.cc/) and [MLflow](https://mlflow.org/) to streamline machine learning experiment workflows. By combining Hydra's powerful configuration management with MLflow's robust experiment tracking, HydraFlow provides a comprehensive solution for defining, executing, and analyzing machine learning experiments.
+
+## Design Principles
+
+HydraFlow is built on the following design principles:
+
+1. **Type Safety** - Utilizing Python dataclasses for configuration type checking and IDE support
+2. **Reproducibility** - Automatically tracking all experiment configurations for fully reproducible experiments
+3. **Analysis Capabilities** - Providing powerful APIs for easily analyzing experiment results
+4. **Workflow Integration** - Creating a cohesive workflow by integrating Hydra's configuration management with MLflow's experiment tracking
 
 ## Key Features
 
-- **Configuration Management**: Utilize Hydra's advanced configuration management
-  to handle complex parameter sweeps and experiment setups.
-- **Experiment Tracking**: Leverage MLflow's tracking capabilities to log parameters,
-  metrics, and artifacts for each run.
-- **Artifact Management**: Automatically log and manage artifacts, such as model
-  checkpoints and configuration files, with MLflow.
-- **Seamless Integration**: Easily integrate Hydra and MLflow in your machine learning
-  projects with minimal setup.
-- **Rich CLI Interface**: Command-line tools for managing experiments and viewing results.
-- **Cross-Platform Support**: Works consistently across different operating systems.
+- **Type-safe Configuration Management** - Define experiment parameters using Python dataclasses with full IDE support and validation
+- **Seamless Hydra-MLflow Integration** - Automatically register configurations with Hydra and track experiments with MLflow
+- **Advanced Parameter Sweeps** - Define complex parameter spaces using extended sweep syntax for numerical ranges, combinations, and SI prefixes
+- **Workflow Automation** - Create reusable experiment workflows with YAML-based job definitions
+- **Powerful Analysis Tools** - Filter, group, and analyze experiment results with type-aware APIs
+- **Custom Implementation Support** - Extend experiment analysis with domain-specific functionality
 
 ## Installation
-
-You can install Hydraflow via pip:
 
 ```bash
 pip install hydraflow
@@ -50,87 +48,97 @@ pip install hydraflow
 
 **Requirements:** Python 3.13+
 
-## Quick Start
-
-Here is a simple example to get you started with Hydraflow:
+## Quick Example
 
 ```python
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
+from mlflow.entities import Run
 import hydraflow
-import mlflow
-
-if TYPE_CHECKING:
-    from mlflow.entities import Run
-
 
 @dataclass
 class Config:
-    """Configuration for the ML training experiment."""
-    # Training hyperparameters
-    learning_rate: float = 0.001
-    batch_size: int = 32
-    epochs: int = 10
-
-    # Model architecture parameters
-    hidden_size: int = 128
-    dropout: float = 0.1
-
-    # Dataset parameters
-    train_size: float = 0.8
-    random_seed: int = 42
-
+    width: int = 1024
+    height: int = 768
 
 @hydraflow.main(Config)
-def app(run: Run, cfg: Config):
-    """Train a model with the given configuration.
+def app(run: Run, cfg: Config) -> None:
+    # Your experiment code here
+    print(f"Running with width={cfg.width}, height={cfg.height}")
 
-    This example demonstrates how to:
-
-    1. Define a configuration using dataclasses
-    2. Use Hydraflow to integrate with MLflow
-    3. Track metrics and parameters automatically
-
-    Args:
-        run: MLflow run for the experiment corresponding to the Hydra app.
-            This `Run` instance is automatically created by Hydraflow.
-        cfg: Configuration for the experiment's run.
-            This `Config` instance is originally defined by Hydra, and then
-            automatically passed to the app by Hydraflow.
-    """
-    # Training loop
-    for epoch in range(cfg.epochs):
-        # Simulate training and validation
-        train_loss = 1.0 / (epoch + 1)
-        val_loss = 1.1 / (epoch + 1)
-
-        # Log metrics to MLflow
-        mlflow.log_metrics({
-            "train_loss": train_loss,
-            "val_loss": val_loss
-        }, step=epoch)
-
-        print(f"Epoch {epoch}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
-
+    # Log metrics
+    hydraflow.log_metric("area", cfg.width * cfg.height)
 
 if __name__ == "__main__":
     app()
 ```
 
-This example demonstrates:
+Execute a parameter sweep with:
 
-- Configuration management with Hydra
-- Automatic experiment tracking with MLflow
-- Parameter logging and metric tracking
-- Type-safe configuration with dataclasses
+```bash
+python app.py -m width=800,1200 height=600,900
+```
+
+## Core Components
+
+HydraFlow consists of the following key components:
+
+### Configuration Management
+
+Define type-safe configurations using Python dataclasses:
+
+```python
+@dataclass
+class Config:
+    learning_rate: float = 0.001
+    batch_size: int = 32
+    epochs: int = 10
+```
+
+### Main Decorator
+
+The `@hydraflow.main` decorator integrates Hydra and MLflow:
+
+```python
+@hydraflow.main(Config)
+def train(run: Run, cfg: Config) -> None:
+    # Your experiment code
+```
+
+### Workflow Automation
+
+Define reusable experiment workflows in YAML:
+
+```yaml
+jobs:
+  train_models:
+    run: python train.py
+    sets:
+      - each: model=small,medium,large
+        all: learning_rate=0.001:0.1:3
+```
+
+### Analysis Tools
+
+Analyze experiment results with powerful APIs:
+
+```python
+from hydraflow import Run
+
+# Load runs
+runs = Run.load(iter_run_dirs("mlruns"))
+
+# Filter and analyze
+best_runs = runs.filter(model_type="transformer").to_frame("learning_rate", "accuracy")
+```
 
 ## Documentation
 
-For detailed documentation, including advanced usage examples and API reference,
-visit our [documentation site](https://daizutabi.github.io/hydraflow/).
+For detailed documentation, visit our [documentation site](https://daizutabi.github.io/hydraflow/):
+
+- [Getting Started](https://daizutabi.github.io/hydraflow/getting-started/) - Installation and core concepts
+- [Practical Tutorials](https://daizutabi.github.io/hydraflow/practical-tutorials/) - Learn through hands-on examples
+- [User Guide](https://daizutabi.github.io/hydraflow/part1-applications/) - Detailed documentation of HydraFlow's capabilities
+- [API Reference](https://daizutabi.github.io/hydraflow/api/hydraflow/) - Complete API documentation
 
 ## Contributing
 
