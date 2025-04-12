@@ -36,13 +36,7 @@ The code above consists of the following key elements:
        height: int = 768
    ```
 
-2. **Configuration Registration**: Register the config class with Hydra's `ConfigStore`
-   ```python
-   cs = ConfigStore.instance()
-   cs.store(name="config", node=Config)
-   ```
-
-3. **Main Function**: Integrate MLflow and Hydra with the [`hydraflow.main`][hydraflow.main] decorator
+2. **Main Function**: Integrate MLflow and Hydra with the [`hydraflow.main`][hydraflow.main] decorator
    ```python
    @hydraflow.main(Config)
    def app(run: Run, cfg: Config) -> None:
@@ -50,14 +44,14 @@ The code above consists of the following key elements:
        log.info(cfg)
    ```
 
-### Role of the hydraflow.main Decorator
+### Role of the `hydraflow.main` Decorator
 
 The [`hydraflow.main`][hydraflow.main] decorator serves several purposes:
 
-- Loads and parses Hydra configuration
-- Sets up and executes MLflow runs
-- Logs Hydra configuration as MLflow artifacts
-- Provides type-safe configuration access
+- Registers the config class with Hydra's `ConfigStore`
+- Sets up an MLflow experiment
+- Starts an MLflow run
+- Stores Hydra configuration/logs as MLflow artifacts
 
 The decorated function always takes two arguments:
 
