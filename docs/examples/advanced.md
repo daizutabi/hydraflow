@@ -92,27 +92,33 @@ This demonstrates how HydraFlow makes Hydra's powerful features easily accessibl
 The `submit` command requires two key components to work:
 
 1. Your HydraFlow application (`example.py` in this case)
-2. A handler script or command that processes the parameter file (`submit.py` in this example)
+2. A command or script defined in `hydraflow.yaml` that will receive and process a parameter file
 
-This pattern separates the experiment definition from the execution strategy:
+This pattern separates the experiment definition from the execution strategy.
 
 ```python title="submit.py" linenums="1"
 --8<-- "examples/submit.py"
 ```
 
-This handler script (`submit.py`):
+How the `submit` command works:
 
-- Receives two arguments: the application script path and the parameter file path
-- Reads each line from the parameter file
-- Executes the application with each set of parameters separately
+1. HydraFlow generates all parameter combinations based on your `sets` configuration
+2. It writes these combinations to a temporary text file (one combination per line)
+3. It runs the command specified in the `submit` field of your `hydraflow.yaml`
+4. It **appends the temporary file path as the last argument** to your command
 
-When you run a job with the `submit` command, HydraFlow:
+For example, with `submit: python submit.py example.py` in your `hydraflow.yaml`,
+the actual executed command will be something like:
+```
+python submit.py example.py /tmp/hydraflow_parameters_12345.txt
+```
 
-1. Creates a temporary file containing all parameter combinations
-2. Passes both your application file and this parameter file to your handler
-3. Lets your handler decide how to distribute or execute the jobs
+Your submit handler (`submit.py` in this case) must:
+- Accept the parameter file path as its last argument
+- Process the parameter file according to your requirements
+- Execute jobs using the parameters in the file
 
-This separation enables powerful deployment scenarios:
+This approach provides complete flexibility in how you execute your jobs:
 - Submit jobs to compute clusters (SLURM, PBS, etc.)
 - Implement custom scheduling logic
 - Distribute workloads based on resource availability
@@ -124,7 +130,7 @@ $ hydraflow run job_submit --dry-run
 ```
 
 The dry run output shows:
-- The handler command that will be executed with paths to both your application and the parameter file
+- The command that will be executed with the parameter file path appended
 - The parameter combinations that will be written to the parameter file
 
 Now let's run it:
@@ -132,6 +138,13 @@ Now let's run it:
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_submit
 ```
+
+Our `submit.py` example implements a simple processor that:
+1. Accepts two arguments: the application file (`example.py`) and the parameter file
+2. Reads each line from the parameter file
+3. Runs the application with each set of parameters sequentially
+
+You can customize this handler to implement any execution strategy you need.
 
 For more details about the `submit` command, see the [Job Configuration documentation](../part2-advanced/job-configuration.md#submit).
 
