@@ -114,7 +114,7 @@ jobs:
     run: python train.py
     sets:
       - each: model=small,medium,large
-        all: learning_rate=0.001:0.1:3
+        all: learning_rate=0.001,0.01,0.1
 ```
 
 ### Analysis Tools
