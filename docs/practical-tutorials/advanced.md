@@ -43,6 +43,27 @@ This configuration file defines three different types of jobs:
 
 Each job demonstrates different execution patterns and parameter combinations.
 
+## Using the HydraFlow CLI
+
+HydraFlow provides a command-line interface (CLI) for executing and
+managing jobs defined in your `hydraflow.yaml` file.
+The primary command is `hydraflow run`, which allows you to execute
+any job defined in your configuration.
+
+Basic usage:
+```bash
+hydraflow run <job_name> [overrides]
+```
+
+Where:
+
+- `<job_name>` is the name of a job defined in `hydraflow.yaml`
+- `[overrides]` are optional Hydra-style parameter overrides
+
+For more details on the CLI,
+see the [Job Configuration](../part2-advanced/job-configuration.md#command-line-interface)
+documentation.
+
 ## Previewing Execution with Dry Run
 
 Before executing our workflows, we can preview what will happen using the `--dry-run` flag:
@@ -74,7 +95,8 @@ job_sequential:
       all: height=100:300:100
 ```
 
-This job uses the `each` parameter to run multiple configuration combinations in sequence:
+This job uses the `each` and `all` parameters to run
+multiple configuration combinations in sequence:
 
 ```console exec="1" source="console" workdir="examples"
 $ hydraflow run job_sequential
