@@ -123,7 +123,7 @@ jobs:
 Analyze experiment results with powerful APIs:
 
 ```python
-from hydraflow import Run
+from hydraflow import Run, iter_run_dirs
 
 # Load runs
 runs = Run.load(iter_run_dirs("mlruns"))
