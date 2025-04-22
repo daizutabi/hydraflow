@@ -229,6 +229,8 @@ class Run[C, I = None]:
         cfg: DictConfig = self.cfg  # type: ignore
 
         if isinstance(key, str):
+            key = key.replace("__", ".")
+
             if force or OmegaConf.select(cfg, key, default=MISSING) is MISSING:
                 v = value(self) if callable(value) else value  # type: ignore
                 OmegaConf.update(cfg, key, v, force_add=True)
@@ -246,8 +248,9 @@ class Run[C, I = None]:
             raise TypeError(msg)
 
         for k, v in zip(key, value, strict=True):
-            if force or OmegaConf.select(cfg, k, default=MISSING) is MISSING:
-                OmegaConf.update(cfg, k, v, force_add=True)
+            k_ = k.replace("__", ".")
+            if force or OmegaConf.select(cfg, k_, default=MISSING) is MISSING:
+                OmegaConf.update(cfg, k_, v, force_add=True)
 
     def get(self, key: str, default: Any = MISSING) -> Any:
         """Get a value from the information or configuration.
@@ -268,6 +271,8 @@ class Run[C, I = None]:
                 no default is provided.
 
         """
+        key = key.replace("__", ".")
+
         value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
         if value is not MISSING:
             return value

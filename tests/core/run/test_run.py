@@ -47,6 +47,15 @@ def test_update_str_dot(run: Run):
     assert run.get("db.name") == "abc"
 
 
+def test_update_str_underscore(run: Run):
+    run.update("db__name", "abc")
+    assert run.get("db.name") == "abc"
+    assert run.get("db__name") == "abc"
+    run.update("db__name", "def")
+    assert run.get("db.name") == "abc"
+    assert run.get("db__name") == "abc"
+
+
 def test_update_str_dot_force(run: Run):
     run.update("db.b", 100)
     assert run.get("db.b") == 100
@@ -68,6 +77,18 @@ def test_update_tuple(run: Run[Config]):
     assert run.get("db.b") == 1000
     run.update(("db.name", "a"), ["abc", 1])
     assert run.get("db.name") == "xyz"
+    assert run.get("a") == 1
+
+
+def test_update_underscore(run: Run[Config]):
+    run.update(("db__name", "db__b"), ["xyz", 1000])
+    assert run.get("db.name") == "xyz"
+    assert run.get("db.b") == 1000
+    assert run.get("db__name") == "xyz"
+    assert run.get("db__b") == 1000
+    run.update(("db__name", "a"), ["abc", 1])
+    assert run.get("db.name") == "xyz"
+    assert run.get("db__name") == "xyz"
     assert run.get("a") == 1
 
 
