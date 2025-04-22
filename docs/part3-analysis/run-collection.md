@@ -195,6 +195,31 @@ learning_rates = runs.to_numpy(
     default=lambda run: run.get("base_lr", 0.01) * run.get("lr_schedule_factor", 1.0)
 )
 
+# Extract values as a Polars Series
+lr_series = runs.to_series("learning_rate")
+
+# Extract with a custom name for the series
+model_series = runs.to_series("model_type", name="Model Architecture")
+
+# Extract with callable default and custom name
+effective_lr = runs.to_series(
+    "learning_rate",
+    default=lambda run: run.get("base_lr", 0.01) * run.get("lr_multiplier", 1.0),
+    name="Effective Learning Rate"
+)
+
+# Use Series for further analysis and operations
+import polars as pl
+# Combine multiple series into a DataFrame
+df = pl.DataFrame([
+    runs.to_series("model_type", name="Model"),
+    runs.to_series("batch_size", default=32, name="Batch Size"),
+    effective_lr
+])
+# Perform operations between Series
+normalized_acc = runs.to_series("accuracy", default=0.0, name="Accuracy")
+efficiency = normalized_acc / effective_lr  # Series division
+
 # Get unique values for a key
 model_types = runs.unique("model_type")
 
@@ -202,7 +227,7 @@ model_types = runs.unique("model_type")
 num_model_types = runs.n_unique("model_type")
 ```
 
-All data extraction methods (`to_list`, `to_numpy`, etc.) support both static and callable default values,
+All data extraction methods (`to_list`, `to_numpy`, `to_series`, etc.) support both static and callable default values,
 matching the behavior of the `Run.get` method. When using a callable default, the function receives
 the Run instance as an argument, allowing you to:
 
@@ -225,39 +250,75 @@ df = runs.to_frame()
 # DataFrame with specific configuration parameters
 df = runs.to_frame("model_type", "learning_rate", "batch_size")
 
-# DataFrame with parameters that might be missing in some runs
-# Using static defaults
+# Specify default values for missing parameters using the defaults parameter
 df = runs.to_frame(
     "model_type",
     "learning_rate",
     "batch_size",
-    default_values={"learning_rate": 0.01, "batch_size": 32}
+    defaults={"learning_rate": 0.01, "batch_size": 32}
 )
 
-# Using callable defaults for dynamically computed values
+# Use callable defaults for dynamic values based on each run
 df = runs.to_frame(
     "model_type",
     "learning_rate",
-    "training__epochs",
-    default_values={
+    "epochs",
+    defaults={
         "learning_rate": lambda run: run.get("base_lr", 0.01) * run.get("lr_multiplier", 1.0),
-        "training__epochs": lambda run: int(run.get("max_steps", 1000) / run.get("steps_per_epoch", 100))
+        "epochs": lambda run: int(run.get("max_steps", 1000) / run.get("steps_per_epoch", 100))
     }
 )
 
-# Using a custom function that returns multiple columns
+# Missing values without defaults are represented as None (null) in the DataFrame
+# This allows for standard handling of missing data in Polars
+missing_values_df = runs.to_frame("model_type", "parameter_that_might_be_missing")
+
+# Filter rows with non-null values
+import polars as pl
+valid_rows = missing_values_df.filter(pl.col("parameter_that_might_be_missing").is_not_null())
+
+# Fill null values after creating the DataFrame
+filled_df = missing_values_df.with_columns(
+    pl.col("parameter_that_might_be_missing").fill_null("default_value")
+)
+
+# Using a custom function that returns multiple columns as keyword arguments
 def get_metrics(run: Run) -> dict[str, float]:
     return {
         "accuracy": run.get("accuracy", default=lambda r: r.get("val_accuracy", 0.0) * 0.9),
         "precision": run.get("precision", default=lambda r: r.get("val_precision", 0.0) * 0.9),
     }
 
+# Add custom columns using a function
 df = runs.to_frame("model_type", metrics=get_metrics)
+
+# Combine defaults with custom column generator functions
+df = runs.to_frame(
+    "model_type",
+    "learning_rate",
+    defaults={"learning_rate": 0.01},
+    metrics=get_metrics
+)
 ```
 
-The `to_frame` method supports callable default values in both the `default_values` dictionary
-and within custom column generator functions. This makes it possible to handle missing parameters
-elegantly and create derived features on-the-fly when converting to a DataFrame.
+The `to_frame` method provides several ways to handle missing data:
+
+1. **defaults parameter**: Provide static or callable default values for specific keys
+   - Static values: `defaults={"param": value}`
+   - Callable values: `defaults={"param": lambda run: computed_value}`
+
+2. **None values**: Parameters without defaults are represented as `None` (null) in the DataFrame
+   - This lets you use Polars operations for handling null values:
+     - Filter: `df.filter(pl.col("param").is_not_null())`
+     - Fill nulls: `df.with_columns(pl.col("param").fill_null(value))`
+     - Aggregations: Most aggregation functions handle nulls appropriately
+
+3. **Custom column generators**: Use keyword argument functions to compute complex columns
+   - These functions receive each Run instance and can implement custom logic
+   - They can use `run.get()` with defaults to handle missing parameters
+
+These approaches can be combined to create flexible and robust data extraction pipelines
+that handle different experiment configurations and parameter evolution over time.
 
 ## Grouping Runs
 
