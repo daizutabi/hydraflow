@@ -107,6 +107,12 @@ def predicate_experiment_dir(
     return experiment_names(name)
 
 
+def get_experiment_names(tracking_dir: str | Path) -> list[str]:
+    """Get the experiment names from the tracking directory."""
+    names = [get_experiment_name(path) for path in Path(tracking_dir).iterdir()]
+    return [name for name in names if name is not None and name != "Default"]
+
+
 def iter_experiment_dirs(
     tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,

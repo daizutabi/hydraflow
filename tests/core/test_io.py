@@ -43,6 +43,12 @@ def setup(chdir):
         mlflow.log_text("5", "text.txt")
 
 
+def test_get_experiment_names(tracking_dir: Path):
+    from hydraflow.core.io import get_experiment_names
+
+    assert sorted(get_experiment_names(tracking_dir)) == ["e1", "e2"]  # type: ignore
+
+
 def test_iter_experiment_dirs(tracking_dir: Path):
     from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
 
