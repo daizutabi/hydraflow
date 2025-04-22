@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING, overload
 import numpy as np
 import polars as pl
 from omegaconf import OmegaConf
-from polars import DataFrame
+from polars import DataFrame, Series
 
 from .run import Run
 
@@ -375,6 +375,29 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         """
         return np.array(self.to_list(key, default))
 
+    def to_series(
+        self,
+        key: str,
+        default: Any | Callable[[R], Any] = MISSING,
+        *,
+        name: str | None = None,
+    ) -> Series:
+        """Extract values for a specific key from all runs as a Polars series.
+
+        Args:
+            key: The key to extract from each run.
+            default: The default value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
+            name: The name of the series. If not provided, the key will be used.
+
+        Returns:
+            Series: A Polars series containing the values for the
+            specified key from each run.
+
+        """
+        return Series(name or key, self.to_list(key, default))
+
     def unique(
         self,
         key: str,
@@ -438,13 +461,22 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
 
         return self[index]
 
-    def to_frame(self, *keys: str, **kwargs: Callable[[R], Any]) -> DataFrame:
+    def to_frame(
+        self,
+        *keys: str,
+        defaults: dict[str, Any | Callable[[R], Any]] | None = None,
+        **kwargs: Callable[[R], Any],
+    ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
 
         Args:
             *keys (str): The keys to include as columns in the DataFrame.
                 If not provided, all keys from each run's to_dict() method
                 will be used.
+            defaults (dict[str, Any | Callable[[R], Any]] | None): Default
+                values for the keys. If a callable, it will be called with
+                the Run instance and the value returned will be used as the
+                default.
             **kwargs (Callable[[R], Any]): Additional columns to compute
                 using callables that take a Run and return a value.
 
@@ -453,15 +485,20 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
             from the runs.
 
         """
+        if defaults is None:
+            defaults = {}
+
         if keys:
-            df = DataFrame({key: self.to_list(key) for key in keys})
+            df = DataFrame(
+                {key: self.to_list(key, defaults.get(key, MISSING)) for key in keys},
+            )
         else:
             df = DataFrame(r.to_dict() for r in self)
 
         if not kwargs:
             return df
 
-        columns = [pl.Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
+        columns = [Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
         return df.with_columns(*columns)
 
     def _group_by(self, *keys: str) -> dict[Any, Self]:
