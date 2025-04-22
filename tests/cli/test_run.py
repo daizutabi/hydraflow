@@ -123,3 +123,13 @@ def test_run_error():
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1
     assert "No command found in job: error." in result.stdout
+
+
+def test_run():
+    from hydraflow.core.io import iter_run_dirs
+    from hydraflow.core.run import Run
+
+    runner.invoke(app, ["run", "job-name"])
+    run_dir = next(iter_run_dirs("mlruns", "job-name"))
+    run = Run(run_dir)
+    assert run.info.job_name == "job-name"
