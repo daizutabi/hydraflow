@@ -140,6 +140,47 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         """
         return iter(self.runs)
 
+    def preload(
+        self,
+        *,
+        n_jobs: int = 0,
+        cfg: bool = True,
+        impl: bool = True,
+    ) -> Self:
+        """Pre-load configuration and implementation objects for all runs in parallel.
+
+        This method eagerly evaluates the cfg and impl properties of all runs
+        in the collection, potentially in parallel using joblib. This can
+        significantly improve performance for subsequent operations that
+        access these properties, as they will be already loaded in memory.
+
+        Args:
+            cfg (bool): Whether to preload the configuration objects
+            impl (bool): Whether to preload the implementation objects
+            n_jobs (int): Number of parallel jobs to run
+                (-1 means using all processors)
+
+        Returns:
+            Self: The same RunCollection instance with preloaded
+            configuration and implementation objects.
+
+        """
+
+        def load(run: R) -> None:
+            _ = cfg and run.cfg
+            _ = impl and run.impl
+
+        if n_jobs == 0:
+            for run in self:
+                load(run)
+            return self
+
+        from joblib import Parallel, delayed
+
+        parallel = Parallel(backend="threading", n_jobs=n_jobs)
+        parallel(delayed(load)(run) for run in self)
+        return self
+
     @overload
     def update(
         self,

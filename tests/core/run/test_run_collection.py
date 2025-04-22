@@ -88,6 +88,14 @@ def test_iter(rc: Rc):
     assert len(list(iter(rc))) == 12
 
 
+def test_preload(rc: Rc):
+    assert rc.preload(cfg=True, impl=True) is rc
+
+
+def test_preload_n_jobs(rc: Rc):
+    assert rc.preload(cfg=True, impl=True, n_jobs=2) is rc
+
+
 def test_update(rc: Rc):
     rc.update("size.height", 10)
     assert all(r.get("size.height") is None for r in rc)
