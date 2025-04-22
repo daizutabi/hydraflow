@@ -56,3 +56,7 @@ jobs:
     sets:
       - each: >-
           model=small,medium|large
+  job-name:
+    run: python app.py
+    sets:
+      - all: count=1

@@ -11,8 +11,11 @@ was created.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cache, cached_property
+from pathlib import Path
 from typing import TYPE_CHECKING
+
+from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -47,7 +50,7 @@ class RunInfo:
         Hydra configuration file (e.g., if the file does not exist or does not
         contain the expected format).
         """
-        return get_job_name(self.run_dir)
+        return get_job_name(self.run_dir.parent)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the RunInfo to a dictionary."""
@@ -58,27 +61,23 @@ class RunInfo:
         }
 
 
-def get_job_name(run_dir: Path) -> str:
-    """Extract the Hydra job name from the Hydra configuration file.
+@cache
+def get_job_name(experiment_dir: Path) -> str:
+    """Get the job name from an experiment directory.
 
-    Return an empty string if the job name cannot be extracted from the
-    Hydra configuration file (e.g., if the file does not exist or does not
-    contain the expected format).
+    Extracts the job name from the meta.yaml file. Returns an empty string
+    if the file does not exist or if the job name cannot be found.
 
     Args:
-        run_dir (Path): The directory where the run artifacts are stored.
+        experiment_dir: Path to the experiment directory containing the meta.yaml file
 
     Returns:
-        str: The Hydra job name, which was used as the MLflow Experiment name.
+        The job name as a string, or an empty string if the file does not exist
 
     """
-    hydra_file = run_dir / "artifacts/.hydra/hydra.yaml"
-
-    if not hydra_file.exists():
+    path = experiment_dir / "meta.yaml"
+    if not path.exists():
         return ""
 
-    text = hydra_file.read_text()
-    if "  job:\n    name: " in text:
-        return text.split("  job:\n    name: ")[1].split("\n")[0]
-
-    return ""
+    meta = OmegaConf.load(experiment_dir / "meta.yaml")
+    return OmegaConf.select(meta, "name")
