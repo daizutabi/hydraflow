@@ -11,11 +11,11 @@ was created.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cache, cached_property
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from omegaconf import OmegaConf
+from .io import get_experiment_name
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -50,7 +50,7 @@ class RunInfo:
         Hydra configuration file (e.g., if the file does not exist or does not
         contain the expected format).
         """
-        return get_job_name(self.run_dir.parent)
+        return get_experiment_name(self.run_dir.parent)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the RunInfo to a dictionary."""
@@ -59,25 +59,3 @@ class RunInfo:
             "run_dir": self.run_dir.as_posix(),
             "job_name": self.job_name,
         }
-
-
-@cache
-def get_job_name(experiment_dir: Path) -> str:
-    """Get the job name from an experiment directory.
-
-    Extracts the job name from the meta.yaml file. Returns an empty string
-    if the file does not exist or if the job name cannot be found.
-
-    Args:
-        experiment_dir: Path to the experiment directory containing the meta.yaml file
-
-    Returns:
-        The job name as a string, or an empty string if the file does not exist
-
-    """
-    path = experiment_dir / "meta.yaml"
-    if not path.exists():
-        return ""
-
-    meta = OmegaConf.load(experiment_dir / "meta.yaml")
-    return OmegaConf.select(meta, "name")

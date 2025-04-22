@@ -90,14 +90,14 @@ def test_predicate_experiment_dir():
 def test_get_experiment_name_none(tracking_dir: Path):
     from hydraflow.core.io import get_experiment_name
 
-    assert get_experiment_name(tracking_dir.parent) is None
+    assert get_experiment_name(tracking_dir.parent) == ""
 
 
 def test_get_experiment_name_metafile_none(tracking_dir: Path):
     from hydraflow.core.io import get_experiment_name
 
     (tracking_dir / "meta.yaml").touch()
-    assert get_experiment_name(tracking_dir) is None
+    assert get_experiment_name(tracking_dir) == ""
 
 
 def test_iter_run_dirs(tracking_dir: Path):

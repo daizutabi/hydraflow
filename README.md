@@ -141,10 +141,6 @@ For detailed documentation, visit our [documentation site](https://daizutabi.git
 - [User Guide](https://daizutabi.github.io/hydraflow/part1-applications/) - Detailed documentation of HydraFlow's capabilities
 - [API Reference](https://daizutabi.github.io/hydraflow/api/hydraflow/) - Complete API documentation
 
-## Contributing
-
-We welcome contributions! Please see our [contributing guide](CONTRIBUTING.md) for details.
-
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
