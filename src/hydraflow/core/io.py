@@ -5,8 +5,11 @@ from __future__ import annotations
 import fnmatch
 import urllib.parse
 import urllib.request
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -74,27 +77,37 @@ def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
         mlflow.log_text(text, file.name)
 
 
-def get_experiment_name(path: Path) -> str | None:
-    """Get the experiment name from the meta file."""
-    metafile = path / "meta.yaml"
-    if not metafile.exists():
-        return None
-    lines = metafile.read_text().splitlines()
-    for line in lines:
-        if line.startswith("name:"):
-            return line.split(":")[1].strip()
-    return None
+@cache
+def get_experiment_name(experiment_dir: Path) -> str:
+    """Get the job name from an experiment directory.
+
+    Extracts the job name from the meta.yaml file. Returns an empty string
+    if the file does not exist or if the job name cannot be found.
+
+    Args:
+        experiment_dir: Path to the experiment directory containing the meta.yaml file
+
+    Returns:
+        The job name as a string, or an empty string if the file does not exist
+
+    """
+    path = experiment_dir / "meta.yaml"
+    if not path.exists():
+        return ""
+
+    meta = OmegaConf.load(experiment_dir / "meta.yaml")
+    return OmegaConf.select(meta, "name", default="")
 
 
 def predicate_experiment_dir(
-    path: Path,
+    experiment_dir: Path,
     experiment_names: list[str] | Callable[[str], bool] | None = None,
 ) -> bool:
     """Predicate an experiment directory based on the path and experiment names."""
-    if not path.is_dir() or path.name in [".trash", "0"]:
+    if not experiment_dir.is_dir() or experiment_dir.name in [".trash", "0"]:
         return False
 
-    name = get_experiment_name(path)
+    name = get_experiment_name(experiment_dir)
     if not name:
         return False
 
@@ -108,9 +121,14 @@ def predicate_experiment_dir(
 
 
 def get_experiment_names(tracking_dir: str | Path) -> list[str]:
-    """Get the experiment names from the tracking directory."""
+    """Get the experiment names from the tracking directory.
+
+    Returns:
+        list[str]: A list of experiment names sorted by the name.
+
+    """
     names = [get_experiment_name(path) for path in Path(tracking_dir).iterdir()]
-    return [name for name in names if name is not None and name != "Default"]
+    return sorted(name for name in names if name and name != "Default")
 
 
 def iter_experiment_dirs(
