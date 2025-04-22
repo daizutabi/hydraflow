@@ -195,6 +195,12 @@ def test_to_numpy(rc: Rc):
     assert np.array_equal(rc.to_numpy("count")[3:5], [1, 1])
 
 
+def test_to_series(rc: Rc):
+    s = rc.to_series("count")
+    assert s.to_list() == [1] * 6 + [2] * 6
+    assert s.name == "count"
+
+
 def test_unique(rc: Rc):
     assert np.array_equal(rc.unique("count"), [1, 2])
 
