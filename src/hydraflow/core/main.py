@@ -82,7 +82,12 @@ def main[C](
         rerun_finished: If True, allows rerunning completed runs. Defaults to
             False.
         update: A function that takes a configuration and returns a new
-            configuration. Defaults to None.
+            configuration or None. The function can modify the configuration in-place
+            and/or return it. If the function returns None, the original (potentially
+            modified) configuration is used. Changes made by this function are saved
+            to the configuration file. This is useful for adding derived parameters,
+            ensuring consistency between related values, or adding runtime information
+            to the configuration. Defaults to None.
 
     """
     import mlflow

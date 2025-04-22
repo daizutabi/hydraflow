@@ -242,6 +242,36 @@ This option is particularly useful when:
 - You're iterating on experiments with command-line variations
 - Your configuration contains volatile or automatically generated values
 
+### Dynamic Configuration Updates (`update`)
+
+Modify or enhance the configuration after it has been loaded by Hydra
+but before the run starts:
+
+```python
+def update_config(cfg: Config) -> Config:
+    # Calculate derived values or add runtime information
+    if cfg.width > 0 and cfg.height > 0:
+        cfg.area = cfg.width * cfg.height
+    return cfg
+
+@hydraflow.main(Config, update=update_config)
+def train(run: Run, cfg: Config) -> None:
+    # Configuration has been updated with calculated area
+    print(f"Area: {cfg.area}")
+```
+
+This option is powerful when you need to:
+
+- Calculate derived parameters based on existing configuration values
+- Apply conditional logic to adjust parameters based on their relationships
+- Ensure consistency between related parameters
+- Adapt configurations to the current environment (e.g., hardware capabilities)
+
+The `update` function should accept a configuration object and
+return the same object (or None).
+Any changes made to the configuration will be saved to the run's configuration file,
+ensuring that the stored configuration accurately reflects all updates.
+
 ## Best Practices
 
 1. **Keep Configuration Classes Focused**: Break down complex configurations
