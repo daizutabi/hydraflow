@@ -3,6 +3,7 @@
 from hydraflow.core.context import chdir_artifact, log_run, start_run
 from hydraflow.core.io import (
     get_artifact_dir,
+    get_experiment_names,
     iter_artifact_paths,
     iter_artifacts_dirs,
     iter_experiment_dirs,
@@ -17,6 +18,7 @@ __all__ = [
     "RunCollection",
     "chdir_artifact",
     "get_artifact_dir",
+    "get_experiment_names",
     "iter_artifact_paths",
     "iter_artifacts_dirs",
     "iter_experiment_dirs",
