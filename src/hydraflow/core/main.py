@@ -36,6 +36,7 @@ Example:
 from __future__ import annotations
 
 from functools import wraps
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import hydra
@@ -48,7 +49,6 @@ from hydraflow.core.io import file_uri_to_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
     from typing import Any
 
     from mlflow.entities import Run
@@ -62,6 +62,7 @@ def main[C](
     force_new_run: bool = False,
     match_overrides: bool = False,
     rerun_finished: bool = False,
+    update: Callable[[C], C | None] | None = None,
 ):
     """Decorator for configuring and running MLflow experiments with Hydra.
 
@@ -80,6 +81,8 @@ def main[C](
             instead of full config. Defaults to False.
         rerun_finished: If True, allows rerunning completed runs. Defaults to
             False.
+        update: A function that takes a configuration and returns a new
+            configuration. Defaults to None.
 
     """
     import mlflow
@@ -95,6 +98,14 @@ def main[C](
         def inner_decorator(cfg: C) -> None:
             hc = HydraConfig.get()
             experiment = mlflow.set_experiment(hc.job.name)
+
+            if update:
+                if cfg_ := update(cfg):
+                    cfg = cfg_
+
+                hydra_dir = Path(hc.runtime.output_dir) / (hc.output_subdir or "")
+                cfg_path = hydra_dir.joinpath("config.yaml")
+                OmegaConf.save(cfg, cfg_path)
 
             if force_new_run:
                 run_id = None

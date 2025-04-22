@@ -38,11 +38,11 @@ def log_run(run: Run) -> Iterator[None]:
     import mlflow
 
     hc = HydraConfig.get()
-    hydra_dir = Path(hc.runtime.output_dir)
+    hydra_output_dir = Path(hc.runtime.output_dir)
 
     # Save '.hydra' config directory.
-    hydra_subdir = hydra_dir / (hc.output_subdir or "")
-    mlflow.log_artifacts(hydra_subdir.as_posix(), hc.output_subdir)
+    hydra_dir = hydra_output_dir / (hc.output_subdir or "")
+    mlflow.log_artifacts(hydra_dir.as_posix(), ".hydra")
 
     try:
         yield
@@ -53,7 +53,7 @@ def log_run(run: Run) -> Iterator[None]:
         raise
 
     finally:
-        log_text(run, hydra_dir)
+        log_text(run, hydra_output_dir)
 
 
 @contextmanager
