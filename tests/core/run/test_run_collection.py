@@ -182,6 +182,15 @@ def test_to_list(rc: Rc):
     assert sorted(rc.to_list("name")) == [*(["abc"] * 6), *(["def"] * 6)]
 
 
+def test_to_list_default(rc: Rc):
+    assert sorted(rc.to_list("unknown", 1)) == [1] * 12
+
+
+def test_to_list_default_callable(rc: Rc):
+    x = sorted(rc.to_list("unknown", lambda r: r.get("count")))
+    assert x == [1] * 6 + [2] * 6
+
+
 def test_to_numpy(rc: Rc):
     assert np.array_equal(rc.to_numpy("count")[3:5], [1, 1])
 
