@@ -36,7 +36,7 @@ Example:
 from __future__ import annotations
 
 from functools import wraps
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -54,11 +54,8 @@ if TYPE_CHECKING:
     from mlflow.entities import Run
 
 
-T = TypeVar("T")
-
-
-def main(
-    node: T | type[T],
+def main[C](
+    node: C | type[C],
     config_name: str = "config",
     *,
     chdir: bool = False,
@@ -90,12 +87,12 @@ def main(
 
     finished = RunStatus.to_string(RunStatus.FINISHED)
 
-    def decorator(app: Callable[[Run, T], None]) -> Callable[[], None]:
+    def decorator(app: Callable[[Run, C], None]) -> Callable[[], None]:
         ConfigStore.instance().store(config_name, node)
 
         @hydra.main(config_name=config_name, version_base=None)
         @wraps(app)
-        def inner_decorator(config: T) -> None:
+        def inner_decorator(cfg: C) -> None:
             hc = HydraConfig.get()
             experiment = mlflow.set_experiment(hc.job.name)
 
@@ -104,7 +101,7 @@ def main(
             else:
                 uri = experiment.artifact_location
                 overrides = hc.overrides.task if match_overrides else None
-                run_id = get_run_id(uri, config, overrides)
+                run_id = get_run_id(uri, cfg, overrides)
 
                 if run_id and not rerun_finished:
                     run = mlflow.get_run(run_id)
@@ -112,7 +109,7 @@ def main(
                         return
 
             with start_run(run_id=run_id, chdir=chdir) as run:
-                app(run, config)
+                app(run, cfg)
 
         return inner_decorator
 
