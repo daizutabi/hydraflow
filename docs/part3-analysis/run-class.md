@@ -56,6 +56,9 @@ learning_rate = run.get("learning_rate")
 # Nested access with dot notation
 model_type = run.get("model.type")
 
+# Alternatively, use double underscore notation for nested access
+model_type = run.get("model__type")  # Equivalent to "model.type"
+
 # Access implementation attributes or run info
 metric_value = run.get("accuracy")  # From impl or cfg
 run_id = run.get("run_id")  # From RunInfo
@@ -68,6 +71,10 @@ The `get` method searches for values in the following order:
 3. Finally in the run information (`info`)
 
 This provides a unified access interface regardless of where the data is stored.
+
+The double underscore notation (`__`) is automatically converted to dot notation (`.`) internally,
+making it useful for nested parameter access, especially when using keyword arguments in methods
+that don't allow dots in parameter names.
 
 ## Type-Safe Configuration Access
 

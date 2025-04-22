@@ -52,12 +52,21 @@ runs = Run.load(["old_run_dir", "new_run_dir"])
 for run in runs:
     run.update("aspect_ratio", 1.0)  # Add default value if missing
 
+# You can also use nested parameters with dot notation
+run.update("model.aspect_ratio", 1.0)
+
+# Or use double underscore notation for nested parameters
+run.update("model__aspect_ratio", 1.0)  # Equivalent to "model.aspect_ratio"
+
 # Now you can filter by aspect_ratio
 square_runs = runs.filter(aspect_ratio=1.0)
 ```
 
 The `update` method only adds values if the key doesn't already exist. For runs
 that already have an `aspect_ratio` parameter, the original value is preserved.
+
+The double underscore notation (`__`) is automatically converted to dot notation (`.`)
+internally, making it particularly useful for working with nested configurations.
 
 ## Batch Updates with RunCollection
 
