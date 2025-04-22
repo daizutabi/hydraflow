@@ -123,7 +123,22 @@ complex_filter = runs.filter(
 
 # Chained filtering
 final_runs = runs.filter(model_type="transformer").filter(learning_rate=0.001)
+
+# Advanced filtering using predicate functions with callable defaults
+# This example filters runs based on learning rate efficiency (lr * batch_size)
+# Even if some runs are missing one parameter, the default logic provides values
+def has_efficient_lr(run: Run) -> bool:
+    lr = run.get("learning_rate", default=lambda r: r.get("base_lr", 0.01) * r.get("lr_multiplier", 1.0))
+    batch_size = run.get("batch_size", default=lambda r: r.get("default_batch_size", 32))
+    return lr * batch_size < 0.5
+
+# Apply the complex predicate
+efficient_runs = runs.filter(predicate=has_efficient_lr)
 ```
+
+The combination of predicate functions with callable defaults in `get` enables sophisticated
+filtering logic that can handle missing parameters and varied configuration schemas across
+different experiment runs.
 
 ## Sorting Runs
 

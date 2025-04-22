@@ -62,6 +62,16 @@ model_type = run.get("model__type")  # Equivalent to "model.type"
 # Access implementation attributes or run info
 metric_value = run.get("accuracy")  # From impl or cfg
 run_id = run.get("run_id")  # From RunInfo
+
+# Provide a default value if the key doesn't exist
+batch_size = run.get("batch_size", 32)
+
+# Use a callable as default to dynamically generate values based on the run
+# This is useful for derived parameters or conditional defaults
+lr = run.get("learning_rate", default=lambda r: r.get("base_lr", 0.01) / 10)
+
+# Complex default logic based on other parameters
+steps = run.get("steps", default=lambda r: r.get("epochs", 10) * r.get("steps_per_epoch", 100))
 ```
 
 The `get` method searches for values in the following order:
@@ -75,6 +85,16 @@ This provides a unified access interface regardless of where the data is stored.
 The double underscore notation (`__`) is automatically converted to dot notation (`.`) internally,
 making it useful for nested parameter access, especially when using keyword arguments in methods
 that don't allow dots in parameter names.
+
+When providing a default value, you can use either a static value or a callable function.
+If you provide a callable, it will receive the Run instance as an argument, allowing you to
+create context-dependent default values that can access other run parameters or properties.
+This is particularly useful for:
+
+- Creating derived parameters that don't exist in the original configuration
+- Handling schema evolution across different experiment iterations
+- Providing fallbacks that depend on other configuration values
+- Implementing conditional logic for parameter defaults
 
 ## Type-Safe Configuration Access
 
