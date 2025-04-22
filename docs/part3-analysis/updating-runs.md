@@ -96,7 +96,21 @@ def calculate_aspect_ratio(run: Run) -> float:
 
 # Update with calculated values
 runs.update("aspect_ratio", calculate_aspect_ratio)
+
+# Combine with callable defaults for more sophisticated logic
+runs.update("normalized_lr", lambda run: run.get(
+    "learning_rate",
+    default=lambda r: r.get("base_lr", 0.01) * r.get("lr_multiplier", 1.0)
+) / 10)
 ```
+
+The combination of dynamic updates with callable defaults in `get` provides a powerful
+mechanism for handling complex configuration scenarios and parameter dependencies. This
+approach allows you to:
+
+1. First look for existing values with custom fallback logic using `get` with callable defaults
+2. Then compute new parameters based on those values with `update`
+3. Finally ensure all runs have consistent parameters for analysis
 
 ## Updating Multiple Parameters
 
