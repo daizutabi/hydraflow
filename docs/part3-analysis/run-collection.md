@@ -179,8 +179,21 @@ RunCollection provides several methods to extract specific data from runs:
 # Extract values for a specific key as a list
 learning_rates = runs.to_list("learning_rate")
 
+# Extract values with a static default for missing values
+batch_sizes = runs.to_list("batch_size", default=32)
+
+# Extract values with a callable default that dynamically computes values
+# This is particularly useful for handling missing parameters or derived values
+accuracies = runs.to_list("accuracy", default=lambda run: run.get("val_accuracy", 0.0) * 0.9)
+
 # Extract values as a NumPy array
 batch_sizes = runs.to_numpy("batch_size")
+
+# Extract with callable default for complex scenarios
+learning_rates = runs.to_numpy(
+    "learning_rate",
+    default=lambda run: run.get("base_lr", 0.01) * run.get("lr_schedule_factor", 1.0)
+)
 
 # Get unique values for a key
 model_types = runs.unique("model_type")
@@ -188,6 +201,18 @@ model_types = runs.unique("model_type")
 # Count unique values
 num_model_types = runs.n_unique("model_type")
 ```
+
+All data extraction methods (`to_list`, `to_numpy`, etc.) support both static and callable default values,
+matching the behavior of the `Run.get` method. When using a callable default, the function receives
+the Run instance as an argument, allowing you to:
+
+- Implement fallback logic for missing parameters
+- Create derived values based on multiple parameters
+- Handle varying configuration schemas across different experiments
+- Apply transformations to the raw parameter values
+
+This makes it much easier to work with heterogeneous collections of runs that might have different
+parameter sets or evolving configuration schemas.
 
 ## Converting to DataFrame
 
@@ -200,15 +225,39 @@ df = runs.to_frame()
 # DataFrame with specific configuration parameters
 df = runs.to_frame("model_type", "learning_rate", "batch_size")
 
+# DataFrame with parameters that might be missing in some runs
+# Using static defaults
+df = runs.to_frame(
+    "model_type",
+    "learning_rate",
+    "batch_size",
+    default_values={"learning_rate": 0.01, "batch_size": 32}
+)
+
+# Using callable defaults for dynamically computed values
+df = runs.to_frame(
+    "model_type",
+    "learning_rate",
+    "training__epochs",
+    default_values={
+        "learning_rate": lambda run: run.get("base_lr", 0.01) * run.get("lr_multiplier", 1.0),
+        "training__epochs": lambda run: int(run.get("max_steps", 1000) / run.get("steps_per_epoch", 100))
+    }
+)
+
 # Using a custom function that returns multiple columns
 def get_metrics(run: Run) -> dict[str, float]:
     return {
-        "accuracy": run.impl.accuracy(),
-        "precision": run.impl.precision(),
+        "accuracy": run.get("accuracy", default=lambda r: r.get("val_accuracy", 0.0) * 0.9),
+        "precision": run.get("precision", default=lambda r: r.get("val_precision", 0.0) * 0.9),
     }
 
 df = runs.to_frame("model_type", metrics=get_metrics)
 ```
+
+The `to_frame` method supports callable default values in both the `default_values` dictionary
+and within custom column generator functions. This makes it possible to handle missing parameters
+elegantly and create derived features on-the-fly when converting to a DataFrame.
 
 ## Grouping Runs
 
@@ -249,14 +298,18 @@ This approach preserves all information in each group, giving you maximum flexib
 Combine `group_by` with aggregation for powerful analysis:
 
 ```python
-# Simple aggregation function using get method
+# Simple aggregation function using get method with callable defaults
 def mean_accuracy(runs: RunCollection) -> float:
-    return runs.to_numpy("accuracy").mean()
+    return runs.to_numpy(
+        "accuracy",
+        default=lambda run: run.get("val_accuracy", 0.0) * 0.9
+    ).mean()
 
-# Complex aggregation from implementation or configuration
+# Complex aggregation from implementation or configuration with fallbacks
 def combined_metric(runs: RunCollection) -> float:
-    accuracies = runs.to_numpy("accuracy")  # Could be from impl or cfg
-    precisions = runs.to_numpy("precision")  # Could be from impl or cfg
+    # Use callable defaults to handle missing values consistently
+    accuracies = runs.to_numpy("accuracy", default=lambda r: r.get("val_accuracy", 0.0))
+    precisions = runs.to_numpy("precision", default=lambda r: r.get("val_precision", 0.0))
     return (accuracies.mean() + precisions.mean()) / 2
 
 
@@ -274,9 +327,20 @@ results = runs.group_by(
     accuracy=mean_accuracy,
     combined=combined_metric
 )
+
+# Group by parameters that might be missing in some runs using callable defaults
+def normalize_architecture(run: Run) -> str:
+    # Get architecture with a fallback to model type if not available
+    arch = run.get("architecture", default=lambda r: r.get("model_type", "unknown"))
+    return arch.lower()  # Normalize to lowercase
+
+# Group by the normalized architecture
+arch_results = runs.group_by(normalize_architecture, accuracy=mean_accuracy)
 ```
 
-With the enhanced `get` method that can access both configuration and implementation attributes, writing aggregation functions becomes more straightforward. You no longer need to worry about whether a metric comes from configuration, implementation, or run information - the `get` method provides a unified access interface.
+With the enhanced `get` method and callable defaults support throughout the API, writing aggregation
+functions becomes more straightforward and robust. You can handle missing values consistently and
+implement complex transformations that work across heterogeneous runs.
 
 When aggregation functions are provided as keyword arguments, `group_by` returns a Polars DataFrame with the group keys and aggregated values. This design choice offers several advantages:
 

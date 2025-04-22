@@ -38,6 +38,7 @@ Note:
 from __future__ import annotations
 
 from collections.abc import Hashable, Iterable, Sequence
+from dataclasses import MISSING
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
@@ -334,56 +335,84 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
 
         raise _value_error()
 
-    def to_list(self, key: str) -> list[Any]:
+    def to_list(
+        self,
+        key: str,
+        default: Any | Callable[[R], Any] = MISSING,
+    ) -> list[Any]:
         """Extract a list of values for a specific key from all runs.
 
         Args:
             key: The key to extract from each run.
+            default: The default value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
 
         Returns:
             list[Any]: A list containing the values for the
             specified key from each run.
 
         """
-        return [run.get(key) for run in self]
+        return [run.get(key, default) for run in self]
 
-    def to_numpy(self, key: str) -> NDArray:
+    def to_numpy(
+        self,
+        key: str,
+        default: Any | Callable[[R], Any] = MISSING,
+    ) -> NDArray:
         """Extract values for a specific key from all runs as a NumPy array.
 
         Args:
             key: The key to extract from each run.
+            default: The default value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
 
         Returns:
             NDArray: A NumPy array containing the values for the
             specified key from each run.
 
         """
-        return np.array(self.to_list(key))
+        return np.array(self.to_list(key, default))
 
-    def unique(self, key: str) -> NDArray:
+    def unique(
+        self,
+        key: str,
+        default: Any | Callable[[R], Any] = MISSING,
+    ) -> NDArray:
         """Get the unique values for a specific key across all runs.
 
         Args:
             key: The key to extract unique values for.
+            default: The default value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
 
         Returns:
             NDArray: A NumPy array containing the unique values for the
             specified key.
 
         """
-        return np.unique(self.to_numpy(key), axis=0)
+        return np.unique(self.to_numpy(key, default), axis=0)
 
-    def n_unique(self, key: str) -> int:
+    def n_unique(
+        self,
+        key: str,
+        default: Any | Callable[[R], Any] = MISSING,
+    ) -> int:
         """Count the number of unique values for a specific key across all runs.
 
         Args:
             key: The key to count unique values for.
+            default: The default value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
 
         Returns:
             int: The number of unique values for the specified key.
 
         """
-        return len(self.unique(key))
+        return len(self.unique(key, default))
 
     def sort(self, *keys: str, reverse: bool = False) -> Self:
         """Sort runs based on one or more keys.
