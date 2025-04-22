@@ -116,6 +116,11 @@ def test_get_default(run: Run[Config]):
     assert run.get("unknown", 10) == 10
 
 
+def test_get_default_callable(run: Run[Config]):
+    run.update("a", 1000)
+    assert run.get("unknown", lambda run: run.get("a")) == 1000
+
+
 def test_get_info(run: Run[Config]):
     assert run.get("run_dir") == "."
 

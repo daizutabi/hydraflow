@@ -252,13 +252,15 @@ class Run[C, I = None]:
             if force or OmegaConf.select(cfg, k_, default=MISSING) is MISSING:
                 OmegaConf.update(cfg, k_, v, force_add=True)
 
-    def get(self, key: str, default: Any = MISSING) -> Any:
+    def get(self, key: str, default: Any | Callable[[Self], Any] = MISSING) -> Any:
         """Get a value from the information or configuration.
 
         Args:
             key: The key to look for. Can use dot notation for
                 nested keys in configuration.
             default: Value to return if the key is not found.
+                If a callable, it will be called with the Run instance
+                and the value returned will be used as the default.
                 If not provided, AttributeError will be raised.
 
         Returns:
@@ -285,6 +287,9 @@ class Run[C, I = None]:
             return info[key]
 
         if default is not MISSING:
+            if callable(default):
+                return default(self)
+
             return default
 
         msg = f"No such key: {key}"
