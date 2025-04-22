@@ -86,6 +86,11 @@ specific_runs = runs.filter(
 # Use a tuple to specify the parameter name and value
 nested_filter = runs.filter(("model.hidden_size", 512))
 
+# Filter with double underscore notation for nested parameters
+# This is often more convenient with keyword arguments
+nested_filter = runs.filter(model__hidden_size=512)  # Equivalent to "model.hidden_size"
+nested_filter = runs.filter(model__encoder__num_layers=6)  # For deeply nested parameters
+
 # Filter with tuple for range values (inclusive)
 lr_range = runs.filter(learning_rate=(0.0001, 0.01))
 
@@ -98,6 +103,11 @@ def is_large_image(run: Run):
 
 good_runs = runs.filter(predicate=is_large_image)
 ```
+
+The double underscore notation (`__`) is particularly useful for accessing nested
+configuration parameters with keyword arguments, as it's automatically converted to
+dot notation (`.`) internally. This allows you to write more natural and Pythonic
+filtering expressions, especially for deeply nested configurations.
 
 ## Advanced Filtering
 
@@ -193,12 +203,18 @@ The `group_by` method allows you to organize runs based on parameter values:
 # Group by a single parameter
 model_groups = runs.group_by("model_type")
 
+# Group by nested parameter using dot notation
+architecture_groups = runs.group_by("model.architecture")
+
 # Iterate through groups
 for model_type, group in model_groups.items():
     print(f"Model type: {model_type}, Runs: {len(group)}")
 
 # Group by multiple parameters
 param_groups = runs.group_by("model_type", "learning_rate")
+
+# Mix of regular and nested parameters using double underscore notation
+param_groups = runs.group_by("model_type", "model__hidden_size", "optimizer__learning_rate")
 
 # Access a specific group
 transformer_001_group = param_groups[("transformer", 0.001)]

@@ -115,8 +115,16 @@ def test_filter_tuple(rc: Rc):
     assert len(rc.filter(("size.width", 10), ("count", 2))) == 2
 
 
+def test_filter_underscore(rc: Rc):
+    assert len(rc.filter(size__width=10, count=2)) == 2
+
+
 def test_filter_tuple_list(rc: Rc):
     assert len(rc.filter(("size.width", [10, 30]))) == 8
+
+
+def test_filter_underscope_list(rc: Rc):
+    assert len(rc.filter(size__width=[10, 30])) == 8
 
 
 def test_filter_tuple_tuple(rc: Rc):
