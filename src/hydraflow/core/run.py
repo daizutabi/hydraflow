@@ -258,6 +258,12 @@ class Run[C, I = None]:
         Args:
             key: The key to look for. Can use dot notation for
                 nested keys in configuration.
+                Special keys:
+
+                - "run": Returns the Run object itself (self)
+                - "cfg": Returns the configuration object
+                - "impl": Returns the implementation object
+
             default: Value to return if the key is not found.
                 If a callable, it will be called with the Run instance
                 and the value returned will be used as the default.
@@ -273,6 +279,15 @@ class Run[C, I = None]:
                 no default is provided.
 
         """
+        if key == "run":
+            return self
+
+        if key == "cfg":
+            return self.cfg
+
+        if key == "impl":
+            return self.impl
+
         key = key.replace("__", ".")
 
         value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore

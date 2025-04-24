@@ -251,30 +251,9 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "run_id") == "30"
 
 
-def test_to_frame_callable(rc: Rc):
-    df = rc.to_frame("count", name=lambda r: r.get("name").upper())
-    assert df.item(0, "name") == "ABC"
-    assert df.item(-1, "name") == "DEF"
-
-
-def test_to_frame_callable_struct(rc: Rc):
-    df = rc.to_frame("count", x=lambda r: {"a": r.get("name"), "b": r.get("count") + 1})
-    assert df.shape == (12, 2)
-    df = df.unnest("x")
-    assert df.shape == (12, 3)
-    assert df.item(0, "a") == "abc"
-    assert df.item(-1, "b") == 3
-
-
-def test_to_frame_callable_list(rc: Rc):
-    df = rc.to_frame("count", x=lambda r: [r.get("size.width")] * r.get("count"))
-    assert df.shape == (12, 2)
-    assert df.item(0, "x").to_list() == [10]
-    assert df.item(-1, "x").to_list() == [30, 30]
-
-
-def test_group_by_dict(rc: Rc):
+def test_group_by(rc: Rc):
     gp = rc.group_by("count", "name")
+
     assert isinstance(gp, dict)
     assert list(gp.keys()) == [(1, "abc"), (1, "def"), (2, "abc"), (2, "def")]
     assert all(len(r) == 3 for r in gp.values())

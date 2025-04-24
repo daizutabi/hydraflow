@@ -42,10 +42,10 @@ from dataclasses import MISSING
 from typing import TYPE_CHECKING, overload
 
 import numpy as np
-import polars as pl
 from omegaconf import OmegaConf
 from polars import DataFrame, Series
 
+from .group_by import GroupBy
 from .run import Run
 
 if TYPE_CHECKING:
@@ -506,7 +506,6 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
         self,
         *keys: str,
         defaults: dict[str, Any | Callable[[R], Any]] | None = None,
-        **kwargs: Callable[[R], Any],
     ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
 
@@ -518,31 +517,21 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
                 values for the keys. If a callable, it will be called with
                 the Run instance and the value returned will be used as the
                 default.
-            **kwargs (Callable[[R], Any]): Additional columns to compute
-                using callables that take a Run and return a value.
 
         Returns:
             DataFrame: A Polars DataFrame containing the specified data
             from the runs.
 
         """
+        if not keys:
+            return DataFrame(r.to_dict() for r in self)
+
         if defaults is None:
             defaults = {}
 
-        if keys:
-            df = DataFrame(
-                {key: self.to_list(key, defaults.get(key, MISSING)) for key in keys},
-            )
-        else:
-            df = DataFrame(r.to_dict() for r in self)
+        return DataFrame({k: self.to_list(k, defaults.get(k, MISSING)) for k in keys})
 
-        if not kwargs:
-            return df
-
-        columns = [Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
-        return df.with_columns(*columns)
-
-    def _group_by(self, *keys: str) -> dict[Any, Self]:
+    def group_by(self, *keys: str) -> GroupBy[R, Self]:
         result: dict[Any, Self] = {}
 
         for run in self:
@@ -553,53 +542,7 @@ class RunCollection[R: Run[Any, Any]](Sequence[R]):
                 result[key] = self.__class__([])
             result[key].runs.append(run)
 
-        return result
-
-    @overload
-    def group_by(self, *keys: str) -> dict[Any, Self]: ...
-
-    @overload
-    def group_by(
-        self,
-        *keys: str,
-        **kwargs: Callable[[Self | Sequence[R]], Any],
-    ) -> DataFrame: ...
-
-    def group_by(
-        self,
-        *keys: str,
-        **kwargs: Callable[[Self | Sequence[R]], Any],
-    ) -> dict[Any, Self] | DataFrame:
-        """Group runs by one or more keys.
-
-        This method can return either:
-        - A dictionary mapping group keys to RunCollections
-          (no kwargs provided)
-        - A Polars DataFrame with group keys and aggregated
-          values (kwargs provided)
-
-        Args:
-            *keys (str): The keys to group by.
-            **kwargs (Callable[[Self | Sequence[R]], Any]): Aggregation
-                functions to apply to each group. Each function should
-                accept a RunCollection or Sequence[Run] and return a value.
-
-        Returns:
-            dict[Any, Self] | DataFrame: Either a dictionary mapping
-            group keys to RunCollections, or a Polars DataFrame with
-            group keys and aggregated values.
-
-        """
-        gp = self._group_by(*keys)
-        if not kwargs:
-            return gp
-
-        if len(keys) == 1:
-            df = DataFrame({keys[0]: list(gp)})
-        else:
-            df = DataFrame(dict(zip(keys, k, strict=True)) for k in gp)
-        columns = [pl.Series(k, [v(r) for r in gp.values()]) for k, v in kwargs.items()]
-        return df.with_columns(*columns)
+        return GroupBy(result)
 
 
 def to_hashable(value: Any) -> Hashable:
