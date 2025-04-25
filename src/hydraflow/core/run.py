@@ -29,7 +29,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, cast, overload
 
-from omegaconf import DictConfig, ListConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
 from .run_info import RunInfo
 
@@ -54,6 +54,7 @@ class Run[C, I = None]:
     """Factory function to create the implementation instance.
 
     This can be a callable that accepts either:
+
     - A single Path parameter: the artifacts directory
     - Both a Path and a config parameter: the artifacts directory and
       the configuration instance
@@ -65,10 +66,10 @@ class Run[C, I = None]:
     def __init__(
         self,
         run_dir: Path,
-        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
     ) -> None:
         self.info = RunInfo(run_dir)
-        self.impl_factory = impl_factory
+        self.impl_factory = impl_factory or (lambda _: None)  # type: ignore
 
     def __repr__(self) -> str:
         """Return a string representation of the Run."""
@@ -132,7 +133,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
-    ) -> RunCollection[Self]: ...
+    ) -> RunCollection[Self, I]: ...
 
     @classmethod
     def load(
@@ -141,7 +142,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
-    ) -> Self | RunCollection[Self]:
+    ) -> Self | RunCollection[Self, I]:
         """Load a Run from a run directory.
 
         Args:
@@ -167,13 +168,14 @@ class Run[C, I = None]:
         from .run_collection import RunCollection
 
         if n_jobs == 0:
-            return RunCollection(cls(Path(r), impl_factory) for r in run_dir)
+            runs = (cls(Path(r), impl_factory) for r in run_dir)
+            return RunCollection(runs, cls.get)  # type: ignore
 
         from joblib import Parallel, delayed
 
         parallel = Parallel(backend="threading", n_jobs=n_jobs)
         runs = parallel(delayed(cls)(Path(r), impl_factory) for r in run_dir)
-        return RunCollection(runs)  # type: ignore
+        return RunCollection(runs, cls.get)  # type: ignore
 
     @overload
     def update(
@@ -211,7 +213,9 @@ class Run[C, I = None]:
                 (can use dot notation like "section.subsection.param"),
                 or a tuple of strings to set multiple related configuration
                 values at once.
-            value: The value to set. This can be:
+            value: The value to set.
+                This can be:
+
                 - For string keys: Any value, or a callable that returns
                   a value
                 - For tuple keys: An iterable with the same length as the
@@ -258,6 +262,12 @@ class Run[C, I = None]:
         Args:
             key: The key to look for. Can use dot notation for
                 nested keys in configuration.
+                Special keys:
+
+                - "cfg": Returns the configuration object
+                - "impl": Returns the implementation object
+                - "info": Returns the run information object
+
             default: Value to return if the key is not found.
                 If a callable, it will be called with the Run instance
                 and the value returned will be used as the default.
@@ -272,6 +282,13 @@ class Run[C, I = None]:
             AttributeError: If the key is not found and
                 no default is provided.
 
+        Note:
+            The search order for keys is:
+            1. Configuration (cfg)
+            2. Implementation (impl)
+            3. Run information (info)
+            4. Run object itself (self)
+
         """
         key = key.replace("__", ".")
 
@@ -279,12 +296,10 @@ class Run[C, I = None]:
         if value is not MISSING:
             return value
 
-        if self.impl and hasattr(self.impl, key):
-            return getattr(self.impl, key)
-
-        info = self.info.to_dict()
-        if key in info:
-            return info[key]
+        for attr in [self.impl, self.info, self]:
+            value = getattr(attr, key, MISSING)
+            if value is not MISSING:
+                return value
 
         if default is not MISSING:
             if callable(default):
@@ -295,71 +310,37 @@ class Run[C, I = None]:
         msg = f"No such key: {key}"
         raise AttributeError(msg)
 
-    def predicate(self, key: str, value: Any) -> bool:
-        """Check if a value satisfies a condition for filtering.
-
-        This method retrieves the attribute specified by the key
-        using the get method, and then compares it with the given
-        value according to the following rules:
-
-        - If value is callable: Call it with the attribute and return
-          the boolean result
-        - If value is a list or set: Check if the attribute is in the list/set
-        - If value is a tuple of length 2: Check if the attribute is
-          in the range [value[0], value[1]]. Both sides are inclusive
-        - Otherwise: Check if the attribute equals the value
+    def to_dict(self, flatten: bool = True) -> dict[str, Any]:
+        """Convert the Run to a dictionary.
 
         Args:
-            key: The key to get the attribute from.
-            value: The value to compare with, or a callable that takes
-                the attribute and returns a boolean.
+            flatten (bool, optional): If True, flattens nested dictionaries.
+                Defaults to True.
 
         Returns:
-            bool: True if the attribute satisfies the condition, False otherwise.
+            dict[str, Any]: A dictionary representation of the Run's configuration.
 
         """
-        attr = self.get(key)
-        return _predicate(attr, value)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the Run to a dictionary."""
-        info = self.info.to_dict()
         cfg = OmegaConf.to_container(self.cfg)
-        return info | _flatten_dict(cfg)  # type: ignore
+        if not isinstance(cfg, dict):
+            raise TypeError("Configuration must be a dictionary")
 
+        standard_dict: dict[str, Any] = {str(k): v for k, v in cfg.items()}
 
-def _predicate(attr: Any, value: Any) -> bool:
-    if callable(value):
-        return bool(value(attr))
+        if flatten:
+            return _flatten_dict(standard_dict)
 
-    if isinstance(value, ListConfig):
-        value = list(value)
-
-    if isinstance(value, list | set) and not _is_iterable(attr):
-        return attr in value
-
-    if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
-        return value[0] <= attr <= value[1]
-
-    if _is_iterable(value):
-        value = list(value)
-
-    if _is_iterable(attr):
-        attr = list(attr)
-
-    return attr == value
-
-
-def _is_iterable(value: Any) -> bool:
-    return isinstance(value, Iterable) and not isinstance(value, str)
+        return standard_dict
 
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
     items = []
+
     for k, v in d.items():
         key = f"{parent_key}.{k}" if parent_key else k
         if isinstance(v, dict):
             items.extend(_flatten_dict(v, key).items())
         else:
             items.append((key, v))
+
     return dict(items)

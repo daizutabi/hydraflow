@@ -122,56 +122,34 @@ def test_get_default_callable(run: Run[Config]):
 
 
 def test_get_info(run: Run[Config]):
-    assert run.get("run_dir") == "."
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (10, True),
-        (1, False),
-        ([20, 10], True),
-        ([1, 2], False),
-        ((1, 10), True),
-        ((10, 1), False),
-        (ListConfig([10, 20]), True),
-    ],
-)
-def test_predicate(run: Run[Config], value, expected):
-    run.update("a", 10)
-    assert run.predicate("a", value) is expected
-
-
-def test_predicate_list_config(run: Run[Config]):
-    run.update("a", ListConfig([10, 20]))
-    assert run.predicate("a", [10, 20]) is True
-    assert run.predicate("a", ListConfig([10, 20])) is True
-
-
-def test_predicate_callable(run: Run[Config]):
-    run.update("a", 10)
-    assert run.predicate("a", lambda x: x > 5) is True
-    assert run.predicate("a", lambda x: x > 15) is False
-
-
-def test_predicate_tuple(run: Run[Config]):
-    run.update("a", (1, 2))
-    assert run.predicate("a", (1, 2)) is True
-    assert run.predicate("a", (2, 1)) is False
+    assert run.get("run_dir").as_posix() == "."
 
 
 def test_to_dict(run: Run[Config]):
     run.update("a", 10)
     run.update("db.name", "abc")
     run.update("db.b", 100)
-    assert run.to_dict() == {
-        "run_id": "",
-        "run_dir": ".",
-        "job_name": "",
+    assert run.to_dict(flatten=True) == {
         "a": 10,
         "db.name": "abc",
         "db.b": 100,
     }
+
+
+def test_to_dict_flatten_false(run: Run[Config]):
+    run.update("a", 10)
+    run.update("db.name", "abc")
+    run.update("db.b", 100)
+    assert run.to_dict(flatten=False) == {
+        "a": 10,
+        "db": {"name": "abc", "b": 100},
+    }
+
+
+def test_to_dict_error(run: Run[Config]):
+    run.cfg = ListConfig([1, 2, 3])  # type: ignore
+    with pytest.raises(TypeError):
+        run.to_dict()
 
 
 def test_impl_none(run: Run[Config]):
@@ -201,6 +179,16 @@ def test_load():
     assert run.impl is None
 
 
+def test_get_cfg():
+    run = Run[Config, Impl](Path(), Impl)
+    assert run.get("cfg") is run.cfg
+
+
+def test_get_impl():
+    run = Run[Config, Impl](Path(), Impl)
+    assert run.get("impl") is run.impl
+
+
 @pytest.mark.parametrize("n_jobs", [0, 1, 2])
 def test_load_collection(n_jobs: int):
     rc = Run[Config].load([Path("a/b/c"), Path("a/b/d")], n_jobs=n_jobs)
@@ -215,7 +203,7 @@ def test_load_impl():
     assert run.impl.path == "a/b/c/artifacts"
 
 
-def test_get_impl():
+def test_get_impl_str():
     run = Run[Config, Impl].load("a/b/c", Impl)
     assert run.get("path") == "a/b/c/artifacts"
 

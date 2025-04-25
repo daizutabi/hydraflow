@@ -5,6 +5,22 @@ powerful tool for working with multiple experiment runs. It provides methods
 for filtering, grouping, and analyzing sets of [`Run`][hydraflow.core.run.Run]
 instances, making it easy to compare and extract insights from your experiments.
 
+## Architecture
+
+`RunCollection` is built on top of the more general [`Collection`][hydraflow.core.collection.Collection]
+class, which provides a flexible foundation for working with sequences of items. This architecture offers several benefits:
+
+1. **Consistent Interface**: All collection-based classes in HydraFlow share a common interface and behavior
+2. **Code Reuse**: Core functionality is implemented once in the base class and inherited by specialized collections
+3. **Extensibility**: New collection types can easily be created for different item types
+4. **Type Safety**: Generic type parameters ensure type checking throughout the collection hierarchy
+
+The `Collection` class implements the Python `Sequence` protocol, allowing it to be used like standard Python
+collections (lists, tuples) while providing specialized methods for filtering, grouping, and data extraction.
+
+`RunCollection` extends this foundation with run-specific functionality, particularly for working with MLflow
+experiment data. This layered design separates generic collection behavior from domain-specific operations.
+
 ## Creating a Run Collection
 
 There are several ways to create a `RunCollection`:
@@ -101,7 +117,7 @@ multiple_models = runs.filter(model_type=["transformer", "lstm"])
 def is_large_image(run: Run):
     return run.get("width") + run.get("height") > 100
 
-good_runs = runs.filter(predicate=is_large_image)
+good_runs = runs.filter(is_large_image)
 ```
 
 The double underscore notation (`__`) is particularly useful for accessing nested
@@ -133,7 +149,7 @@ def has_efficient_lr(run: Run) -> bool:
     return lr * batch_size < 0.5
 
 # Apply the complex predicate
-efficient_runs = runs.filter(predicate=has_efficient_lr)
+efficient_runs = runs.filter(has_efficient_lr)
 ```
 
 The combination of predicate functions with callable defaults in `get` enables sophisticated
@@ -250,23 +266,17 @@ df = runs.to_frame()
 # DataFrame with specific configuration parameters
 df = runs.to_frame("model_type", "learning_rate", "batch_size")
 
+# Include Run, configuration, or implementation objects as columns
+df = runs.to_frame("model_type", "learning_rate", "run")  # Include Run objects
+df = runs.to_frame("model_type", "cfg")  # Include configuration objects
+df = runs.to_frame("run_id", "run", "cfg", "impl")  # Include all objects
+
 # Specify default values for missing parameters using the defaults parameter
 df = runs.to_frame(
     "model_type",
     "learning_rate",
     "batch_size",
     defaults={"learning_rate": 0.01, "batch_size": 32}
-)
-
-# Use callable defaults for dynamic values based on each run
-df = runs.to_frame(
-    "model_type",
-    "learning_rate",
-    "epochs",
-    defaults={
-        "learning_rate": lambda run: run.get("base_lr", 0.01) * run.get("lr_multiplier", 1.0),
-        "epochs": lambda run: int(run.get("max_steps", 1000) / run.get("steps_per_epoch", 100))
-    }
 )
 
 # Missing values without defaults are represented as None (null) in the DataFrame
@@ -280,24 +290,6 @@ valid_rows = missing_values_df.filter(pl.col("parameter_that_might_be_missing").
 # Fill null values after creating the DataFrame
 filled_df = missing_values_df.with_columns(
     pl.col("parameter_that_might_be_missing").fill_null("default_value")
-)
-
-# Using a custom function that returns multiple columns as keyword arguments
-def get_metrics(run: Run) -> dict[str, float]:
-    return {
-        "accuracy": run.get("accuracy", default=lambda r: r.get("val_accuracy", 0.0) * 0.9),
-        "precision": run.get("precision", default=lambda r: r.get("val_precision", 0.0) * 0.9),
-    }
-
-# Add custom columns using a function
-df = runs.to_frame("model_type", metrics=get_metrics)
-
-# Combine defaults with custom column generator functions
-df = runs.to_frame(
-    "model_type",
-    "learning_rate",
-    defaults={"learning_rate": 0.01},
-    metrics=get_metrics
 )
 ```
 
@@ -313,12 +305,10 @@ The `to_frame` method provides several ways to handle missing data:
      - Fill nulls: `df.with_columns(pl.col("param").fill_null(value))`
      - Aggregations: Most aggregation functions handle nulls appropriately
 
-3. **Custom column generators**: Use keyword argument functions to compute complex columns
-   - These functions receive each Run instance and can implement custom logic
-   - They can use `run.get()` with defaults to handle missing parameters
-
-These approaches can be combined to create flexible and robust data extraction pipelines
-that handle different experiment configurations and parameter evolution over time.
+3. **Special object keys**: Use the special keys `"run"`, `"cfg"`, and `"impl"` to include the actual
+   Run objects, configuration objects, or implementation objects in the DataFrame
+   - This allows direct access to the original objects for further operations
+   - You can combine regular data columns with object columns as needed
 
 ## Grouping Runs
 
@@ -330,6 +320,12 @@ model_groups = runs.group_by("model_type")
 
 # Group by nested parameter using dot notation
 architecture_groups = runs.group_by("model.architecture")
+
+# Group by and include Run objects in the result DataFrame
+model_groups_df = runs.group_by("model_type", "run")
+
+# Include multiple object types in the result
+grouped_df = runs.group_by("model_type", "batch_size", "run", "cfg")
 
 # Iterate through groups
 for model_type, group in model_groups.items():
@@ -343,75 +339,28 @@ param_groups = runs.group_by("model_type", "model__hidden_size", "optimizer__lea
 
 # Access a specific group
 transformer_001_group = param_groups[("transformer", 0.001)]
+
+# Aggregating grouped runs using the agg method
+# This returns a DataFrame with the aggregated results
+model_counts = model_groups.agg(count=lambda runs: len(runs))
+model_avg_loss = model_groups.agg(
+    avg_loss=lambda runs: sum(run.get("loss", 0) for run in runs) / len(runs),
+    min_loss=lambda runs: min(run.get("loss", float("inf")) for run in runs)
+)
 ```
 
-When no aggregation functions are provided, `group_by` returns a dictionary mapping keys to `RunCollection` instances. This intentional design allows you to:
+The `group_by` method returns a `GroupBy` instance that maps keys to `RunCollection` instances. This design allows you to:
 
 - Work with each group as a separate `RunCollection` with all the filtering, sorting, and analysis capabilities
 - Perform custom operations on each group that might not be expressible as simple aggregation functions
 - Chain additional operations on specific groups that interest you
 - Implement multi-stage analysis workflows where you need to maintain the full run information at each step
 
+To perform aggregations on the grouped data, use the `agg` method on the GroupBy instance. This transforms the grouped data into a DataFrame with aggregated results. You can define multiple aggregation functions to compute different metrics across each group.
+
+When special object keys (`"run"`, `"cfg"`, `"impl"`) are included in the `group_by` call, it returns a DataFrame with those objects included as columns, making it easy to access the original objects for further processing.
+
 This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
-
-## Aggregation with Group By
-
-Combine `group_by` with aggregation for powerful analysis:
-
-```python
-# Simple aggregation function using get method with callable defaults
-def mean_accuracy(runs: RunCollection) -> float:
-    return runs.to_numpy(
-        "accuracy",
-        default=lambda run: run.get("val_accuracy", 0.0) * 0.9
-    ).mean()
-
-# Complex aggregation from implementation or configuration with fallbacks
-def combined_metric(runs: RunCollection) -> float:
-    # Use callable defaults to handle missing values consistently
-    accuracies = runs.to_numpy("accuracy", default=lambda r: r.get("val_accuracy", 0.0))
-    precisions = runs.to_numpy("precision", default=lambda r: r.get("val_precision", 0.0))
-    return (accuracies.mean() + precisions.mean()) / 2
-
-
-# Group by model type and calculate average accuracy
-model_accuracies = runs.group_by(
-    "model_type",
-    accuracy=mean_accuracy
-)
-
-# Group by multiple parameters with multiple aggregations
-results = runs.group_by(
-    "model_type",
-    "learning_rate",
-    count=len,
-    accuracy=mean_accuracy,
-    combined=combined_metric
-)
-
-# Group by parameters that might be missing in some runs using callable defaults
-def normalize_architecture(run: Run) -> str:
-    # Get architecture with a fallback to model type if not available
-    arch = run.get("architecture", default=lambda r: r.get("model_type", "unknown"))
-    return arch.lower()  # Normalize to lowercase
-
-# Group by the normalized architecture
-arch_results = runs.group_by(normalize_architecture, accuracy=mean_accuracy)
-```
-
-With the enhanced `get` method and callable defaults support throughout the API, writing aggregation
-functions becomes more straightforward and robust. You can handle missing values consistently and
-implement complex transformations that work across heterogeneous runs.
-
-When aggregation functions are provided as keyword arguments, `group_by` returns a Polars DataFrame with the group keys and aggregated values. This design choice offers several advantages:
-
-- Directly produces analysis-ready results with all aggregations computed in a single operation
-- Enables efficient downstream analysis using Polars' powerful DataFrame operations
-- Simplifies visualization and reporting workflows
-- Reduces memory usage by computing only the requested aggregations rather than maintaining full RunCollections
-- Creates a clean interface that separates grouping from additional analysis steps
-
-The DataFrame output is particularly useful for final analysis steps where you need to summarize results across many runs or prepare data for visualization.
 
 ## Type-Safe Run Collections
 
@@ -483,7 +432,7 @@ for run in runs:
    type checking.
 
 3. **Chain Operations**: Combine filtering, grouping,
-   and aggregation for efficient analysis workflows.
+   and object extraction for efficient analysis workflows.
 
 4. **Use DataFrame Integration**: Convert to DataFrames
    for complex analysis and visualization needs.
@@ -492,6 +441,8 @@ for run in runs:
 
 The [`RunCollection`][hydraflow.core.run_collection.RunCollection] class is a
 powerful tool for comparative analysis of machine learning experiments. Its
-filtering, grouping, and aggregation capabilities enable efficient extraction
+filtering, grouping, and data extraction capabilities enable efficient extraction
 of insights from large sets of experiments, helping you identify optimal
 configurations and understand performance trends.
+
+[hydraflow.core.collection.Collection]: ../../api/hydraflow/core/collection.html#hydraflow.core.collection.Collection
