@@ -69,6 +69,37 @@ def test_getitem_key_multi(rc: Rc):
     assert len(gp[2, "def"]) == 3
 
 
+def test_iter(rc: Rc):
+    gp = rc.group_by("count")
+    assert list(gp) == [1, 2]
+
+
+def test_len(rc: Rc):
+    gp = rc.group_by("count")
+    assert len(gp) == 2
+
+
+def test_contains(rc: Rc):
+    gp = rc.group_by("count")
+    assert 1 in gp
+    assert 3 not in gp
+
+
+def test_keys(rc: Rc):
+    gp = rc.group_by("count")
+    assert list(gp.keys()) == [1, 2]
+
+
+def test_values(rc: Rc):
+    gp = rc.group_by("count")
+    assert len(list(gp.values())) == 2
+
+
+def test_items(rc: Rc):
+    gp = rc.group_by("count")
+    assert len(list(gp.items())) == 2
+
+
 def test_agg_key(rc: Rc):
     df = rc.group_by("count").agg()
     x = DataFrame({"count": [1, 2]})

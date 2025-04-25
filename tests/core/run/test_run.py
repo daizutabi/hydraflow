@@ -129,11 +129,27 @@ def test_to_dict(run: Run[Config]):
     run.update("a", 10)
     run.update("db.name", "abc")
     run.update("db.b", 100)
-    assert run.to_dict() == {
+    assert run.to_dict(flatten=True) == {
         "a": 10,
         "db.name": "abc",
         "db.b": 100,
     }
+
+
+def test_to_dict_flatten_false(run: Run[Config]):
+    run.update("a", 10)
+    run.update("db.name", "abc")
+    run.update("db.b", 100)
+    assert run.to_dict(flatten=False) == {
+        "a": 10,
+        "db": {"name": "abc", "b": 100},
+    }
+
+
+def test_to_dict_error(run: Run[Config]):
+    run.cfg = ListConfig([1, 2, 3])  # type: ignore
+    with pytest.raises(TypeError):
+        run.to_dict()
 
 
 def test_impl_none(run: Run[Config]):
