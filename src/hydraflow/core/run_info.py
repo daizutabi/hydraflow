@@ -19,7 +19,6 @@ from .io import get_experiment_name
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Any
 
 
 @dataclass
@@ -51,11 +50,3 @@ class RunInfo:
         contain the expected format).
         """
         return get_experiment_name(self.run_dir.parent)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the RunInfo to a dictionary."""
-        return {
-            "run_id": self.run_id,
-            "run_dir": self.run_dir.as_posix(),
-            "job_name": self.job_name,
-        }

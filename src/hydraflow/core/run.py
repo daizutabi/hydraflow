@@ -29,7 +29,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, cast, overload
 
-from omegaconf import DictConfig, ListConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf
 
 from .run_info import RunInfo
 
@@ -65,10 +65,10 @@ class Run[C, I = None]:
     def __init__(
         self,
         run_dir: Path,
-        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
     ) -> None:
         self.info = RunInfo(run_dir)
-        self.impl_factory = impl_factory
+        self.impl_factory = impl_factory or (lambda _: None)  # type: ignore
 
     def __repr__(self) -> str:
         """Return a string representation of the Run."""
@@ -279,27 +279,16 @@ class Run[C, I = None]:
                 no default is provided.
 
         """
-        if key == "run":
-            return self
-
-        if key == "cfg":
-            return self.cfg
-
-        if key == "impl":
-            return self.impl
-
         key = key.replace("__", ".")
 
         value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
         if value is not MISSING:
             return value
 
-        if self.impl and hasattr(self.impl, key):
-            return getattr(self.impl, key)
-
-        info = self.info.to_dict()
-        if key in info:
-            return info[key]
+        for attr in [self.impl, self.info, self]:
+            value = getattr(attr, key, MISSING)
+            if value is not MISSING:
+                return value
 
         if default is not MISSING:
             if callable(default):
@@ -310,71 +299,37 @@ class Run[C, I = None]:
         msg = f"No such key: {key}"
         raise AttributeError(msg)
 
-    def predicate(self, key: str, value: Any) -> bool:
-        """Check if a value satisfies a condition for filtering.
-
-        This method retrieves the attribute specified by the key
-        using the get method, and then compares it with the given
-        value according to the following rules:
-
-        - If value is callable: Call it with the attribute and return
-          the boolean result
-        - If value is a list or set: Check if the attribute is in the list/set
-        - If value is a tuple of length 2: Check if the attribute is
-          in the range [value[0], value[1]]. Both sides are inclusive
-        - Otherwise: Check if the attribute equals the value
+    def to_dict(self, flatten: bool = True) -> dict[str, Any]:
+        """Convert the Run to a dictionary.
 
         Args:
-            key: The key to get the attribute from.
-            value: The value to compare with, or a callable that takes
-                the attribute and returns a boolean.
+            flatten (bool, optional): If True, flattens nested dictionaries.
+                Defaults to True.
 
         Returns:
-            bool: True if the attribute satisfies the condition, False otherwise.
+            dict[str, Any]: A dictionary representation of the Run's configuration.
 
         """
-        attr = self.get(key)
-        return _predicate(attr, value)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the Run to a dictionary."""
-        info = self.info.to_dict()
         cfg = OmegaConf.to_container(self.cfg)
-        return info | _flatten_dict(cfg)  # type: ignore
+        if not isinstance(cfg, dict):
+            raise TypeError("Configuration must be a dictionary")
 
+        standard_dict: dict[str, Any] = {str(k): v for k, v in cfg.items()}
 
-def _predicate(attr: Any, value: Any) -> bool:
-    if callable(value):
-        return bool(value(attr))
+        if flatten:
+            return _flatten_dict(standard_dict)
 
-    if isinstance(value, ListConfig):
-        value = list(value)
-
-    if isinstance(value, list | set) and not _is_iterable(attr):
-        return attr in value
-
-    if isinstance(value, tuple) and len(value) == 2 and not _is_iterable(attr):
-        return value[0] <= attr <= value[1]
-
-    if _is_iterable(value):
-        value = list(value)
-
-    if _is_iterable(attr):
-        attr = list(attr)
-
-    return attr == value
-
-
-def _is_iterable(value: Any) -> bool:
-    return isinstance(value, Iterable) and not isinstance(value, str)
+        return standard_dict
 
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
     items = []
+
     for k, v in d.items():
         key = f"{parent_key}.{k}" if parent_key else k
         if isinstance(v, dict):
             items.extend(_flatten_dict(v, key).items())
         else:
             items.append((key, v))
+
     return dict(items)
