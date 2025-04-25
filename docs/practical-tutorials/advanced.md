@@ -61,7 +61,7 @@ Where:
 - `[overrides]` are optional Hydra-style parameter overrides
 
 For more details on the CLI,
-see the [Job Configuration](../part2-advanced/job-configuration.md#command-line-interface)
+see the [Job Configuration](../part2-advanced/job-configuration.md)
 documentation.
 
 ## Previewing Execution with Dry Run

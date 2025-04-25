@@ -425,12 +425,11 @@ class Collection[I](Sequence[I]):
                 its value will be used as the group key.
                 If multiple keys are provided, a tuple of their
                 values will be used as the group key.
-                Keys can use dot notation (e.g., "model.type") or
-                double underscore notation (e.g., "model__type")
+                Keys can use dot notation (e.g., "model.type")
                 to access nested configuration values.
 
         Returns:
-            GroupBy[I, Self]: A GroupBy instance containing the grouped items.
+            GroupBy[Self, I]: A GroupBy instance containing the grouped items.
             Each group is a collection of the same type as the original.
 
         """
@@ -494,7 +493,9 @@ def matches(value: Any, criterion: Any) -> bool:
 
     Args:
         value: The value to be compared with the criterion.
-        criterion: The criterion to match against. Can be:
+        criterion: The criterion to match against.
+            Can be:
+
             - A callable that takes the value and returns a boolean
             - A list or set to check membership
             - A tuple of length 2 to check range inclusion
