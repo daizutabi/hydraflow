@@ -37,6 +37,7 @@ Note:
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 from .collection import Collection
@@ -47,7 +48,7 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 
-class RunCollection[R: Run[Any, Any]](Collection[R]):
+class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
     """A collection of Run instances that implements the Sequence protocol.
 
     RunCollection provides methods for filtering, sorting, grouping, and analyzing
@@ -162,3 +163,13 @@ class RunCollection[R: Run[Any, Any]](Collection[R]):
         """
         for run in self:
             run.update(key, value, force=force)
+
+    @cached_property
+    def impls(self) -> Collection[I]:
+        """Get the implementation object for all runs in the collection.
+
+        Returns:
+            Collection[Any]: A collection of implementation objects for all runs.
+
+        """
+        return Collection(run.impl for run in self)

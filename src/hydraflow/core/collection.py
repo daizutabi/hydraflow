@@ -411,7 +411,7 @@ class Collection[I](Sequence[I]):
         columns = [Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
         return df.with_columns(*columns)
 
-    def group_by(self, *by: str) -> GroupBy[Self]:
+    def group_by(self, *by: str) -> GroupBy[Self, I]:
         """Group items by one or more keys and return a GroupBy instance.
 
         This method organizes items into groups based on the specified

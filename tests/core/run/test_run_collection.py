@@ -52,7 +52,7 @@ def rc(run_factory):
     return RunCollection(runs, Run.get)
 
 
-type Rc = RunCollection[Run[Config, Impl]]
+type Rc = RunCollection[Run[Config, Impl], Impl]
 
 
 def test_repr(rc: Rc):
@@ -250,3 +250,9 @@ def test_group_by(rc: Rc):
 
     gp = rc.group_by("count", "name")
     assert isinstance(gp, GroupBy)
+
+
+def test_impl(rc: Rc):
+    impls = rc.impls
+    assert len(impls) == 12
+    assert len(impls.filter(lambda i: i.y[0] == "1")) == 6

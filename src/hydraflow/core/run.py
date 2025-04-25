@@ -132,7 +132,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
-    ) -> RunCollection[Self]: ...
+    ) -> RunCollection[Self, I]: ...
 
     @classmethod
     def load(
@@ -141,7 +141,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
         *,
         n_jobs: int = 0,
-    ) -> Self | RunCollection[Self]:
+    ) -> Self | RunCollection[Self, I]:
         """Load a Run from a run directory.
 
         Args:
@@ -168,7 +168,7 @@ class Run[C, I = None]:
 
         if n_jobs == 0:
             runs = (cls(Path(r), impl_factory) for r in run_dir)
-            return RunCollection(runs, cls.get)
+            return RunCollection(runs, cls.get)  # type: ignore
 
         from joblib import Parallel, delayed
 

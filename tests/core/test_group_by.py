@@ -2,12 +2,11 @@ from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
 
-import polars as pl
 import pytest
 from polars import DataFrame
 
-from hydraflow.core.group_by import GroupBy
-from hydraflow.core.run_collection import Run, RunCollection
+from hydraflow.core.run import Run
+from hydraflow.core.run_collection import RunCollection
 
 
 @dataclass
@@ -50,10 +49,10 @@ def rc(run_factory):
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
     runs = [run_factory(*p) for p in it]
-    return RunCollection(runs)
+    return RunCollection(runs, Run.get)
 
 
-type Rc = RunCollection[Run[Config, Impl]]
+type Rc = RunCollection[Run[Config, Impl], Impl]
 
 
 def test_getitem_key(rc: Rc):
@@ -83,13 +82,13 @@ def test_agg_key_multi(rc: Rc):
     assert df.equals(x)
 
 
-def test_agg_run(rc: Rc):
-    df = rc.group_by("count").agg("run")
-    assert all(r.get("count") == 1 for r in df.item(0, "run"))
-    assert all(r.get("count") == 2 for r in df.item(1, "run"))
-
-
 def test_agg_get(rc: Rc):
     df = rc.group_by("count", "name").agg("name")
     assert df.item(0, "name").to_list() == ["abc", "abc", "abc"]
     assert df.item(1, "name").to_list() == ["def", "def", "def"]
+
+
+def test_agg_callable(rc: Rc):
+    df = rc.group_by("count", "name").agg(x=lambda x: len(x))
+    assert df.item(0, "x") == 3
+    assert df.item(1, "x") == 3
