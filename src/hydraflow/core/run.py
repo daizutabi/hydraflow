@@ -54,6 +54,7 @@ class Run[C, I = None]:
     """Factory function to create the implementation instance.
 
     This can be a callable that accepts either:
+
     - A single Path parameter: the artifacts directory
     - Both a Path and a config parameter: the artifacts directory and
       the configuration instance

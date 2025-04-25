@@ -81,12 +81,13 @@ class Collection[I](Sequence[I]):
 
         - Callable criteria that take an item and return a boolean
         - Key-value tuples where the key is a string and the value
-          is compared using the matches function
+          is compared using the `matches` function
         - Keyword arguments, where the key is a string and the value
-          is compared using the matches function
+          is compared using the `matches` function
 
-        The matches function supports the following comparison types:
-        - Callable: The callable is called with the value
+        The `matches` function supports the following comparison types:
+
+        - Callable: The predicate function is called with the value
         - List/Set: Checks if the value is in the list/set
         - Tuple of length 2: Checks if the value is in the range [min, max]
         - Other: Checks for direct equality
@@ -484,11 +485,11 @@ def matches(value: Any, criterion: Any) -> bool:
     to the following rules:
 
     - If criterion is callable: Call it with the value and return
-        the boolean result
+      the boolean result
     - If criterion is a list or set: Check if the value is in the list/set
     - If criterion is a tuple of length 2: Check if the value is
-        in the range [criterion[0], criterion[1]]. Both sides are
-        inclusive
+      in the range [criterion[0], criterion[1]]. Both sides are
+      inclusive
     - Otherwise: Check if the value equals the criteria
 
     Args:
@@ -501,7 +502,7 @@ def matches(value: Any, criterion: Any) -> bool:
 
     Returns:
         bool: True if the value matches the criterion according to the rules above,
-            False otherwise.
+        False otherwise.
 
     Examples:
         >>> matches(5, lambda x: x > 3)
