@@ -63,6 +63,12 @@ model_type = run.get("model__type")  # Equivalent to "model.type"
 metric_value = run.get("accuracy")  # From impl or cfg
 run_id = run.get("run_id")  # From RunInfo
 
+# Access special object keys
+run_obj = run.get("run")    # Returns the Run object itself (self)
+cfg_obj = run.get("cfg")    # Returns the complete configuration object
+impl_obj = run.get("impl")  # Returns the implementation object
+info_obj = run.get("info")  # Returns the run information object
+
 # Provide a default value if the key doesn't exist
 batch_size = run.get("batch_size", 32)
 
@@ -76,9 +82,11 @@ steps = run.get("steps", default=lambda r: r.get("epochs", 10) * r.get("steps_pe
 
 The `get` method searches for values in the following order:
 
-1. First in the configuration (`cfg`)
-2. Then in the implementation instance (`impl`)
-3. Finally in the run information (`info`)
+1. In the configuration (`cfg`)
+2. In the implementation instance (`impl`)
+3. In the run information (`info`)
+4. In the run object itself (`self`)
+5. Special keys: "run", "cfg", "impl", "info" return their respective objects
 
 This provides a unified access interface regardless of where the data is stored.
 

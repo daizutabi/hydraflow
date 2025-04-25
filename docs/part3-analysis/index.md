@@ -20,11 +20,15 @@ The main components of HydraFlow's analysis tools are:
 1. **[`Run`][hydraflow.core.run.Run] Class**: Represents a single experiment
    run, providing access to configuration and artifacts.
 
-2. **[`RunCollection`][hydraflow.core.run_collection.RunCollection] Class**:
-   A collection of `Run` instances with tools for filtering, grouping, and
-   aggregating results.
+2. **[`Collection`][hydraflow.core.collection.Collection] Class**: A generic base class
+   implementing the `Sequence` protocol with powerful filtering, grouping, and data
+   extraction capabilities.
 
-3. **Data Analysis Integration**: Tools to convert experiment data into
+3. **[`RunCollection`][hydraflow.core.run_collection.RunCollection] Class**:
+   A collection of `Run` instances with specialized tools for filtering, grouping, and
+   aggregating results, built on top of the `Collection` class.
+
+4. **Data Analysis Integration**: Tools to convert experiment data into
    Polars DataFrames for advanced analysis.
 
 ## Practical Examples
@@ -142,3 +146,8 @@ In the following pages, we'll explore HydraFlow's analysis tools in detail:
 
 - [Updating Runs](updating-runs.md): Learn how to update existing runs with
   new metrics, tags, and artifacts.
+
+[hydraflow.core.run.Run]: ../../api/hydraflow/core/run.html#hydraflow.core.run.Run
+[hydraflow.core.run_collection.RunCollection]: ../../api/hydraflow/core/run_collection.html#hydraflow.core.run_collection.RunCollection
+[hydraflow.core.collection.Collection]: ../../api/hydraflow/core/collection.html#hydraflow.core.collection.Collection
+[hydraflow.core.io.iter_run_dirs]: ../../api/hydraflow/core/io.html#hydraflow.core.io.iter_run_dirs
