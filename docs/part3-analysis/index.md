@@ -51,6 +51,12 @@ filtered_runs = runs.filter(learning_rate=0.01, model_type="transformer")
 # Group runs by a parameter
 grouped_runs = runs.group_by("batch_size")
 
+# Aggregate grouped data
+df_aggregated = grouped_runs.agg(
+    count=lambda runs: len(runs),
+    avg_accuracy=lambda runs: sum(run.get("accuracy", 0) for run in runs) / len(runs)
+)
+
 # Convert to DataFrame for analysis
 df = runs.to_frame("learning_rate", "batch_size", accuracy=lambda run: run.get("accuracy"))
 

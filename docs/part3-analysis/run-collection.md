@@ -339,16 +339,26 @@ param_groups = runs.group_by("model_type", "model__hidden_size", "optimizer__lea
 
 # Access a specific group
 transformer_001_group = param_groups[("transformer", 0.001)]
+
+# Aggregating grouped runs using the agg method
+# This returns a DataFrame with the aggregated results
+model_counts = model_groups.agg(count=lambda runs: len(runs))
+model_avg_loss = model_groups.agg(
+    avg_loss=lambda runs: sum(run.get("loss", 0) for run in runs) / len(runs),
+    min_loss=lambda runs: min(run.get("loss", float("inf")) for run in runs)
+)
 ```
 
-When no special object keys are provided, `group_by` returns a dictionary mapping keys to `RunCollection` instances. This design allows you to:
+The `group_by` method returns a `GroupBy` instance that maps keys to `RunCollection` instances. This design allows you to:
 
 - Work with each group as a separate `RunCollection` with all the filtering, sorting, and analysis capabilities
 - Perform custom operations on each group that might not be expressible as simple aggregation functions
 - Chain additional operations on specific groups that interest you
 - Implement multi-stage analysis workflows where you need to maintain the full run information at each step
 
-When special object keys (`"run"`, `"cfg"`, `"impl"`) are included, `group_by` returns a DataFrame with those objects included as columns, making it easy to access the original objects for further processing.
+To perform aggregations on the grouped data, use the `agg` method on the GroupBy instance. This transforms the grouped data into a DataFrame with aggregated results. You can define multiple aggregation functions to compute different metrics across each group.
+
+When special object keys (`"run"`, `"cfg"`, `"impl"`) are included in the `group_by` call, it returns a DataFrame with those objects included as columns, making it easy to access the original objects for further processing.
 
 This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
 

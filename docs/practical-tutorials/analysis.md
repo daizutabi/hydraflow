@@ -288,7 +288,7 @@ Or dictionaries for multiple named columns:
 
 ### Grouping Runs
 
-The [`group_by`][hydraflow.core.run_collection.RunCollection.group_by] method organizes runs by common attributes:
+The [`group_by`][hydraflow.core.collection.Collection.group_by] method organizes runs by common attributes:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> grouped = rc.group_by("width")
@@ -304,10 +304,11 @@ You can group by multiple keys:
 ...     print(key, group)
 ```
 
-Adding aggregation functions transforms the result into a DataFrame:
+Adding aggregation functions using the `agg` method transforms the result into a DataFrame:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
->>> df = rc.group_by("width", n=lambda runs: len(runs))
+>>> grouped = rc.group_by("width")
+>>> df = grouped.agg(n=lambda runs: len(runs))
 >>> print(df)
 ```
 
