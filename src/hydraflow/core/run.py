@@ -261,9 +261,9 @@ class Run[C, I = None]:
                 nested keys in configuration.
                 Special keys:
 
-                - "run": Returns the Run object itself (self)
                 - "cfg": Returns the configuration object
                 - "impl": Returns the implementation object
+                - "info": Returns the run information object
 
             default: Value to return if the key is not found.
                 If a callable, it will be called with the Run instance
@@ -278,6 +278,13 @@ class Run[C, I = None]:
         Raises:
             AttributeError: If the key is not found and
                 no default is provided.
+
+        Note:
+            The search order for keys is:
+            1. Configuration (cfg)
+            2. Implementation (impl)
+            3. Run information (info)
+            4. Run object itself (self)
 
         """
         key = key.replace("__", ".")

@@ -81,9 +81,15 @@ class Collection[I](Sequence[I]):
 
         - Callable criteria that take an item and return a boolean
         - Key-value tuples where the key is a string and the value
-          is compared using the item.predicate method
+          is compared using the matches function
         - Keyword arguments, where the key is a string and the value
-          is compared using the item.predicate method
+          is compared using the matches function
+
+        The matches function supports the following comparison types:
+        - Callable: The callable is called with the value
+        - List/Set: Checks if the value is in the list/set
+        - Tuple of length 2: Checks if the value is in the range [min, max]
+        - Other: Checks for direct equality
 
         Args:
             *criteria: Callable criteria or (key, value) tuples
@@ -93,6 +99,24 @@ class Collection[I](Sequence[I]):
         Returns:
             Self: A new Collection containing only the items that
             match all criteria.
+
+        Examples:
+            ```python
+            # Filter using a callable
+            filtered = collection.filter(lambda x: x > 5)
+
+            # Filter using a key-value tuple
+            filtered = collection.filter(("age", 25))
+
+            # Filter using keyword arguments
+            filtered = collection.filter(age=25, name="John")
+
+            # Filter using range
+            filtered = collection.filter(("age", (20, 30)))
+
+            # Filter using list membership
+            filtered = collection.filter(("name", ["John", "Jane"]))
+            ```
 
         """
         items = self._items

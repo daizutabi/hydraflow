@@ -74,14 +74,38 @@ class RunCollection[R: Run[Any, Any]](Collection[R]):
         access these properties, as they will be already loaded in memory.
 
         Args:
-            cfg (bool): Whether to preload the configuration objects
-            impl (bool): Whether to preload the implementation objects
-            n_jobs (int): Number of parallel jobs to run
-                (-1 means using all processors)
+            n_jobs (int): Number of parallel jobs to run.
+                - 0: Run sequentially (default)
+                - -1: Use all available CPU cores
+                - >0: Use the specified number of cores
+            cfg (bool): Whether to preload the configuration objects.
+                Defaults to True.
+            impl (bool): Whether to preload the implementation objects.
+                Defaults to True.
 
         Returns:
             Self: The same RunCollection instance with preloaded
             configuration and implementation objects.
+
+        Note:
+            The preloading is done using joblib's threading backend,
+            which is suitable for I/O-bound tasks like loading
+            configuration files and implementation objects.
+
+        Examples:
+            ```python
+            # Preload all runs sequentially
+            runs.preload()
+
+            # Preload using all available cores
+            runs.preload(n_jobs=-1)
+
+            # Preload only configurations
+            runs.preload(impl=False)
+
+            # Preload only implementations
+            runs.preload(cfg=False)
+            ```
 
         """
 
