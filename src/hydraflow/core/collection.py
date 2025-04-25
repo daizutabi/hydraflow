@@ -63,9 +63,9 @@ class Collection[I](Sequence[I]):
             return self._items[index]
 
         if isinstance(index, slice):
-            return self.__class__(self._items[index])
+            return self.__class__(self._items[index], self._get)
 
-        return self.__class__([self._items[i] for i in index])
+        return self.__class__([self._items[i] for i in index], self._get)
 
     def __iter__(self) -> Iterator[I]:
         return iter(self._items)
@@ -106,7 +106,7 @@ class Collection[I](Sequence[I]):
         for key, value in kwargs.items():
             items = [i for i in items if matches(self._get(i, key), value)]
 
-        return self.__class__(items)
+        return self.__class__(items, self._get)
 
     def try_get(
         self,
@@ -227,18 +227,12 @@ class Collection[I](Sequence[I]):
 
         raise _value_error()
 
-    def to_list(
-        self,
-        key: str,
-        default: Any | Callable[[I], Any] = MISSING,
-    ) -> list[Any]:
+    def to_list(self, key: str, default: Any = MISSING) -> list[Any]:
         """Extract a list of values for a specific key from all items.
 
         Args:
             key: The key to extract from each item.
             default: The default value to return if the key is not found.
-                If a callable, it will be called with the item
-                and the value returned will be used as the default.
 
         Returns:
             list[Any]: A list containing the values for the
@@ -247,22 +241,18 @@ class Collection[I](Sequence[I]):
         """
         return [self._get(i, key, default) for i in self]
 
-    def to_numpy(
-        self,
-        key: str,
-        default: Any | Callable[[I], Any] = MISSING,
-    ) -> NDArray:
-        """Extract values for a specific key from all runs as a NumPy array.
+    def to_numpy(self, key: str, default: Any = MISSING) -> NDArray:
+        """Extract values for a specific key from all items as a NumPy array.
 
         Args:
-            key: The key to extract from each run.
+            key: The key to extract from each item.
             default: The default value to return if the key is not found.
                 If a callable, it will be called with the item
                 and the value returned will be used as the default.
 
         Returns:
             NDArray: A NumPy array containing the values for the
-            specified key from each run.
+            specified key from each item.
 
         """
         return np.array(self.to_list(key, default))
@@ -270,14 +260,14 @@ class Collection[I](Sequence[I]):
     def to_series(
         self,
         key: str,
-        default: Any | Callable[[I], Any] = MISSING,
+        default: Any = MISSING,
         *,
         name: str | None = None,
     ) -> Series:
-        """Extract values for a specific key from all runs as a Polars series.
+        """Extract values for a specific key from all items as a Polars series.
 
         Args:
-            key: The key to extract from each run.
+            key: The key to extract from each item.
             default: The default value to return if the key is not found.
                 If a callable, it will be called with the item
                 and the value returned will be used as the default.
@@ -290,12 +280,8 @@ class Collection[I](Sequence[I]):
         """
         return Series(name or key, self.to_list(key, default))
 
-    def unique(
-        self,
-        key: str,
-        default: Any | Callable[[I], Any] = MISSING,
-    ) -> NDArray:
-        """Get the unique values for a specific key across all runs.
+    def unique(self, key: str, default: Any = MISSING) -> NDArray:
+        """Get the unique values for a specific key across all items.
 
         Args:
             key: The key to extract unique values for.
@@ -310,12 +296,8 @@ class Collection[I](Sequence[I]):
         """
         return np.unique(self.to_numpy(key, default), axis=0)
 
-    def n_unique(
-        self,
-        key: str,
-        default: Any | Callable[[I], Any] = MISSING,
-    ) -> int:
-        """Count the number of unique values for a specific key across all runs.
+    def n_unique(self, key: str, default: Any = MISSING) -> int:
+        """Count the number of unique values for a specific key across all items.
 
         Args:
             key: The key to count unique values for.
@@ -330,7 +312,7 @@ class Collection[I](Sequence[I]):
         return len(self.unique(key, default))
 
     def sort(self, *keys: str, reverse: bool = False) -> Self:
-        """Sort runs based on one or more keys.
+        """Sort items based on one or more keys.
 
         Args:
             *keys: The keys to sort by, in order of priority.
@@ -338,7 +320,7 @@ class Collection[I](Sequence[I]):
                 ascending).
 
         Returns:
-            Self: A new RunCollection with the runs sorted according to
+            Self: A new Collection with the items sorted according to
             the specified keys.
 
         """
@@ -353,11 +335,7 @@ class Collection[I](Sequence[I]):
 
         return self[index]
 
-    def to_frame(
-        self,
-        *keys: str,
-        defaults: dict[str, Any | Callable[[I], Any]] | None = None,
-    ) -> DataFrame:
+    def to_frame(self, *keys: str, defaults: dict[str, Any] | None = None) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
 
         Args:
@@ -377,7 +355,7 @@ class Collection[I](Sequence[I]):
 
         return DataFrame({k: self.to_list(k, defaults.get(k, MISSING)) for k in keys})
 
-    def group_by(self, *by: str) -> GroupBy[I, Self]:
+    def group_by(self, *by: str) -> GroupBy[Self]:
         """Group items by one or more keys and return a GroupBy instance.
 
         This method organizes items into groups based on the specified
