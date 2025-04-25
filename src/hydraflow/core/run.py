@@ -167,13 +167,14 @@ class Run[C, I = None]:
         from .run_collection import RunCollection
 
         if n_jobs == 0:
-            return RunCollection(cls(Path(r), impl_factory) for r in run_dir)
+            runs = (cls(Path(r), impl_factory) for r in run_dir)
+            return RunCollection(runs, cls.get)
 
         from joblib import Parallel, delayed
 
         parallel = Parallel(backend="threading", n_jobs=n_jobs)
         runs = parallel(delayed(cls)(Path(r), impl_factory) for r in run_dir)
-        return RunCollection(runs)  # type: ignore
+        return RunCollection(runs, cls.get)  # type: ignore
 
     @overload
     def update(

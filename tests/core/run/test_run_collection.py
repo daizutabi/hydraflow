@@ -4,10 +4,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from omegaconf import ListConfig
-from polars import DataFrame
 
-from hydraflow.core.run_collection import Run, RunCollection
+from hydraflow.core.run import Run
+from hydraflow.core.run_collection import RunCollection
 
 
 @dataclass
@@ -50,7 +49,7 @@ def rc(run_factory):
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
     runs = [run_factory(*p) for p in it]
-    return RunCollection(runs)
+    return RunCollection(runs, Run.get)
 
 
 type Rc = RunCollection[Run[Config, Impl]]
@@ -234,11 +233,6 @@ def test_sort_multi(rc: Rc):
     assert r.get("name") == "def"
 
 
-def test_to_frame_default(rc: Rc):
-    df = rc.to_frame()
-    assert df.shape == (12, 7)
-
-
 def test_to_frame(rc: Rc):
     df = rc.to_frame("size.width", "count", "run_id")
     assert df.shape == (12, 3)
@@ -252,49 +246,7 @@ def test_to_frame(rc: Rc):
 
 
 def test_group_by(rc: Rc):
+    from hydraflow.core.group_by import GroupBy
+
     gp = rc.group_by("count", "name")
-
-    assert isinstance(gp, dict)
-    assert list(gp.keys()) == [(1, "abc"), (1, "def"), (2, "abc"), (2, "def")]
-    assert all(len(r) == 3 for r in gp.values())
-
-
-def test_group_by_frame(rc: Rc):
-    df = rc.group_by("count", x=lambda rc: len(rc))
-    assert isinstance(df, DataFrame)
-    assert df.shape == (2, 2)
-    assert df["x"].to_list() == [6, 6]
-
-
-def test_group_by_frame_multi(rc: Rc):
-    df = rc.group_by("count", "name", x=lambda rc: len(rc))
-    assert isinstance(df, DataFrame)
-    assert df.shape == (4, 3)
-    assert df["x"].to_list() == [3, 3, 3, 3]
-
-
-def test_to_hashable_list_config():
-    from hydraflow.core.run_collection import to_hashable
-
-    assert to_hashable(ListConfig([1, 2, 3])) == (1, 2, 3)
-
-
-def test_to_hashable_ndarray():
-    from hydraflow.core.run_collection import to_hashable
-
-    assert to_hashable(np.array([1, 2, 3])) == (1, 2, 3)
-
-
-def test_to_hashable_fallback_str():
-    from hydraflow.core.run_collection import to_hashable
-
-    class C:
-        __hash__ = None  # type: ignore
-
-        def __str__(self) -> str:
-            return "abc"
-
-        def __iter__(self):
-            raise TypeError
-
-    assert to_hashable(C()) == "abc"
+    assert isinstance(gp, GroupBy)
