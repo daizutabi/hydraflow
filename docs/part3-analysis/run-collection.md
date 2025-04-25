@@ -117,7 +117,7 @@ multiple_models = runs.filter(model_type=["transformer", "lstm"])
 def is_large_image(run: Run):
     return run.get("width") + run.get("height") > 100
 
-good_runs = runs.filter(predicate=is_large_image)
+good_runs = runs.filter(is_large_image)
 ```
 
 The double underscore notation (`__`) is particularly useful for accessing nested
@@ -140,7 +140,7 @@ complex_filter = runs.filter(
 # Chained filtering
 final_runs = runs.filter(model_type="transformer").filter(learning_rate=0.001)
 
-# Advanced filtering using predicate functions with callable defaults
+# Advanced filtering using matcher functions with callable defaults
 # This example filters runs based on learning rate efficiency (lr * batch_size)
 # Even if some runs are missing one parameter, the default logic provides values
 def has_efficient_lr(run: Run) -> bool:
@@ -148,11 +148,11 @@ def has_efficient_lr(run: Run) -> bool:
     batch_size = run.get("batch_size", default=lambda r: r.get("default_batch_size", 32))
     return lr * batch_size < 0.5
 
-# Apply the complex predicate
-efficient_runs = runs.filter(predicate=has_efficient_lr)
+# Apply the complex matcher
+efficient_runs = runs.filter(has_efficient_lr)
 ```
 
-The combination of predicate functions with callable defaults in `get` enables sophisticated
+The combination of matcher functions with callable defaults in `get` enables sophisticated
 filtering logic that can handle missing parameters and varied configuration schemas across
 different experiment runs.
 
