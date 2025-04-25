@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import product
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import pytest
@@ -22,14 +22,14 @@ class Run[C]:
     def __init__(self, cfg: C):
         self.cfg = cfg
 
-    def get(self, key: str, default: Any | Callable[[C], Any] | None = None) -> Any:
+    def get(self, key: str, default: Any | Callable[[Self], Any] | None = None) -> Any:
         if key == "run_id":
             return 0
         value = getattr(self.cfg, key, None)
         if value is not None:
             return value
         if callable(default):
-            return default(self.cfg)
+            return default(self)
         return default
 
 
@@ -37,8 +37,8 @@ class Run[C]:
 def rc():
     x = [1, 2, 3]
     y = ["a", "b", "c", "d"]
-    items = [Run(Config(x, y)) for x, y in product(x, y)]
-    return Collection(items, Run.get)
+    items = [Run[Config](Config(x, y)) for x, y in product(x, y)]
+    return Collection(items, Run[Config].get)
 
 
 type Rc = Collection[Run[Config]]
@@ -70,14 +70,14 @@ def test_getitem_slice(rc: Rc):
     rc = rc[:3]
     assert isinstance(rc, Collection)
     assert len(rc) == 3
-    assert rc._get(rc[0], "x") == 1
+    assert rc._get(rc[0], "x", None) == 1
 
 
 def test_getitem_iterable(rc: Rc):
     rc = rc[[2, 3]]
     assert isinstance(rc, Collection)
     assert len(rc) == 2
-    assert rc._get(rc[0], "y") == "c"
+    assert rc._get(rc[0], "y", None) == "c"
 
 
 def test_iter(rc: Rc):
@@ -87,7 +87,7 @@ def test_iter(rc: Rc):
 def test_filter(rc: Rc):
     rc = rc.filter(x=1)
     assert len(rc) == 4
-    assert rc._get(rc[0], "x") == 1
+    assert rc._get(rc[0], "x", None) == 1
     assert all(r.get("x") == 1 for r in rc)
 
 
@@ -159,7 +159,7 @@ def test_to_list_default(rc: Rc):
 
 
 def test_to_list_default_callable(rc: Rc):
-    x = rc.to_list("unknown", lambda cfg: cfg.x + 1)
+    x = rc.to_list("unknown", lambda run: run.cfg.x + 1)
     assert x == [2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
 
@@ -212,6 +212,14 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "run_id") == 0
 
 
+def test_to_frame_kwargs(rc: Rc):
+    df = rc.to_frame("x", "y", "run_id", z=lambda r: r.cfg.x + 1)
+    assert df.shape == (12, 4)
+    assert df.columns == ["x", "y", "run_id", "z"]
+    assert df.item(0, "z") == 2
+    assert df.item(-1, "z") == 4
+
+
 def test_group_by(rc: Rc):
     from hydraflow.core.group_by import GroupBy
 
@@ -220,8 +228,8 @@ def test_group_by(rc: Rc):
     assert len(gp) == 4
     assert len(gp["a"]) == 3
     rc = gp["b"]
-    assert rc._get(rc[0], "x") == 1
-    assert rc._get(rc[0], "y") == "b"
+    assert rc._get(rc[0], "x", None) == 1
+    assert rc._get(rc[0], "y", None) == "b"
 
 
 def test_group_by_multi(rc: Rc):
@@ -232,24 +240,24 @@ def test_group_by_multi(rc: Rc):
     assert len(gp) == 3
     assert len(gp[1, 0]) == 4
     rc = gp[3, 0]
-    assert rc._get(rc[0], "x") == 3
-    assert rc._get(rc[0], "run_id") == 0
+    assert rc._get(rc[0], "x", None) == 3
+    assert rc._get(rc[0], "run_id", None) == 0
 
 
 def test_to_hashable_list_config():
-    from hydraflow.core.run_collection import to_hashable
+    from hydraflow.core.collection import to_hashable
 
     assert to_hashable(ListConfig([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_ndarray():
-    from hydraflow.core.run_collection import to_hashable
+    from hydraflow.core.collection import to_hashable
 
     assert to_hashable(np.array([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_fallback_str():
-    from hydraflow.core.run_collection import to_hashable
+    from hydraflow.core.collection import to_hashable
 
     class C:
         __hash__ = None  # type: ignore

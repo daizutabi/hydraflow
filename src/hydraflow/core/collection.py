@@ -23,12 +23,12 @@ class Collection[I](Sequence[I]):
     """A collection of items that implements the Sequence protocol."""
 
     _items: list[I]
-    _get: Callable[..., Any]
+    _get: Callable[[I, str, Any | Callable[[I], Any]], Any]
 
     def __init__(
         self,
         items: Iterable[I],
-        get: Callable[[I, str], Any] | Callable[[I, str, Any], Any] | None = None,
+        get: Callable[[I, str, Any | Callable[[I], Any]], Any] | None = None,
     ) -> None:
         self._items = list(items)
         self._get = get or getattr
@@ -101,10 +101,10 @@ class Collection[I](Sequence[I]):
             if callable(c):
                 items = [i for i in items if c(i)]
             else:
-                items = [i for i in items if matches(self._get(i, c[0]), c[1])]
+                items = [i for i in items if matches(self._get(i, c[0], MISSING), c[1])]
 
         for key, value in kwargs.items():
-            items = [i for i in items if matches(self._get(i, key), value)]
+            items = [i for i in items if matches(self._get(i, key, MISSING), value)]
 
         return self.__class__(items, self._get)
 
@@ -227,12 +227,18 @@ class Collection[I](Sequence[I]):
 
         raise _value_error()
 
-    def to_list(self, key: str, default: Any = MISSING) -> list[Any]:
+    def to_list(
+        self,
+        key: str,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> list[Any]:
         """Extract a list of values for a specific key from all items.
 
         Args:
             key: The key to extract from each item.
             default: The default value to return if the key is not found.
+                If a callable, it will be called with the item
+                and the value returned will be used as the default.
 
         Returns:
             list[Any]: A list containing the values for the
@@ -241,7 +247,11 @@ class Collection[I](Sequence[I]):
         """
         return [self._get(i, key, default) for i in self]
 
-    def to_numpy(self, key: str, default: Any = MISSING) -> NDArray:
+    def to_numpy(
+        self,
+        key: str,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> NDArray:
         """Extract values for a specific key from all items as a NumPy array.
 
         Args:
@@ -280,7 +290,11 @@ class Collection[I](Sequence[I]):
         """
         return Series(name or key, self.to_list(key, default))
 
-    def unique(self, key: str, default: Any = MISSING) -> NDArray:
+    def unique(
+        self,
+        key: str,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> NDArray:
         """Get the unique values for a specific key across all items.
 
         Args:
@@ -296,7 +310,11 @@ class Collection[I](Sequence[I]):
         """
         return np.unique(self.to_numpy(key, default), axis=0)
 
-    def n_unique(self, key: str, default: Any = MISSING) -> int:
+    def n_unique(
+        self,
+        key: str,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> int:
         """Count the number of unique values for a specific key across all items.
 
         Args:
@@ -335,7 +353,12 @@ class Collection[I](Sequence[I]):
 
         return self[index]
 
-    def to_frame(self, *keys: str, defaults: dict[str, Any] | None = None) -> DataFrame:
+    def to_frame(
+        self,
+        *keys: str,
+        defaults: dict[str, Any | Callable[[I], Any]] | None = None,
+        **kwargs: Callable[[I], Any],
+    ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
 
         Args:
@@ -344,6 +367,8 @@ class Collection[I](Sequence[I]):
                 values for the keys. If a callable, it will be called with
                 the item and the value returned will be used as the
                 default.
+            **kwargs (Callable[[I], Any]): Additional columns to compute
+                using callables that take an item and return a value.
 
         Returns:
             DataFrame: A Polars DataFrame containing the specified data
@@ -353,7 +378,14 @@ class Collection[I](Sequence[I]):
         if defaults is None:
             defaults = {}
 
-        return DataFrame({k: self.to_list(k, defaults.get(k, MISSING)) for k in keys})
+        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys}
+        df = DataFrame(data)
+
+        if not kwargs:
+            return df
+
+        columns = [Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
+        return df.with_columns(*columns)
 
     def group_by(self, *by: str) -> GroupBy[Self]:
         """Group items by one or more keys and return a GroupBy instance.
@@ -380,7 +412,7 @@ class Collection[I](Sequence[I]):
         groups: dict[Any, Self] = {}
 
         for item in self:
-            keys = [to_hashable(self._get(item, key)) for key in by]
+            keys = [to_hashable(self._get(item, key, MISSING)) for key in by]
             key = keys[0] if len(by) == 1 else tuple(keys)
 
             if key not in groups:
