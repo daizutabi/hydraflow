@@ -122,7 +122,7 @@ class Run[C, I = None]:
     def load(  # type: ignore
         cls,
         run_dir: str | Path,
-        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
     ) -> Self: ...
 
     @overload
@@ -130,7 +130,7 @@ class Run[C, I = None]:
     def load(
         cls,
         run_dir: Iterable[str | Path],
-        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
         *,
         n_jobs: int = 0,
     ) -> RunCollection[Self, I]: ...
@@ -139,7 +139,7 @@ class Run[C, I = None]:
     def load(
         cls,
         run_dir: str | Path | Iterable[str | Path],
-        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] = lambda _: None,  # type: ignore
+        impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
         *,
         n_jobs: int = 0,
     ) -> Self | RunCollection[Self, I]:
