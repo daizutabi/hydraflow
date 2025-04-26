@@ -173,7 +173,7 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
         """Get the implementation objects for all runs in the collection.
 
         Returns:
-            Collection[Any]: A collection of implementation objects for all runs.
+            Collection[I]: A collection of implementation objects for all runs.
 
         """
         return Collection(run.impl for run in self)
