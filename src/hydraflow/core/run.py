@@ -375,6 +375,31 @@ class Run[C, I = None]:
         """
         return self.info.run_dir / "artifacts" / relative_path
 
+    def iterdir(self, relative_dir: str = "") -> Iterator[Path]:
+        """Iterate over the artifact directories for the run.
+
+        Args:
+            relative_dir (str): The relative directory to iterate over.
+
+        Yields:
+            Path: The artifact directory for the run.
+
+        """
+        yield from self.path(relative_dir).iterdir()
+
+    def glob(self, pattern: str, relative_dir: str = "") -> Iterator[Path]:
+        """Glob the artifact directories for the run.
+
+        Args:
+            pattern (str): The pattern to glob.
+            relative_dir (str): The relative directory to glob.
+
+        Yields:
+            Path: The existing artifact paths that match the pattern.
+
+        """
+        yield from self.path(relative_dir).glob(pattern)
+
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
     items = []
