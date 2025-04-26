@@ -337,15 +337,43 @@ class Run[C, I = None]:
         return standard_dict
 
     @contextmanager
-    def chdir(self) -> Iterator[Path]:
-        artifacts_dir = self.info.run_dir / "artifacts"
+    def chdir(self, relative_dir: str = "") -> Iterator[Path]:
+        """Change the current working directory to the artifact directory.
+
+        This context manager changes the current working directory
+        to the artifact directory of the run.
+        It ensures that the directory is changed back
+        to the original directory after the context is exited.
+
+        Args:
+            relative_dir (str): The relative directory to the artifact
+                directory. Defaults to an empty string.
+
+        Yields:
+            Path: The artifact directory of the run.
+
+        """
+        artifacts_dir = self.info.run_dir / "artifacts" / relative_dir
         current_dir = Path.cwd()
 
         try:
             os.chdir(artifacts_dir)
             yield artifacts_dir
+
         finally:
             os.chdir(current_dir)
+
+    def path(self, relative_path: str = "") -> Path:
+        """Return the path relative to the artifact directory.
+
+        Args:
+            relative_path (str): The relative path to the artifact directory.
+
+        Returns:
+            Path: The path relative to the artifact directory.
+
+        """
+        return self.info.run_dir / "artifacts" / relative_path
 
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:

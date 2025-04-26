@@ -131,9 +131,8 @@ def chdir_artifact(run: Run) -> Iterator[Path]:
     current_dir = Path.cwd()
     artifact_dir = get_artifact_dir(run)
 
-    os.chdir(artifact_dir)
-
     try:
+        os.chdir(artifact_dir)
         yield artifact_dir
 
     finally:

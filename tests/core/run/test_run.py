@@ -272,3 +272,10 @@ def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]):
     assert cfg.name == "abc"  # type: ignore
     assert cfg.size.width == 1  # type: ignore
     assert cfg.size.height == 3  # type: ignore
+
+
+def test_chdir(run_impl_config: Run[Dummy, ImplConfig]):
+    run = run_impl_config
+    with run.chdir():
+        Path("a.txt").write_text("a")
+    assert run.path("a.txt").read_text() == "a"
