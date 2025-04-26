@@ -321,12 +321,6 @@ model_groups = runs.group_by("model_type")
 # Group by nested parameter using dot notation
 architecture_groups = runs.group_by("model.architecture")
 
-# Group by and include Run objects in the result DataFrame
-model_groups_df = runs.group_by("model_type", "run")
-
-# Include multiple object types in the result
-grouped_df = runs.group_by("model_type", "batch_size", "run", "cfg")
-
 # Iterate through groups
 for model_type, group in model_groups.items():
     print(f"Model type: {model_type}, Runs: {len(group)}")
@@ -357,8 +351,6 @@ The `group_by` method returns a `GroupBy` instance that maps keys to `RunCollect
 - Implement multi-stage analysis workflows where you need to maintain the full run information at each step
 
 To perform aggregations on the grouped data, use the `agg` method on the GroupBy instance. This transforms the grouped data into a DataFrame with aggregated results. You can define multiple aggregation functions to compute different metrics across each group.
-
-When special object keys (`"run"`, `"cfg"`, `"impl"`) are included in the `group_by` call, it returns a DataFrame with those objects included as columns, making it easy to access the original objects for further processing.
 
 This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
 

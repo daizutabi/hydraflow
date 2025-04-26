@@ -20,10 +20,13 @@ Example:
     # Sort runs by specific keys
     sorted_runs = runs.sort("metrics.accuracy", reverse=True)
 
-    # Group runs by model type and compute aggregates
-    grouped = runs.group_by("model.type",
-                           avg_acc=lambda rc: sum(r.get("metrics.accuracy")
-                                                 for r in rc) / len(rc))
+    # Group runs by model type
+    grouped = runs.group_by("model.type")
+
+    # Compute aggregates on grouped data
+    metrics_df = grouped.agg(
+        avg_acc=lambda rc: sum(r.get("metrics.accuracy") for r in rc) / len(rc)
+    )
 
     # Convert runs to a DataFrame for analysis
     df = runs.to_frame("run_id", "model.type", "metrics.accuracy")
@@ -178,26 +181,35 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
     def iterdir(self, relative_dir: str = "") -> Iterator[Path]:
         """Iterate over the artifact directories for all runs in the collection.
 
-        Args:
-            relative_dir (str): The relative directory to iterate over.
+        This method yields all files and directories in the specified
+        relative directory for each run in the collection.
 
-        Returns:
-            Iterator[Path]: An iterator over the artifact directories for all runs.
+        Args:
+            relative_dir (str): The relative directory within the artifacts
+                directory to iterate over.
+
+        Yields:
+            Path: Each path in the specified directory for each run
+            in the collection.
 
         """
         for run in self:
-            yield from run.iterdir(relative_dir)
+            yield from run.path(relative_dir).iterdir()
 
     def glob(self, pattern: str, relative_dir: str = "") -> Iterator[Path]:
         """Glob the artifact directories for all runs in the collection.
 
-        Args:
-            pattern (str): The pattern to glob.
-            relative_dir (str): The relative directory to glob.
+        This method yields all paths matching the specified pattern
+        in the relative directory for each run in the collection.
 
-        Returns:
-            Iterator[Path]: An iterator over the artifact directories for all runs.
+        Args:
+            pattern (str): The glob pattern to match files or directories.
+            relative_dir (str): The relative directory within the artifacts
+                directory to search in.
+
+        Yields:
+            Path: Each path matching the pattern for each run in the collection.
 
         """
         for run in self:
-            yield from run.glob(pattern, relative_dir)
+            yield from run.path(relative_dir).glob(pattern)
