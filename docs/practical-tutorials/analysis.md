@@ -220,7 +220,7 @@ You can perform basic operations on a collection:
 
 ### Filtering Runs
 
-The [`filter`][hydraflow.core.run_collection.RunCollection.filter] method lets you select runs based on various criteria:
+The [`filter`][hydraflow.core.collection.Collection.filter] method lets you select runs based on various criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(width=400))
@@ -246,7 +246,7 @@ You can even use custom filter functions:
 
 ### Finding Specific Runs
 
-The [`get`][hydraflow.core.run_collection.RunCollection.get] method returns a single run matching your criteria:
+The [`get`][hydraflow.core.collection.Collection.get] method returns a single run matching your criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run = rc.get(width=250, height=(100, 200))
