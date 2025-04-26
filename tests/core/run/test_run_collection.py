@@ -233,6 +233,16 @@ def test_sort_multi(rc: Rc):
     assert r.get("name") == "def"
 
 
+def test_map(rc: Rc):
+    def func(r: Run[Config, Impl], x: int, y: int = 2) -> int:
+        return r.cfg.size.width + x + y
+
+    x = list(rc.map(func, 10, 20))
+    assert x == [40, 50, 60] * 4
+    x = rc.pmap(func, x=10, y=20, backend="threading")
+    assert x == [40, 50, 60] * 4
+
+
 def test_to_frame(rc: Rc):
     df = rc.to_frame("size.width", "count", "run_id")
     assert df.shape == (12, 3)
@@ -243,6 +253,15 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "size.width") == 30
     assert df.item(-1, "count") == 2
     assert df.item(-1, "run_id") == "30"
+
+
+def test_to_frame_kwargs(rc: Rc):
+    def func(r: Run[Config, Impl]) -> int:
+        return r.cfg.count
+
+    df = rc.to_frame("count", func=func)
+    assert df.shape == (12, 2)
+    assert df["count"].to_list() == df["func"].to_list()
 
 
 def test_group_by(rc: Rc):
