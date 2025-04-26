@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import MISSING
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Concatenate, overload
 
 import numpy as np
+from joblib.parallel import Parallel, delayed
 from omegaconf import ListConfig, OmegaConf
 from polars import DataFrame, Series
 
@@ -377,6 +378,77 @@ class Collection[I](Sequence[I]):
             index = index[::-1]
 
         return self[index]
+
+    def map[**P, R](
+        self,
+        function: Callable[Concatenate[I, P], R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Iterator[R]:
+        """Apply a function to each item and return an iterator of results.
+
+        This is a memory-efficient mapping operation that lazily evaluates results.
+        Ideal for large collections where memory usage is a concern.
+
+        Args:
+            function: Function to apply to each item. The item is passed
+                as the first argument.
+            *args: Additional positional arguments to pass to the function.
+            **kwargs: Additional keyword arguments to pass to the function.
+
+        Returns:
+            Iterator[R]: An iterator of the function's results.
+
+        Examples:
+            ```python
+            # Process results one at a time
+            for result in collection.map(process_item, additional_arg):
+                handle_result(result)
+
+            # Convert to list if needed
+            results = list(collection.map(transform_item))
+            ```
+
+        """
+        yield from (function(i, *args, **kwargs) for i in self)
+
+    def pmap[**P, R](
+        self,
+        function: Callable[Concatenate[I, P], R],
+        n_jobs: int = -1,
+        backend: str = "multiprocessing",
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> list[R]:
+        """Apply a function to each item in parallel and return a list of results.
+
+        This method processes items concurrently for improved performance on
+        CPU-bound or I/O-bound operations, depending on the backend.
+
+        Args:
+            function: Function to apply to each item. The item is passed
+                as the first argument.
+            n_jobs (int): Number of jobs to run in parallel. -1 means using all
+                processors.
+            backend (str): Parallelization backend.
+            *args: Additional positional arguments to pass to the function.
+            **kwargs: Additional keyword arguments to pass to the function.
+
+        Returns:
+            list[R]: A list containing all results of the function applications.
+
+        Examples:
+            ```python
+            # Process all items in parallel using all cores
+            results = collection.pmap(heavy_computation)
+
+            # Specify number of parallel jobs and backend
+            results = collection.pmap(process_files, n_jobs=4, backend="threading")
+            ```
+
+        """
+        parallel = Parallel(n_jobs=n_jobs, backend=backend, return_as="list")
+        return parallel(delayed(function)(i, *args, **kwargs) for i in self)  # type: ignore
 
     def to_frame(
         self,
