@@ -279,3 +279,17 @@ def test_chdir(run_impl_config: Run[Dummy, ImplConfig]):
     with run.chdir():
         Path("a.txt").write_text("a")
     assert run.path("a.txt").read_text() == "a"
+
+
+@pytest.fixture(scope="module")
+def rc(results):
+    run_dir: Path = results[0][0].parent
+    return Run[Dummy, ImplConfig].load([run_dir, run_dir], ImplConfig)
+
+
+def test_iterdir_glob(rc: RunCollection[Run[Dummy, ImplConfig]]):
+    for run in rc:
+        run.path("a.txt").write_text("a")
+
+    assert len(list(rc.iterdir())) == 6
+    assert len(list(rc.glob("*.txt"))) == 2

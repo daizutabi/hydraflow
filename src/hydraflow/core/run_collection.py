@@ -44,7 +44,8 @@ from .collection import Collection
 from .run import Run
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Iterator
+    from pathlib import Path
     from typing import Any, Self
 
 
@@ -166,10 +167,37 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
 
     @cached_property
     def impls(self) -> Collection[I]:
-        """Get the implementation object for all runs in the collection.
+        """Get the implementation objects for all runs in the collection.
 
         Returns:
             Collection[Any]: A collection of implementation objects for all runs.
 
         """
         return Collection(run.impl for run in self)
+
+    def iterdir(self, relative_dir: str = "") -> Iterator[Path]:
+        """Iterate over the artifact directories for all runs in the collection.
+
+        Args:
+            relative_dir (str): The relative directory to iterate over.
+
+        Returns:
+            Iterator[Path]: An iterator over the artifact directories for all runs.
+
+        """
+        for run in self:
+            yield from run.iterdir(relative_dir)
+
+    def glob(self, pattern: str, relative_dir: str = "") -> Iterator[Path]:
+        """Glob the artifact directories for all runs in the collection.
+
+        Args:
+            pattern (str): The pattern to glob.
+            relative_dir (str): The relative directory to glob.
+
+        Returns:
+            Iterator[Path]: An iterator over the artifact directories for all runs.
+
+        """
+        for run in self:
+            yield from run.glob(pattern, relative_dir)
