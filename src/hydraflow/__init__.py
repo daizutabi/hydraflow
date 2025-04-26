@@ -1,5 +1,6 @@
 """Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
+from hydraflow.core.collection import Collection
 from hydraflow.core.context import chdir_artifact, log_run, start_run
 from hydraflow.core.io import (
     get_artifact_dir,
@@ -14,6 +15,7 @@ from hydraflow.core.run import Run
 from hydraflow.core.run_collection import RunCollection
 
 __all__ = [
+    "Collection",
     "Run",
     "RunCollection",
     "chdir_artifact",
