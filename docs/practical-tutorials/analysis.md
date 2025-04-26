@@ -304,7 +304,8 @@ You can group by multiple keys:
 ...     print(key, group)
 ```
 
-Adding aggregation functions using the `agg` method transforms the result into a DataFrame:
+Adding aggregation functions using the [`agg`][hydraflow.core.collection.Collection.agg]
+method transforms the result into a DataFrame:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> grouped = rc.group_by("width")
@@ -322,7 +323,8 @@ In this tutorial, you've learned how to:
 4. Filter, group, and analyze collections of runs
 5. Convert run data to DataFrames for advanced analysis
 
-These capabilities enable you to efficiently analyze your experiments and extract valuable insights from your machine learning workflows.
+These capabilities enable you to efficiently analyze your experiments and extract
+valuable insights from your machine learning workflows.
 
 ## Next Steps
 
