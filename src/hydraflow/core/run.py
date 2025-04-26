@@ -3,7 +3,7 @@
 This module provides the Run class, which represents an MLflow
 Run in HydraFlow. A Run contains three main components:
 
-1. info: Information about the run, such as run directory,
+1. info: Information about the run, which includes the run directory,
    run ID, and job name.
 2. cfg: Configuration loaded from the Hydra configuration file.
 3. impl: Implementation instance created by the provided
@@ -23,7 +23,9 @@ behavior based on the run's configuration.
 from __future__ import annotations
 
 import inspect
+import os
 from collections.abc import Callable, Iterable
+from contextlib import contextmanager
 from dataclasses import MISSING
 from functools import cached_property
 from pathlib import Path
@@ -34,6 +36,7 @@ from omegaconf import DictConfig, OmegaConf
 from .run_info import RunInfo
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Any, Self
 
     from .run_collection import RunCollection
@@ -149,11 +152,11 @@ class Run[C, I = None]:
             run_dir (str | Path | Iterable[str | Path]): The directory where the
                 MLflow runs are stored, either as a string, a Path instance,
                 or an iterable of them.
-            impl_factory (Callable[[Path], I] | Callable[[Path, C], I]): A factory
-                function that creates the implementation instance. It can accept
-                either just the artifacts directory path, or both the path and
-                the configuration instance. Defaults to a function that returns
-                None.
+            impl_factory (Callable[[Path], I] | Callable[[Path, C], I] | None):
+                A factory function that creates the implementation instance. It
+                can accept either just the artifacts directory path, or both the
+                path and the configuration instance. Defaults to None, in which
+                case a function that returns None is used.
             n_jobs (int): The number of parallel jobs. If 0 (default), runs
                 sequentially. If -1, uses all available CPU cores.
 
@@ -284,10 +287,11 @@ class Run[C, I = None]:
 
         Note:
             The search order for keys is:
-            1. Configuration (cfg)
-            2. Implementation (impl)
-            3. Run information (info)
-            4. Run object itself (self)
+
+            1. Configuration (`cfg`)
+            2. Implementation (`impl`)
+            3. Run information (`info`)
+            4. Run object itself (`self`)
 
         """
         key = key.replace("__", ".")
@@ -298,7 +302,7 @@ class Run[C, I = None]:
 
         for attr in [self.impl, self.info, self]:
             value = getattr(attr, key, MISSING)
-            if value is not MISSING:
+            if value is not MISSING and not callable(value):
                 return value
 
         if default is not MISSING:
@@ -331,6 +335,17 @@ class Run[C, I = None]:
             return _flatten_dict(standard_dict)
 
         return standard_dict
+
+    @contextmanager
+    def chdir(self) -> Iterator[Path]:
+        artifacts_dir = self.info.run_dir / "artifacts"
+        current_dir = Path.cwd()
+
+        try:
+            os.chdir(artifacts_dir)
+            yield artifacts_dir
+        finally:
+            os.chdir(current_dir)
 
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:

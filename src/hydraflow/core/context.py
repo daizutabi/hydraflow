@@ -128,7 +128,7 @@ def chdir_artifact(run: Run) -> Iterator[Path]:
         run (Run | None): The run to get the artifact directory from.
 
     """
-    curdir = Path.cwd()
+    current_dir = Path.cwd()
     artifact_dir = get_artifact_dir(run)
 
     os.chdir(artifact_dir)
@@ -137,4 +137,4 @@ def chdir_artifact(run: Run) -> Iterator[Path]:
         yield artifact_dir
 
     finally:
-        os.chdir(curdir)
+        os.chdir(current_dir)
