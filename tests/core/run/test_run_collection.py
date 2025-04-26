@@ -255,6 +255,15 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "run_id") == "30"
 
 
+def test_to_frame_kwargs(rc: Rc):
+    def func(r: Run[Config, Impl]) -> int:
+        return r.cfg.count
+
+    df = rc.to_frame("count", func=func)
+    assert df.shape == (12, 2)
+    assert df["count"].to_list() == df["func"].to_list()
+
+
 def test_group_by(rc: Rc):
     from hydraflow.core.group_by import GroupBy
 

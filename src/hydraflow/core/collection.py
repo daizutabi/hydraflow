@@ -481,7 +481,7 @@ class Collection[I](Sequence[I]):
         if not kwargs:
             return df
 
-        columns = [Series(k, [v(r) for r in self]) for k, v in kwargs.items()]
+        columns = [Series(k, self.map(v)) for k, v in kwargs.items()]
         return df.with_columns(*columns)
 
     def group_by(self, *by: str) -> GroupBy[Self, I]:
