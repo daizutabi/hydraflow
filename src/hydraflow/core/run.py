@@ -216,9 +216,7 @@ class Run[C, I = None]:
                 (can use dot notation like "section.subsection.param"),
                 or a tuple of strings to set multiple related configuration
                 values at once.
-            value: The value to set.
-                This can be:
-
+            value: The value to set. This can be:
                 - For string keys: Any value, or a callable that returns
                   a value
                 - For tuple keys: An iterable with the same length as the
@@ -264,9 +262,7 @@ class Run[C, I = None]:
 
         Args:
             key: The key to look for. Can use dot notation for
-                nested keys in configuration.
-                Special keys:
-
+                nested keys in configuration. Special keys:
                 - "cfg": Returns the configuration object
                 - "impl": Returns the implementation object
                 - "info": Returns the run information object

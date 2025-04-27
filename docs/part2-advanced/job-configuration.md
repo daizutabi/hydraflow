@@ -64,7 +64,8 @@ The specified function will be imported and called with the parameters.
 
 ### `submit`
 
-The `submit` command collects all parameter combinations into a text file and passes this file to the specified command:
+The `submit` command collects all parameter combinations into a text
+file and passes this file to the specified command:
 
 ```yaml
 jobs:
@@ -91,7 +92,9 @@ The key difference between `run` and `submit`:
 - `run`: Executes the command once per parameter combination
 - `submit`: Executes the command once, with all parameter combinations provided in a file
 
-This gives you complete flexibility in how parameter combinations are processed. Your handler script can implement any logic - from simple sequential processing to complex distributed execution across a cluster.
+This gives you complete flexibility in how parameter combinations are
+processed. Your handler script can implement any logic - from simple
+sequential processing to complex distributed execution across a cluster.
 
 ## Parameter Sets
 
@@ -214,14 +217,18 @@ jobs:
         add: hydra/launcher=submitit hydra.launcher.submitit.cpus_per_task=8
 ```
 
-When a set has its own `add` parameter, it is merged with the job-level `add` parameter.
-If the same parameter key exists in both the job-level and set-level `add`, the set-level value takes precedence.
+When a set has its own `add` parameter, it is merged with
+the job-level `add` parameter.
+If the same parameter key exists in both the job-level and set-level
+`add`, the set-level value takes precedence.
 
 For example, with the configuration above:
+
 - The first set uses: `hydra/launcher=joblib hydra.launcher.n_jobs=2`
 - The second set uses: `hydra/launcher=submitit hydra.launcher.n_jobs=2 hydra.launcher.submitit.cpus_per_task=8`
 
-Notice how `hydra/launcher` is overridden by the set-level value, while `hydra.launcher.n_jobs` from the job-level is retained.
+Notice how `hydra/launcher` is overridden by the set-level value,
+while `hydra.launcher.n_jobs` from the job-level is retained.
 
 This behavior allows you to:
 
@@ -229,11 +236,13 @@ This behavior allows you to:
 2. Override or add specific parameters at the set level
 3. Keep all non-conflicting parameters from both levels
 
-This merging behavior makes it easy to maintain common configuration options while customizing specific aspects for different parameter sets.
+This merging behavior makes it easy to maintain common configuration
+options while customizing specific aspects for different parameter sets.
 
 ## Summary
 
-HydraFlow's job configuration system provides a powerful way to define and manage complex parameter sweeps:
+HydraFlow's job configuration system provides a powerful way to define
+and manage complex parameter sweeps:
 
 1. **Execution Commands**:
 

@@ -135,7 +135,10 @@ This default behavior improves efficiency by:
 
 ## Automatic Skipping of Completed Runs
 
-HydraFlow automatically skips runs that have already completed successfully. This is especially valuable in environments where jobs are automatically restarted after preemption. Without requiring any additional configuration, HydraFlow will:
+HydraFlow automatically skips runs that have already completed successfully.
+This is especially valuable in environments where jobs are automatically
+restarted after preemption. Without requiring any additional configuration,
+HydraFlow will:
 
 1. Identify already completed runs with the same configuration
 2. Skip re-execution of those runs
@@ -161,7 +164,9 @@ This automatic skipping behavior:
 
 ## Advanced Features
 
-The `hydraflow.main` decorator supports several keyword arguments that enhance its functionality. All these options are set to `False` by default and must be explicitly enabled when needed:
+The `hydraflow.main` decorator supports several keyword arguments that
+enhance its functionality. All these options are set to `False` by
+default and must be explicitly enabled when needed:
 
 ### Working Directory Management (`chdir`)
 
@@ -187,7 +192,8 @@ This option is beneficial when:
 
 ### Forcing New Runs (`force_new_run`)
 
-Override the default run identification and reuse behavior by always creating a new run, even when identical configurations exist:
+Override the default run identification and reuse behavior by always
+creating a new run, even when identical configurations exist:
 
 ```python
 @hydraflow.main(Config, force_new_run=True)
@@ -206,7 +212,8 @@ This option is useful when:
 
 ### Rerunning Finished Experiments (`rerun_finished`)
 
-Override the automatic skipping of completed runs by explicitly allowing rerunning of experiments that have already finished:
+Override the automatic skipping of completed runs by explicitly
+allowing rerunning of experiments that have already finished:
 
 ```python
 @hydraflow.main(Config, rerun_finished=True)

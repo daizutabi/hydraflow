@@ -1,6 +1,7 @@
 # Automating Complex Workflows
 
-This tutorial demonstrates how to use HydraFlow's workflow automation capabilities to define, manage, and execute complex experiment workflows.
+This tutorial demonstrates how to use HydraFlow's workflow automation
+capabilities to define, manage, and execute complex experiment workflows.
 
 ```bash exec="1" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
@@ -10,7 +11,8 @@ rm -rf mlruns outputs multirun __pycache__
 
 Before you begin this tutorial, you should:
 
-1. Understand basic HydraFlow applications (from the [Creating Your First Application](applications.md) tutorial)
+1. Understand basic HydraFlow applications (from the
+   [Creating Your First Application](applications.md) tutorial)
 2. Have a basic understanding of YAML configuration files
 
 ## Project Structure
@@ -80,7 +82,8 @@ From the dry run output, we can observe:
     - `hydra.job.name`: The name of the job defined in hydraflow.yaml
     - `hydra.sweep.dir`: A unique but time-ordered directory for each job created by HydraFlow
 
-Standard Hydra creates directories based on the current date and time, which may cause duplication during parallel execution.
+Standard Hydra creates directories based on the current date
+and time, which may cause duplication during parallel execution.
 HydraFlow solves this problem by creating unique, time-ordered directories for each job.
 
 ## Running Sequential Jobs
@@ -247,6 +250,3 @@ For more detailed information, refer to:
 - [Part 1: Running Applications](../part1-applications/index.md)
 - [Part 2: Automating Workflows](../part2-advanced/index.md)
 - [Part 3: Analyzing Results](../part3-analysis/index.md)
-
-- d
-    - d

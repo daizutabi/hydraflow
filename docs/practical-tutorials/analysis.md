@@ -1,6 +1,7 @@
 # Analyzing Experiment Results
 
-This tutorial demonstrates how to use HydraFlow's powerful analysis capabilities to work with your experiment results.
+This tutorial demonstrates how to use HydraFlow's powerful analysis
+capabilities to work with your experiment results.
 
 ```bash exec="1" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
@@ -10,14 +11,17 @@ rm -rf mlruns outputs multirun __pycache__
 
 Before you begin this tutorial, you should:
 
-1. Understand the basic structure of a HydraFlow application (from the [Basic Application](applications.md) tutorial)
-2. Be familiar with the concept of job definitions (from the [Automated Workflows](advanced.md) tutorial)
+1. Understand the basic structure of a HydraFlow application
+   (from the [Basic Application](applications.md) tutorial)
+2. Be familiar with the concept of job definitions
+   (from the [Automated Workflows](advanced.md) tutorial)
 
 ## Project Setup
 
-We'll start by running several experiments that we can analyze. We'll execute the three jobs defined in the [Automated Workflows](advanced.md) tutorial:
+We'll start by running several experiments that we can analyze.
+We'll execute the three jobs defined in the [Automated Workflows](advanced.md) tutorial:
 
-```console exec="1" source="tabbed-left" workdir="examples" result="ansi" tabs="Input|Output"
+```console exec="1" source="tabbed-left" workdir="examples" result="nohighlight" tabs="Input|Output"
 $ hydraflow run job_sequential
 $ hydraflow run job_parallel
 $ hydraflow run job_submit
@@ -33,13 +37,15 @@ After running these commands, our project structure looks like this:
 $ tree -L 3 --dirsfirst --noreport
 ```
 
-The `mlruns` directory contains all our experiment data. Let's explore how to access and analyze this data using HydraFlow's API.
+The `mlruns` directory contains all our experiment data.
+Let's explore how to access and analyze this data using HydraFlow's API.
 
 ## Discovering Runs
 
 ### Finding Run Directories
 
-HydraFlow provides the [`iter_run_dirs`][hydraflow.iter_run_dirs] function to discover runs in your MLflow tracking directory:
+HydraFlow provides the [`iter_run_dirs`][hydraflow.iter_run_dirs]
+function to discover runs in your MLflow tracking directory:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> from hydraflow import iter_run_dirs
@@ -49,7 +55,8 @@ HydraFlow provides the [`iter_run_dirs`][hydraflow.iter_run_dirs] function to di
 ...     print(run_dir)
 ```
 
-This function finds all run directories in your MLflow tracking directory, making it easy to collect runs for analysis.
+This function finds all run directories in your MLflow tracking
+directory, making it easy to collect runs for analysis.
 
 ### Filtering by Experiment Name
 
@@ -72,7 +79,8 @@ As shown above, you can:
 
 ### Loading a Run
 
-The [`Run`][hydraflow.core.run.Run] class represents a single experiment run in HydraFlow:
+The [`Run`][hydraflow.core.run.Run] class represents a single
+experiment run in HydraFlow:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> from hydraflow import Run
@@ -83,7 +91,8 @@ The [`Run`][hydraflow.core.run.Run] class represents a single experiment run in 
 >>> print(type(run))
 ```
 
-You can also use the [`load`][hydraflow.core.run.Run.load] class method, which accepts both string paths and Path objects:
+You can also use the [`load`][hydraflow.core.run.Run.load]
+class method, which accepts both string paths and Path objects:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> Run.load(str(run_dir))
@@ -108,7 +117,8 @@ The configuration is available through the `cfg` attribute:
 
 ### Type-Safe Configuration Access
 
-For better IDE integration and type checking, you can specify the configuration type:
+For better IDE integration and type checking, you can
+specify the configuration type:
 
 ```python exec="1" source="console" session="results" workdir="examples"
 from dataclasses import dataclass
@@ -124,7 +134,8 @@ class Config:
 >>> print(run)
 ```
 
-When you use `Run[Config]`, your IDE will recognize `run.cfg` as having the specified type, enabling autocompletion and type checking.
+When you use `Run[Config]`, your IDE will recognize `run.cfg` as
+having the specified type, enabling autocompletion and type checking.
 
 ### Accessing Configuration Values
 
@@ -139,7 +150,8 @@ The `get` method provides a unified interface to access values from a run:
 
 ### Basic Implementation
 
-You can extend runs with custom implementation classes to add domain-specific functionality:
+You can extend runs with custom implementation classes to
+add domain-specific functionality:
 
 ```python exec="1" source="console" session="results" workdir="examples"
 from pathlib import Path
@@ -193,13 +205,15 @@ class Size:
 >>> print(run.impl.size)
 ```
 
-This allows you to define custom analysis methods that use both the run's artifacts and its configuration.
+This allows you to define custom analysis methods that use
+both the run's artifacts and its configuration.
 
 ## Working with Multiple Runs
 
 ### Creating a Run Collection
 
-The [`RunCollection`][hydraflow.core.run_collection.RunCollection] class helps you analyze multiple runs:
+The [`RunCollection`][hydraflow.core.run_collection.RunCollection]
+class helps you analyze multiple runs:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run_dirs = iter_run_dirs("mlruns")
@@ -207,7 +221,8 @@ The [`RunCollection`][hydraflow.core.run_collection.RunCollection] class helps y
 >>> print(rc)
 ```
 
-The `load` method automatically creates a `RunCollection` when given multiple run directories.
+The `load` method automatically creates a `RunCollection` when
+given multiple run directories.
 
 ### Basic Run Collection Operations
 
@@ -220,7 +235,8 @@ You can perform basic operations on a collection:
 
 ### Filtering Runs
 
-The [`filter`][hydraflow.core.collection.Collection.filter] method lets you select runs based on various criteria:
+The [`filter`][hydraflow.core.collection.Collection.filter] method
+lets you select runs based on various criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> print(rc.filter(width=400))
@@ -246,7 +262,8 @@ You can even use custom filter functions:
 
 ### Finding Specific Runs
 
-The [`get`][hydraflow.core.collection.Collection.get] method returns a single run matching your criteria:
+The [`get`][hydraflow.core.collection.Collection.get] method
+returns a single run matching your criteria:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> run = rc.get(width=250, height=(100, 200))
@@ -288,7 +305,8 @@ Or dictionaries for multiple named columns:
 
 ### Grouping Runs
 
-The [`group_by`][hydraflow.core.collection.Collection.group_by] method organizes runs by common attributes:
+The [`group_by`][hydraflow.core.collection.Collection.group_by]
+method organizes runs by common attributes:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
 >>> grouped = rc.group_by("width")
@@ -304,7 +322,8 @@ You can group by multiple keys:
 ...     print(key, group)
 ```
 
-Adding aggregation functions using the [`agg`][hydraflow.core.collection.Collection.agg]
+Adding aggregation functions using the
+[`agg`][hydraflow.core.group_by.GroupBy.agg]
 method transforms the result into a DataFrame:
 
 ```pycon exec="1" source="console" session="results" workdir="examples"
@@ -323,13 +342,16 @@ In this tutorial, you've learned how to:
 4. Filter, group, and analyze collections of runs
 5. Convert run data to DataFrames for advanced analysis
 
-These capabilities enable you to efficiently analyze your experiments and extract
-valuable insights from your machine learning workflows.
+These capabilities enable you to efficiently analyze your
+experiments and extract valuable insights from your machine
+learning workflows.
 
 ## Next Steps
 
 Now that you understand HydraFlow's analysis capabilities, you can:
 
-- Dive deeper into the [Run Class](../part3-analysis/run-class.md) and [Run Collection](../part3-analysis/run-collection.md) documentation
-- Explore advanced analysis techniques in the [Analyzing Results](../part3-analysis/index.md) section
+- Dive deeper into the [Run Class](../part3-analysis/run-class.md)
+  and [Run Collection](../part3-analysis/run-collection.md) documentation
+- Explore advanced analysis techniques in the
+  [Analyzing Results](../part3-analysis/index.md) section
 - Apply these analysis techniques to your own machine learning experiments

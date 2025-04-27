@@ -33,9 +33,12 @@ The main components of HydraFlow's analysis tools are:
 
 ## Practical Examples
 
-For hands-on examples of experiment analysis, check out our [Practical Tutorials](../practical-tutorials/index.md) section, specifically:
+For hands-on examples of experiment analysis, check out our
+[Practical Tutorials](../practical-tutorials/index.md) section, specifically:
 
-- [Analyzing Experiment Results](../practical-tutorials/analysis.md): A detailed tutorial demonstrating how to load, filter, group, and analyze experiment data using HydraFlow's APIs
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): A
+detailed tutorial demonstrating how to load, filter, group, and analyze
+experiment data using HydraFlow's APIs
 
 ## Basic Analysis Workflow
 
@@ -66,7 +69,8 @@ best_run = df.sort("accuracy", descending=True).first()
 
 ## Finding and Loading Runs
 
-HydraFlow provides utilities to easily find and load runs from your MLflow tracking directory:
+HydraFlow provides utilities to easily find and load runs from your
+MLflow tracking directory:
 
 ```python
 from hydraflow import Run
@@ -83,7 +87,8 @@ runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
 runs = Run.load(iter_run_dirs(tracking_dir, ["training_*", "finetuning_*"]))
 ```
 
-This approach makes it easy to gather all relevant runs for analysis without having to manually specify each run directory.
+This approach makes it easy to gather all relevant runs for analysis
+without having to manually specify each run directory.
 
 ## Type-Safe Analysis
 
@@ -137,7 +142,9 @@ model = run.impl.load_model()
 results = run.impl.analyze_performance()
 ```
 
-The analysis capabilities covered in Part 3 are designed to work seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md) and the advanced workflow automation from [Part 2](../part2-advanced/index.md).
+The analysis capabilities covered in Part 3 are designed to work
+seamlessly with the experiment definitions from [Part 1](../part1-applications/index.md)
+and the advanced workflow automation from [Part 2](../part2-advanced/index.md).
 
 ## What's Next
 

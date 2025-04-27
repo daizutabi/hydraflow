@@ -1,6 +1,8 @@
 # Practical Tutorials
 
-Welcome to the hands-on section of the HydraFlow documentation. These tutorials provide practical examples to help you understand how HydraFlow works in real-world scenarios.
+Welcome to the hands-on section of the HydraFlow documentation.
+These tutorials provide practical examples to help you understand
+how HydraFlow works in real-world scenarios.
 
 ## What You'll Learn
 
@@ -40,7 +42,8 @@ These tutorials are designed to be followed in sequence:
 
 </div>
 
-By working through these tutorials, you'll gain a practical understanding of HydraFlow's capabilities and how it can streamline your machine learning experiments.
+By working through these tutorials, you'll gain a practical understanding
+of HydraFlow's capabilities and how it can streamline your machine learning experiments.
 
 ## Next Steps
 

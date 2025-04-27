@@ -14,13 +14,18 @@ python train.py
 
 This will:
 
-1. Set up an MLflow experiment with the same name as the Hydra job name (using `mlflow.set_experiment`). If the experiment doesn't exist, it will be created automatically
+1. Set up an MLflow experiment with the same name as the Hydra job name
+    (using `mlflow.set_experiment`). If the experiment doesn't exist,
+    it will be created automatically
 2. Create a new MLflow run or reuse an existing one based on the configuration
 3. Save the Hydra configuration as an MLflow artifact
 4. Execute your function decorated with `@hydraflow.main`
 5. Save only `*.log` files from Hydra's output directory as MLflow artifacts
 
-Note that any other artifacts (models, data files, etc.) must be explicitly saved by your code using MLflow's logging functions. The `chdir` option in the `@hydraflow.main` decorator can help with this by changing the working directory to the run's artifact directory, making file operations more convenient.
+Note that any other artifacts (models, data files, etc.) must be explicitly
+saved by your code using MLflow's logging functions. The `chdir` option in
+the `@hydraflow.main` decorator can help with this by changing the working
+directory to the run's artifact directory, making file operations more convenient.
 
 ## Command-line Override Syntax
 
@@ -62,7 +67,8 @@ of the specified parameters (2 learning rates × 3 model types).
 
 ### Advanced Parameter Sweeps
 
-For more complex parameter spaces, HydraFlow provides an extended sweep syntax that goes beyond Hydra's basic capabilities:
+For more complex parameter spaces, HydraFlow provides an extended
+sweep syntax that goes beyond Hydra's basic capabilities:
 
 ```bash
 # Define numerical ranges with start:stop:step
@@ -75,11 +81,13 @@ python train.py -m learning_rate=1:5:m  # 0.001 to 0.005
 python train.py -m model=(cnn,transformer)_(small,large)
 ```
 
-See [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md) for a complete reference on these powerful features.
+See [Extended Sweep Syntax](../part2-advanced/sweep-syntax.md) for a
+complete reference on these powerful features.
 
 ### Managing Complex Experiment Workflows
 
-HydraFlow provides CLI tools to work with multirun mode more efficiently than using long command lines:
+HydraFlow provides CLI tools to work with multirun mode more efficiently
+than using long command lines:
 
 ```bash
 # Define jobs in hydraflow.yaml
@@ -94,11 +102,14 @@ jobs:
 hydraflow run train
 ```
 
-This approach helps you organize complex experiments, track execution history, and make experiments more reproducible. For details on these advanced capabilities, see [Job Configuration](../part2-advanced/job-configuration.md) in Part 2.
+This approach helps you organize complex experiments, track execution history,
+and make experiments more reproducible. For details on these advanced capabilities,
+see [Job Configuration](../part2-advanced/job-configuration.md) in Part 2.
 
 ## Output Organization
 
-By default, Hydra organizes outputs in the following directory structure for HydraFlow applications:
+By default, Hydra organizes outputs in the following directory structure
+for HydraFlow applications:
 
 ```
 ROOT_DIR/

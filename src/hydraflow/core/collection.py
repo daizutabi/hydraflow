@@ -565,9 +565,7 @@ def matches(value: Any, criterion: Any) -> bool:
 
     Args:
         value: The value to be compared with the criterion.
-        criterion: The criterion to match against.
-            Can be:
-
+        criterion: The criterion to match against. Can be:
             - A callable that takes the value and returns a boolean
             - A list or set to check membership
             - A tuple of length 2 to check range inclusion

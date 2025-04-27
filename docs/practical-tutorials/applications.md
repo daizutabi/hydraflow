@@ -1,6 +1,8 @@
 # Creating Your First HydraFlow Application
 
-This tutorial demonstrates how to create and run a basic HydraFlow application that integrates Hydra's configuration management with MLflow's experiment tracking.
+This tutorial demonstrates how to create and run a basic HydraFlow
+application that integrates Hydra's configuration management
+with MLflow's experiment tracking.
 
 ```bash exec="1" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
@@ -25,7 +27,8 @@ In this tutorial, we will only use the `example.py` file.
 
 ## Creating a Basic Application
 
-Let's create a simple HydraFlow application that defines a configuration class and tracks experiment parameters:
+Let's create a simple HydraFlow application that defines a
+configuration class and tracks experiment parameters:
 
 ```python title="example.py" linenums="1"
 --8<-- "examples/example.py"
@@ -43,7 +46,8 @@ Let's break down the essential parts of this application:
         height: int = 768
     ```
 
-    This class defines the structure and default values for our configuration parameters. Using Python's dataclass gives us type safety and clear structure.
+    This class defines the structure and default values for our configuration parameters.
+    Using Python's dataclass gives us type safety and clear structure.
 
 2. **Main Function**: The core of our application, decorated with `@hydraflow.main`
     ```python
@@ -67,7 +71,8 @@ The [`hydraflow.main`][hydraflow.main] decorator is where the magic happens:
 - It starts an MLflow run and passes it to your function
 - It stores all Hydra configuration and logs as MLflow artifacts
 
-This single decorator seamlessly connects Hydra's configuration capabilities with MLflow's experiment tracking.
+This single decorator seamlessly connects Hydra's configuration capabilities
+with MLflow's experiment tracking.
 
 ## Running the Application
 
@@ -107,13 +112,15 @@ The directory structure shows:
 
 ### Multi-run Mode (Parameter Sweeps)
 
-One of Hydra's most powerful features is the ability to run parameter sweeps. Let's try this by overriding our configuration parameters:
+One of Hydra's most powerful features is the ability to run parameter sweeps.
+Let's try this by overriding our configuration parameters:
 
 ```console exec="1" source="console" workdir="examples"
 $ python example.py -m width=400,600 height=100,200
 ```
 
-The `-m` flag (or `--multirun`) tells Hydra to run all combinations of the specified parameters. In this case, we'll run 4 combinations:
+The `-m` flag (or `--multirun`) tells Hydra to run all combinations of
+the specified parameters. In this case, we'll run 4 combinations:
 
 - width=400, height=100
 - width=400, height=200
@@ -126,11 +133,13 @@ Let's see the updated directory structure:
 $ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
 ```
 
-Notice that all runs are added to the same MLflow experiment, making it easy to compare results across parameter combinations.
+Notice that all runs are added to the same MLflow experiment, making it
+easy to compare results across parameter combinations.
 
 ## Cleanup
 
-With HydraFlow, all important data is stored in MLflow, so you can safely delete the Hydra output directories:
+With HydraFlow, all important data is stored in MLflow,
+so you can safely delete the Hydra output directories:
 
 ```console exec="1" source="console" workdir="examples"
 $ rm -rf outputs multirun
@@ -153,7 +162,9 @@ In this tutorial, you've learned how to:
 3. Run experiments with default and overridden parameters
 4. Perform parameter sweeps using Hydra's multi-run capabilities
 
-This basic pattern forms the foundation for all HydraFlow applications. As your machine learning workflows grow in complexity, you can build upon this foundation to create more sophisticated experiments.
+This basic pattern forms the foundation for all HydraFlow applications.
+As your machine learning workflows grow in complexity,
+you can build upon this foundation to create more sophisticated experiments.
 
 ## Next Steps
 

@@ -1,10 +1,13 @@
 # Automating Workflows
 
-This section covers advanced techniques for automating and structuring multiple experiments in HydraFlow. It provides tools for defining complex parameter spaces and reusable experiment definitions.
+This section covers advanced techniques for automating and structuring
+multiple experiments in HydraFlow. It provides tools for defining complex
+parameter spaces and reusable experiment definitions.
 
 ## Overview
 
-After creating your basic HydraFlow applications, the next step is to automate your experiment workflows. This includes:
+After creating your basic HydraFlow applications, the next step is to
+automate your experiment workflows. This includes:
 
 - Creating parameter sweeps across complex combinations
 - Defining reusable experiment configurations
@@ -14,20 +17,26 @@ After creating your basic HydraFlow applications, the next step is to automate y
 
 The main components for workflow automation in HydraFlow are:
 
-1. **Extended Sweep Syntax**: A powerful syntax for defining parameter spaces beyond simple comma-separated values.
-
-2. **Job Configuration**: A YAML-based definition system for creating reusable experiment workflows.
+1. **Extended Sweep Syntax**: A powerful syntax for defining parameter
+    spaces beyond simple comma-separated values.
+2. **Job Configuration**: A YAML-based definition system for creating
+    reusable experiment workflows.
 
 ## Practical Examples
 
-For hands-on examples of workflow automation, see our [Practical Tutorials](../practical-tutorials/index.md) section, specifically:
+For hands-on examples of workflow automation, see our
+[Practical Tutorials](../practical-tutorials/index.md) section, specifically:
 
-- [Automating Complex Workflows](../practical-tutorials/advanced.md): A tutorial that demonstrates how to use `hydraflow.yaml` to define and execute various types of workflows
-- [Analyzing Experiment Results](../practical-tutorials/analysis.md): Learn how to work with results from automated experiment runs
+- [Automating Complex Workflows](../practical-tutorials/advanced.md): A tutorial
+  that demonstrates how to use `hydraflow.yaml` to define and execute
+  various types of workflows
+- [Analyzing Experiment Results](../practical-tutorials/analysis.md): Learn
+  how to work with results from automated experiment runs
 
 ## Extended Sweep Syntax
 
-HydraFlow extends Hydra's sweep syntax to provide more powerful ways to define parameter spaces:
+HydraFlow extends Hydra's sweep syntax to provide more powerful ways
+to define parameter spaces:
 
 ```bash
 # Range of values (inclusive)
@@ -44,7 +53,8 @@ Learn more about these capabilities in [Sweep Syntax](sweep-syntax.md).
 
 ## Job Configuration
 
-For more complex experiment workflows, you can use HydraFlow's job configuration system:
+For more complex experiment workflows, you can use HydraFlow's job
+configuration system:
 
 ```yaml
 jobs:
@@ -61,7 +71,9 @@ jobs:
         all: test_data=validation
 ```
 
-This approach allows you to define reusable experiment definitions that can be executed with a single command. Learn more in [Job Configuration](job-configuration.md).
+This approach allows you to define reusable experiment definitions that
+can be executed with a single command. Learn more in
+[Job Configuration](job-configuration.md).
 
 ## Executing Workflows
 
@@ -82,7 +94,10 @@ hydraflow run train_models seed=123
 
 In the following pages, we'll explore workflow automation in detail:
 
-- [Sweep Syntax](sweep-syntax.md): Learn about HydraFlow's extended syntax for defining parameter spaces.
-- [Job Configuration](job-configuration.md): Discover how to create reusable job definitions for your experiments.
+- [Sweep Syntax](sweep-syntax.md): Learn about HydraFlow's extended
+  syntax for defining parameter spaces.
+- [Job Configuration](job-configuration.md): Discover how to create
+  reusable job definitions for your experiments.
 
-After automating your experiments, you'll want to analyze the results using the tools covered in [Part 3: Analyzing Results](../part3-analysis/index.md).
+After automating your experiments, you'll want to analyze the results
+using the tools covered in [Part 3: Analyzing Results](../part3-analysis/index.md).

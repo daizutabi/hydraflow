@@ -83,7 +83,9 @@ def train(run: Run, cfg: Config) -> None:
 
 ## Hydra Integration
 
-HydraFlow integrates closely with Hydra for configuration management. For detailed explanations of Hydra's capabilities, please refer to the [Hydra documentation](https://hydra.cc/docs/intro/).
+HydraFlow integrates closely with Hydra for configuration management.
+For detailed explanations of Hydra's capabilities, please refer to
+the [Hydra documentation](https://hydra.cc/docs/intro/).
 
 HydraFlow leverages the following Hydra features, but does not modify their behavior:
 
@@ -100,7 +102,9 @@ When using HydraFlow, remember that:
 2. HydraFlow automatically registers your top-level dataclass with Hydra
 3. `@hydraflow.main` sets up the connection between your dataclass and Hydra
 
-For advanced Hydra features and detailed usage examples, we recommend consulting the official Hydra documentation after you become familiar with the basic HydraFlow concepts.
+For advanced Hydra features and detailed usage examples, we recommend
+consulting the official Hydra documentation after you become familiar
+with the basic HydraFlow concepts.
 
 ## Best Practices
 

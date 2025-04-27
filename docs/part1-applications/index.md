@@ -55,7 +55,8 @@ if __name__ == "__main__":
 
 ## Practical Examples
 
-If you prefer learning by example, check out our [Practical Tutorials](../practical-tutorials/index.md) section, which includes:
+If you prefer learning by example, check out our
+[Practical Tutorials](../practical-tutorials/index.md) section, which includes:
 
 - [Creating Your First HydraFlow Application](../practical-tutorials/applications.md): A step-by-step guide to building a basic application
 - [Automating Complex Workflows](../practical-tutorials/advanced.md): How to define and execute complex experiment workflows

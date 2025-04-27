@@ -1,15 +1,20 @@
 # Core Concepts
 
-This page introduces the fundamental concepts of HydraFlow that form the foundation of the framework.
+This page introduces the fundamental concepts of HydraFlow that
+form the foundation of the framework.
 
 ## Design Principles
 
 HydraFlow is built on the following design principles:
 
-1. **Type Safety** - Utilizing Python dataclasses for configuration type checking and IDE support
-2. **Reproducibility** - Automatically tracking all experiment configurations for fully reproducible experiments
-3. **Workflow Integration** - Creating a cohesive workflow by integrating Hydra's configuration management with MLflow's experiment tracking
-4. **Analysis Capabilities** - Providing powerful APIs for easily analyzing experiment results
+1. **Type Safety** - Utilizing Python dataclasses for configuration
+    type checking and IDE support
+2. **Reproducibility** - Automatically tracking all experiment configurations
+    for fully reproducible experiments
+3. **Workflow Integration** - Creating a cohesive workflow by integrating
+    Hydra's configuration management with MLflow's experiment tracking
+4. **Analysis Capabilities** - Providing powerful APIs for easily
+    analyzing experiment results
 
 ## Key Components
 
@@ -17,7 +22,8 @@ HydraFlow consists of the following key components:
 
 ### Configuration Management
 
-HydraFlow uses a hierarchical configuration system based on OmegaConf and Hydra. This provides:
+HydraFlow uses a hierarchical configuration system based on
+OmegaConf and Hydra. This provides:
 
 - Type-safe configuration using Python dataclasses
 - Schema validation to ensure configuration correctness
@@ -36,11 +42,13 @@ class Config:
     epochs: int = 10
 ```
 
-This configuration class defines the structure and default values for your experiment, enabling type checking and auto-completion.
+This configuration class defines the structure and default values
+for your experiment, enabling type checking and auto-completion.
 
 ### Main Decorator
 
-The [`@hydraflow.main`][hydraflow.main] decorator defines the entry point for a HydraFlow application:
+The [`@hydraflow.main`][hydraflow.main] decorator defines the entry
+point for a HydraFlow application:
 
 ```python
 import hydraflow
@@ -64,7 +72,8 @@ This decorator provides:
 
 ### Workflow Automation
 
-HydraFlow allows you to automate experiment workflows using a YAML-based job definition system:
+HydraFlow allows you to automate experiment workflows using a
+YAML-based job definition system:
 
 ```yaml
 jobs:
@@ -98,11 +107,14 @@ python train.py -m "model=(small,large)_(v1,v2)"
 
 ### Analysis Tools
 
-After running experiments, HydraFlow provides powerful tools for accessing and analyzing results. These tools help you track, compare, and derive insights from your experiments.
+After running experiments, HydraFlow provides powerful tools for accessing
+and analyzing results. These tools help you track, compare, and derive
+insights from your experiments.
 
 #### Working with Individual Runs
 
-For individual experiment analysis, HydraFlow provides the `Run` class, which represents a single experiment run:
+For individual experiment analysis, HydraFlow provides the `Run` class,
+which represents a single experiment run:
 
 ```python
 from hydraflow import Run
@@ -139,7 +151,8 @@ print(run.cfg.learning_rate)  # IDE auto-completion works
 
 #### Comparing Multiple Runs
 
-For comparing multiple runs, HydraFlow offers the `RunCollection` class, which enables efficient analysis across runs:
+For comparing multiple runs, HydraFlow offers the `RunCollection` class,
+which enables efficient analysis across runs:
 
 ```python
 # Load multiple runs
@@ -164,11 +177,13 @@ Key features of experiment comparison:
 
 ## Summary
 
-These core concepts work together to provide a comprehensive framework for managing machine learning experiments:
+These core concepts work together to provide a comprehensive framework
+for managing machine learning experiments:
 
 1. **Configuration Management** - Type-safe configuration with Python dataclasses
 2. **Main Decorator** - The entry point that integrates Hydra and MLflow
 3. **Workflow Automation** - Reusable experiment definitions and advanced parameter sweeps
 4. **Analysis Tools** - Access, filter, and analyze experiment results
 
-Understanding these fundamental concepts will help you leverage the full power of HydraFlow for your machine learning projects.
+Understanding these fundamental concepts will help you leverage the full power
+of HydraFlow for your machine learning projects.

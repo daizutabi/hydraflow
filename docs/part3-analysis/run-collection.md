@@ -7,19 +7,27 @@ instances, making it easy to compare and extract insights from your experiments.
 
 ## Architecture
 
-`RunCollection` is built on top of the more general [`Collection`][hydraflow.core.collection.Collection]
-class, which provides a flexible foundation for working with sequences of items. This architecture offers several benefits:
+`RunCollection` is built on top of the more general
+[`Collection`][hydraflow.core.collection.Collection]
+class, which provides a flexible foundation for working with sequences
+of items. This architecture offers several benefits:
 
-1. **Consistent Interface**: All collection-based classes in HydraFlow share a common interface and behavior
-2. **Code Reuse**: Core functionality is implemented once in the base class and inherited by specialized collections
-3. **Extensibility**: New collection types can easily be created for different item types
-4. **Type Safety**: Generic type parameters ensure type checking throughout the collection hierarchy
+1. **Consistent Interface**: All collection-based classes in HydraFlow
+    share a common interface and behavior
+2. **Code Reuse**: Core functionality is implemented once in the base
+    class and inherited by specialized collections
+3. **Extensibility**: New collection types can easily be created
+    for different item types
+4. **Type Safety**: Generic type parameters ensure type checking
+    throughout the collection hierarchy
 
-The `Collection` class implements the Python `Sequence` protocol, allowing it to be used like standard Python
-collections (lists, tuples) while providing specialized methods for filtering, grouping, and data extraction.
+The `Collection` class implements the Python `Sequence` protocol,
+allowing it to be used like standard Python collections (lists, tuples)
+while providing specialized methods for filtering, grouping, and data extraction.
 
-`RunCollection` extends this foundation with run-specific functionality, particularly for working with MLflow
-experiment data. This layered design separates generic collection behavior from domain-specific operations.
+`RunCollection` extends this foundation with run-specific functionality,
+particularly for working with MLflow experiment data. This layered
+design separates generic collection behavior from domain-specific operations.
 
 ## Creating a Run Collection
 
@@ -243,17 +251,19 @@ model_types = runs.unique("model_type")
 num_model_types = runs.n_unique("model_type")
 ```
 
-All data extraction methods (`to_list`, `to_numpy`, `to_series`, etc.) support both static and callable default values,
-matching the behavior of the `Run.get` method. When using a callable default, the function receives
-the Run instance as an argument, allowing you to:
+All data extraction methods (`to_list`, `to_numpy`, `to_series`, etc.)
+support both static and callable default values,
+matching the behavior of the `Run.get` method. When using a callable default,
+the function receives the Run instance as an argument, allowing you to:
 
 - Implement fallback logic for missing parameters
 - Create derived values based on multiple parameters
 - Handle varying configuration schemas across different experiments
 - Apply transformations to the raw parameter values
 
-This makes it much easier to work with heterogeneous collections of runs that might have different
-parameter sets or evolving configuration schemas.
+This makes it much easier to work with heterogeneous collections of
+runs that might have different parameter sets or evolving configuration
+schemas.
 
 ## Converting to DataFrame
 
@@ -293,23 +303,6 @@ filled_df = missing_values_df.with_columns(
 )
 ```
 
-The `to_frame` method provides several ways to handle missing data:
-
-1. **defaults parameter**: Provide static or callable default values for specific keys
-   - Static values: `defaults={"param": value}`
-   - Callable values: `defaults={"param": lambda run: computed_value}`
-
-2. **None values**: Parameters without defaults are represented as `None` (null) in the DataFrame
-   - This lets you use Polars operations for handling null values:
-     - Filter: `df.filter(pl.col("param").is_not_null())`
-     - Fill nulls: `df.with_columns(pl.col("param").fill_null(value))`
-     - Aggregations: Most aggregation functions handle nulls appropriately
-
-3. **Special object keys**: Use the special keys `"run"`, `"cfg"`, and `"impl"` to include the actual
-   Run objects, configuration objects, or implementation objects in the DataFrame
-   - This allows direct access to the original objects for further operations
-   - You can combine regular data columns with object columns as needed
-
 ## Grouping Runs
 
 The `group_by` method allows you to organize runs based on parameter values:
@@ -343,16 +336,25 @@ model_avg_loss = model_groups.agg(
 )
 ```
 
-The `group_by` method returns a `GroupBy` instance that maps keys to `RunCollection` instances. This design allows you to:
+The `group_by` method returns a `GroupBy` instance that maps keys to
+`RunCollection` instances. This design allows you to:
 
-- Work with each group as a separate `RunCollection` with all the filtering, sorting, and analysis capabilities
-- Perform custom operations on each group that might not be expressible as simple aggregation functions
+- Work with each group as a separate `RunCollection` with all the
+  filtering, sorting, and analysis capabilities
+- Perform custom operations on each group that might not be expressible
+  as simple aggregation functions
 - Chain additional operations on specific groups that interest you
-- Implement multi-stage analysis workflows where you need to maintain the full run information at each step
+- Implement multi-stage analysis workflows where you need to maintain
+  the full run information at each step
 
-To perform aggregations on the grouped data, use the `agg` method on the GroupBy instance. This transforms the grouped data into a DataFrame with aggregated results. You can define multiple aggregation functions to compute different metrics across each group.
+To perform aggregations on the grouped data, use the `agg` method on
+the GroupBy instance. This transforms the grouped data into a DataFrame
+with aggregated results.
+You can define multiple aggregation functions to compute different
+metrics across each group.
 
-This approach preserves all information in each group, giving you maximum flexibility for downstream analysis.
+This approach preserves all information in each group, giving
+you maximum flexibility for downstream analysis.
 
 ## Type-Safe Run Collections
 

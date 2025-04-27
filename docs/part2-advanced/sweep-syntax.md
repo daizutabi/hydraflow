@@ -24,7 +24,8 @@ python train.py -m model=medium
 python train.py -m model=large
 ```
 
-When using multiple parameters with `each`, all possible combinations (cartesian product) will be generated:
+When using multiple parameters with `each`, all possible
+combinations (cartesian product) will be generated:
 
 ```yaml
 jobs:
@@ -275,6 +276,10 @@ HydraFlow's extended sweep syntax provides several powerful features for paramet
 5. **Parentheses grouping** - Create combinations of values and nested structures
 6. **Pipe operator** - Run multiple independent parameter sweeps in the same job
 
-All of these can be combined to create complex, expressive parameter sweeps with minimal configuration. Remember that using the `each` keyword creates a cartesian product of all parameters (all possible combinations), while the pipe operator (`|`) creates separate, independent parameter sweeps.
+All of these can be combined to create complex, expressive parameter sweeps
+with minimal configuration. Remember that using the `each` keyword creates a cartesian
+product of all parameters (all possible combinations), while the pipe
+operator (`|`) creates separate, independent parameter sweeps.
 
-When using these features, HydraFlow will automatically generate the appropriate Hydra multirun commands with the `-m` flag.
+When using these features, HydraFlow will automatically generate the appropriate
+Hydra multirun commands with the `-m` flag.
