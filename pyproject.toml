@@ -41,7 +41,6 @@ dependencies = [
   "polars>=1.26",
   "python-ulid>=3.0.0",
   "rich>=13.9",
-  "ruff>=0.11",
   "typer>=0.15",
 ]
 
@@ -61,6 +60,7 @@ dev = [
   "pytest-order",
   "pytest-randomly",
   "pytest-xdist",
+  "ruff>=0.11",
 ]
 docs = ["markdown-exec[ansi]", "mkapi", "mkdocs-material"]
 
