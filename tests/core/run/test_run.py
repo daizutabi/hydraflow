@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import polars as pl
 import pytest
 from omegaconf import ListConfig
 
@@ -123,6 +124,18 @@ def test_get_default_callable(run: Run[Config]):
 
 def test_get_info(run: Run[Config]):
     assert run.get("run_dir").as_posix() == "."
+
+
+def test_lit(run: Run[Config]):
+    run.update("db.b", 100)
+    expr = run.lit("db.b", dtype=pl.Int64)
+    df = pl.DataFrame({"a": [1, 2, 3]})
+    df = df.with_columns(expr)
+    assert df.shape == (3, 2)
+    assert df.columns == ["a", "db.b"]
+    assert df.item(0, "db.b") == 100
+    assert df.item(1, "db.b") == 100
+    assert df.item(2, "db.b") == 100
 
 
 def test_to_dict(run: Run[Config]):
