@@ -31,6 +31,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, cast, overload
 
+import polars as pl
 from omegaconf import DictConfig, OmegaConf
 
 from .run_info import RunInfo
@@ -38,6 +39,9 @@ from .run_info import RunInfo
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from typing import Any, Self
+
+    from polars import Expr
+    from polars._typing import PolarsDataType
 
     from .run_collection import RunCollection
 
@@ -309,6 +313,33 @@ class Run[C, I = None]:
 
         msg = f"No such key: {key}"
         raise AttributeError(msg)
+
+    def lit(
+        self,
+        key: str,
+        default: Any | Callable[[Self], Any] = MISSING,
+        *,
+        dtype: PolarsDataType | None = None,
+    ) -> Expr:
+        """Create a Polars literal expression from a run key.
+
+        Args:
+            key (str): The key to look up in the run's configuration or info.
+            default (Any | Callable[[Run], Any], optional): Default value to
+                use if the key is missing. If a callable is provided, it will be
+                called with the Run instance.
+            dtype (PolarsDataType | None): Explicit data type for the literal
+                expression.
+
+        Returns:
+            Expr: A Polars literal expression aliased to the provided key.
+
+        Raises:
+            AttributeError: If the key is not found and no default is provided.
+
+        """
+        value = self.get(key, default)
+        return pl.lit(value, dtype).alias(key)
 
     def to_dict(self, flatten: bool = True) -> dict[str, Any]:
         """Convert the Run to a dictionary.
