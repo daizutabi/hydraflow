@@ -239,7 +239,14 @@ def test_map(rc: Rc):
 
     x = list(rc.map(func, 10, 20))
     assert x == [40, 50, 60] * 4
-    x = rc.pmap(func, x=10, y=20, backend="threading")
+
+
+@pytest.mark.parametrize("progress", [False, True])
+def test_pmap(rc: Rc, progress: bool):
+    def func(r: Run[Config, Impl], x: int, y: int = 2) -> int:
+        return r.cfg.size.width + x + y
+
+    x = rc.pmap(func, x=10, y=20, n_jobs=2, backend="threading", progress=progress)
     assert x == [40, 50, 60] * 4
 
 

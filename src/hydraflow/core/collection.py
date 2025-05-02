@@ -418,6 +418,7 @@ class Collection[I](Sequence[I]):
         function: Callable[Concatenate[I, P], R],
         n_jobs: int = -1,
         backend: str = "multiprocessing",
+        progress: bool = False,
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> list[R]:
@@ -432,6 +433,7 @@ class Collection[I](Sequence[I]):
             n_jobs (int): Number of jobs to run in parallel. -1 means using all
                 processors.
             backend (str): Parallelization backend.
+            progress (bool): Whether to display a progress bar.
             *args: Additional positional arguments to pass to the function.
             **kwargs: Additional keyword arguments to pass to the function.
 
@@ -449,7 +451,16 @@ class Collection[I](Sequence[I]):
 
         """
         parallel = Parallel(n_jobs=n_jobs, backend=backend, return_as="list")
-        return parallel(delayed(function)(i, *args, **kwargs) for i in self)  # type: ignore
+        it = (delayed(function)(i, *args, **kwargs) for i in self)
+
+        if not progress:
+            return parallel(it)  # type: ignore
+
+        from hydraflow.utils.progress import Progress
+
+        with Progress(*Progress.get_default_columns()) as p:
+            p.add_task("", total=len(self))
+            return parallel(it)  # type: ignore
 
     def to_frame(
         self,
@@ -457,6 +468,7 @@ class Collection[I](Sequence[I]):
         defaults: dict[str, Any | Callable[[I], Any]] | None = None,
         n_jobs: int = 0,
         backend: str = "multiprocessing",
+        progress: bool = False,
         **kwargs: Callable[[I], Any],
     ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
@@ -476,6 +488,7 @@ class Collection[I](Sequence[I]):
             n_jobs (int): Number of jobs to run in parallel. 0 means no parallelization.
                 Default is 0.
             backend (str): Parallelization backend.
+            progress (bool): Whether to display a progress bar.
             **kwargs (Callable[[I], Any]): Additional columns to compute using
                 callables that take an item and return a value.
 
@@ -511,10 +524,9 @@ class Collection[I](Sequence[I]):
 
         kv = kwargs.items()
         if n_jobs == 0:
-            columns = [Series(k, self.map(v)) for k, v in kv]
-        else:
-            columns = [Series(k, self.pmap(v, n_jobs, backend)) for k, v in kv]
+            return df.with_columns(Series(k, self.map(v)) for k, v in kv)
 
+        columns = [Series(k, self.pmap(v, n_jobs, backend, progress)) for k, v in kv]
         return df.with_columns(*columns)
 
     def group_by(self, *by: str) -> GroupBy[Self, I]:
