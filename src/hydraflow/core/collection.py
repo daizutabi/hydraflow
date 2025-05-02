@@ -453,30 +453,52 @@ class Collection[I](Sequence[I]):
 
     def to_frame(
         self,
-        *keys: str,
+        *keys: str | tuple[str, Any | Callable[[I], Any]],
         defaults: dict[str, Any | Callable[[I], Any]] | None = None,
         **kwargs: Callable[[I], Any],
     ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
 
+        This method converts the items in the collection into a Polars DataFrame.
+        It allows specifying multiple keys, where each key can be a string or a tuple.
+        If a tuple is provided, the first element is treated as the key and the second
+        element as the default value for that key.
+
         Args:
-            *keys (str): The keys to include as columns in the DataFrame.
-            defaults (dict[str, Any | Callable[[T], Any]] | None): Default
-                values for the keys. If a callable, it will be called with
-                the item and the value returned will be used as the
-                default.
-            **kwargs (Callable[[I], Any]): Additional columns to compute
-                using callables that take an item and return a value.
+            *keys (str | tuple[str, Any | Callable[[I], Any]]): The keys to include
+                as columns in the DataFrame. If a tuple is provided, the first element
+                is the key and the second element is the default value.
+            defaults (dict[str, Any | Callable[[I], Any]] | None): Default values
+                for the keys. If a callable, it will be called with the item and the
+                value returned will be used as the default.
+            **kwargs (Callable[[I], Any]): Additional columns to compute using
+                callables that take an item and return a value.
 
         Returns:
-            DataFrame: A Polars DataFrame containing the specified data
-            from the items.
+            DataFrame: A Polars DataFrame containing the specified data from the items.
+
+        Examples:
+            ```python
+            # Convert to DataFrame with single keys
+            df = collection.to_frame("name", "age")
+
+            # Convert to DataFrame with keys and default values
+            df = collection.to_frame(("name", "Unknown"), ("age", 0))
+            ```
 
         """
         if defaults is None:
             defaults = {}
 
-        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys}
+        keys_ = []
+        for k in keys:
+            if isinstance(k, tuple):
+                keys_.append(k[0])
+                defaults[k[0]] = k[1]
+            else:
+                keys_.append(k)
+
+        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys_}
         df = DataFrame(data)
 
         if not kwargs:
