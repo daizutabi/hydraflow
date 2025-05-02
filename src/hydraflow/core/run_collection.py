@@ -194,7 +194,7 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
 
         """
         for run in self:
-            yield from run.path(relative_dir).iterdir()
+            yield from run.iterdir(relative_dir)
 
     def glob(self, pattern: str, relative_dir: str = "") -> Iterator[Path]:
         """Glob the artifact directories for all runs in the collection.
@@ -212,4 +212,4 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
 
         """
         for run in self:
-            yield from run.path(relative_dir).glob(pattern)
+            yield from run.glob(pattern, relative_dir)
