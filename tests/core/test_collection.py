@@ -296,3 +296,34 @@ def test_matches_list_config():
 
     assert matches(ListConfig([10, 20]), [10, 20])
     assert matches(ListConfig([10, 20]), ListConfig([10, 20]))
+
+
+@pytest.mark.parametrize("seed", [None, 1])
+def test_sample(seed):
+    from hydraflow.core.collection import Collection
+
+    x = Collection(list(range(100)))
+
+    sample = x.sample(50, seed=seed)
+    assert isinstance(sample, Collection)
+    assert len(sample) == 50
+    assert len(set(sample._items)) == 50
+
+
+def test_sample_error():
+    from hydraflow.core.collection import Collection
+
+    x = Collection(list(range(10)))
+    with pytest.raises(ValueError):
+        x.sample(11)
+
+
+@pytest.mark.parametrize("seed", [None, 1])
+def test_shuffle(seed):
+    from hydraflow.core.collection import Collection
+
+    x = Collection(list(range(10)))
+    shuffled = x.shuffle(seed)
+    assert len(shuffled) == 10
+    assert len(set(shuffled._items)) == 10
+    assert shuffled._items != x._items

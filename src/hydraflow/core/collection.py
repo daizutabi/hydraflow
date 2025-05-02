@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import MISSING
 from typing import TYPE_CHECKING, Concatenate, overload
@@ -517,6 +518,50 @@ class Collection[I](Sequence[I]):
             groups[key]._items.append(item)  # noqa: SLF001
 
         return GroupBy(by, groups)
+
+    def sample(self, k: int, seed: int | None = None) -> Self:
+        """Sample a random subset of items from the collection.
+
+        This method returns a new collection containing a random sample
+        of items from the original collection. The sample is drawn without
+        replacement, meaning each item can only appear once in the sample.
+
+        Args:
+            k (int): The number of items to sample.
+            seed (int | None): The seed for the random number generator.
+                If provided, the sample will be reproducible.
+
+        Returns:
+            Self: A new collection containing a random sample of items.
+
+        Raises:
+            ValueError: If the sample size is greater than the collection size.
+
+        """
+        n = len(self)
+        if k < 1 or k > n:
+            msg = f"Sample size ({k}) must be between 1 and {n}"
+            raise ValueError(msg)
+
+        if seed is not None:
+            random.seed(seed)
+
+        return self.__class__(random.sample(self._items, k), self._get)
+
+    def shuffle(self, seed: int | None = None) -> Self:
+        """Shuffle the items in the collection.
+
+        This method returns a new collection with the items in random order.
+
+        Args:
+            seed (int | None): The seed for the random number generator.
+                If provided, the sample will be reproducible.
+
+        Returns:
+            Self: A new collection containing the items in random order.
+
+        """
+        return self.sample(len(self), seed)
 
 
 def to_hashable(value: Any) -> Hashable:
