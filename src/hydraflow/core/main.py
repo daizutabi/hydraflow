@@ -35,6 +35,8 @@ Example:
 
 from __future__ import annotations
 
+import logging
+import sys
 from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -53,6 +55,8 @@ if TYPE_CHECKING:
 
     from mlflow.entities import Run
 
+log = logging.getLogger("hydraflow")
+
 
 def main[C](
     node: C | type[C],
@@ -62,6 +66,7 @@ def main[C](
     force_new_run: bool = False,
     match_overrides: bool = False,
     rerun_finished: bool = False,
+    dry_run: bool = False,
     update: Callable[[C], C | None] | None = None,
 ):
     """Decorator for configuring and running MLflow experiments with Hydra.
@@ -81,6 +86,9 @@ def main[C](
             instead of full config. Defaults to False.
         rerun_finished: If True, allows rerunning completed runs. Defaults to
             False.
+        dry_run: If True, starts the hydra job but does not run the application
+            itself. This allows users to preview the configuration and
+            settings without executing the actual run. Defaults to False.
         update: A function that takes a configuration and returns a new
             configuration or None. The function can modify the configuration in-place
             and/or return it. If the function returns None, the original (potentially
@@ -93,6 +101,10 @@ def main[C](
     import mlflow
     from mlflow.entities import RunStatus
 
+    if "--dry-run" in sys.argv:
+        dry_run = True
+        sys.argv.remove("--dry-run")
+
     finished = RunStatus.to_string(RunStatus.FINISHED)
 
     def decorator(app: Callable[[Run, C], None]) -> Callable[[], None]:
@@ -102,7 +114,6 @@ def main[C](
         @wraps(app)
         def inner_decorator(cfg: C) -> None:
             hc = HydraConfig.get()
-            experiment = mlflow.set_experiment(hc.job.name)
 
             if update:
                 if cfg_ := update(cfg):
@@ -111,6 +122,12 @@ def main[C](
                 hydra_dir = Path(hc.runtime.output_dir) / (hc.output_subdir or "")
                 cfg_path = hydra_dir.joinpath("config.yaml")
                 OmegaConf.save(cfg, cfg_path)
+
+            if dry_run:
+                log.info("Dry run:\n%s", OmegaConf.to_yaml(cfg).rstrip())
+                return
+
+            experiment = mlflow.set_experiment(hc.job.name)
 
             if force_new_run:
                 run_id = None

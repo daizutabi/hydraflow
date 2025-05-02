@@ -486,7 +486,7 @@ class Collection[I](Sequence[I]):
                 for the keys. If a callable, it will be called with the item and the
                 value returned will be used as the default.
             n_jobs (int): Number of jobs to run in parallel. 0 means no parallelization.
-                Default is 0.
+                Default to 0.
             backend (str): Parallelization backend.
             progress (bool): Whether to display a progress bar.
             **kwargs (Callable[[I], Any]): Additional columns to compute using
