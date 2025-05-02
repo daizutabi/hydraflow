@@ -212,10 +212,38 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "run_id") == 0
 
 
+def test_to_frame_defaults(rc: Rc):
+    df = rc.to_frame("x", "z", defaults={"z": lambda r: r.cfg.x + 2})
+    assert df.shape == (12, 2)
+    assert df.columns == ["x", "z"]
+    assert df.item(0, "x") == 1
+    assert df.item(0, "z") == 3
+    assert df.item(-1, "x") == 3
+    assert df.item(-1, "z") == 5
+
+
+def test_to_frame_tuple(rc: Rc):
+    df = rc.to_frame("x", ("z", lambda r: r.cfg.x + 3))
+    assert df.shape == (12, 2)
+    assert df.columns == ["x", "z"]
+    assert df.item(0, "x") == 1
+    assert df.item(0, "z") == 4
+    assert df.item(-1, "x") == 3
+    assert df.item(-1, "z") == 6
+
+
 def test_to_frame_kwargs(rc: Rc):
     df = rc.to_frame("x", "y", "run_id", z=lambda r: r.cfg.x + 1)
     assert df.shape == (12, 4)
     assert df.columns == ["x", "y", "run_id", "z"]
+    assert df.item(0, "z") == 2
+    assert df.item(-1, "z") == 4
+
+
+def test_to_frame_kwargs_without_keys(rc: Rc):
+    df = rc.to_frame(z=lambda r: r.cfg.x + 1)
+    assert df.shape == (12, 1)
+    assert df.columns == ["z"]
     assert df.item(0, "z") == 2
     assert df.item(-1, "z") == 4
 
