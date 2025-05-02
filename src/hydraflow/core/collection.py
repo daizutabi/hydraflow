@@ -455,6 +455,8 @@ class Collection[I](Sequence[I]):
         self,
         *keys: str | tuple[str, Any | Callable[[I], Any]],
         defaults: dict[str, Any | Callable[[I], Any]] | None = None,
+        n_jobs: int = 0,
+        backend: str = "multiprocessing",
         **kwargs: Callable[[I], Any],
     ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
@@ -471,6 +473,9 @@ class Collection[I](Sequence[I]):
             defaults (dict[str, Any | Callable[[I], Any]] | None): Default values
                 for the keys. If a callable, it will be called with the item and the
                 value returned will be used as the default.
+            n_jobs (int): Number of jobs to run in parallel. 0 means no parallelization.
+                Default is 0.
+            backend (str): Parallelization backend.
             **kwargs (Callable[[I], Any]): Additional columns to compute using
                 callables that take an item and return a value.
 
@@ -504,7 +509,12 @@ class Collection[I](Sequence[I]):
         if not kwargs:
             return df
 
-        columns = [Series(k, self.map(v)) for k, v in kwargs.items()]
+        kv = kwargs.items()
+        if n_jobs == 0:
+            columns = [Series(k, self.map(v)) for k, v in kv]
+        else:
+            columns = [Series(k, self.pmap(v, n_jobs, backend)) for k, v in kv]
+
         return df.with_columns(*columns)
 
     def group_by(self, *by: str) -> GroupBy[Self, I]:
