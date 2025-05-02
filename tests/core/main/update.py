@@ -15,18 +15,18 @@ class Config:
     height: int = 0
     area: int = 0
 
+    @staticmethod
+    def update(cfg: Config) -> Config:
+        if cfg.width > 0 and cfg.height > 0:
+            cfg.area = cfg.width * cfg.height
+        elif cfg.width > 0 and cfg.area > 0:
+            cfg.height = cfg.area // cfg.width
+        elif cfg.height > 0 and cfg.area > 0:
+            cfg.width = cfg.area // cfg.height
+        return cfg
 
-def update(cfg: Config) -> Config:
-    if cfg.width > 0 and cfg.height > 0:
-        cfg.area = cfg.width * cfg.height
-    elif cfg.width > 0 and cfg.area > 0:
-        cfg.height = cfg.area // cfg.width
-    elif cfg.height > 0 and cfg.area > 0:
-        cfg.width = cfg.area // cfg.height
-    return cfg
 
-
-@hydraflow.main(Config, chdir=True, update=update)
+@hydraflow.main(Config, chdir=True, update=Config.update)
 def app(run: Run, cfg: Config):
     pass
 
