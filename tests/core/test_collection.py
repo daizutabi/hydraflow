@@ -369,3 +369,15 @@ def test_shuffle(seed):
     assert len(shuffled) == 10
     assert len(set(shuffled._items)) == 10
     assert shuffled._items != x._items
+
+
+@pytest.fixture(scope="module")
+def rcd():
+    x = [1, 2, 3, 4, 5]
+    y = [1, 1, 3, 3, 3]
+    items = [{"x": x, "y": y} for x, y in zip(x, y, strict=True)]
+    return Collection(items, lambda i, k, d: i.get(k, d))
+
+
+def test_eq(rcd: Collection):
+    assert len(rcd.filter(rcd.eq("x", "y"))) == 2

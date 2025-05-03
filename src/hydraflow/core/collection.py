@@ -607,6 +607,70 @@ class Collection[I](Sequence[I]):
         """
         return self.sample(len(self), seed)
 
+    def eq(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if two attributes are equal.
+
+        This method returns a function that compares the values of two
+        attributes of an item and returns True if they are equal.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the values of the specified attributes are equal.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' equals attribute 'b'
+            equal_items = collection.filter(collection.eq('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) == self._get(i, right, default)
+
+    def ne(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if two attributes are not equal.
+
+        This method returns a function that compares the values of two
+        attributes of an item and returns True if they are not equal.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the values of the specified attributes are not equal.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' is not equal to attribute 'b'
+            unequal_items = collection.filter(collection.ne('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) != self._get(i, right, default)
+
 
 def to_hashable(value: Any) -> Hashable:
     """Convert a value to a hashable instance.
