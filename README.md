@@ -66,9 +66,6 @@ def app(run: Run, cfg: Config) -> None:
     # Your experiment code here
     print(f"Running with width={cfg.width}, height={cfg.height}")
 
-    # Log metrics
-    hydraflow.log_metric("area", cfg.width * cfg.height)
-
 if __name__ == "__main__":
     app()
 ```
