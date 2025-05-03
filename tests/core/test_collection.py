@@ -375,9 +375,42 @@ def test_shuffle(seed):
 def rcd():
     x = [1, 2, 3, 4, 5]
     y = [1, 1, 3, 3, 3]
-    items = [{"x": x, "y": y} for x, y in zip(x, y, strict=True)]
+    z = ["abcd", "bac", "bacd", "abc", "abcd"]
+    items = [{"x": x, "y": y, "z": z} for x, y, z in zip(x, y, z, strict=True)]
     return Collection(items, lambda i, k, d: i.get(k, d))
 
 
 def test_eq(rcd: Collection):
     assert len(rcd.filter(rcd.eq("x", "y"))) == 2
+
+
+def test_ne(rcd: Collection):
+    assert len(rcd.filter(rcd.ne("x", "y"))) == 3
+
+
+def test_gt(rcd: Collection):
+    assert len(rcd.filter(rcd.gt("x", "y"))) == 3
+
+
+def test_lt(rcd: Collection):
+    assert len(rcd.filter(rcd.lt("x", "y"))) == 0
+
+
+def test_ge(rcd: Collection):
+    assert len(rcd.filter(rcd.ge("x", "y"))) == 5
+
+
+def test_le(rcd: Collection):
+    assert len(rcd.filter(rcd.le("x", "y"))) == 2
+
+
+def test_startswith(rcd: Collection):
+    assert len(rcd.filter(rcd.startswith("z", "ab"))) == 3
+
+
+def test_endswith(rcd: Collection):
+    assert len(rcd.filter(rcd.endswith("z", "cd"))) == 3
+
+
+def test_match(rcd: Collection):
+    assert len(rcd.filter(rcd.match("z", r".*ac.*"))) == 2
