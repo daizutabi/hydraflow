@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import re
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import MISSING
 from typing import TYPE_CHECKING, Concatenate, overload
@@ -606,6 +607,222 @@ class Collection[I](Sequence[I]):
 
         """
         return self.sample(len(self), seed)
+
+    def eq(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if two attributes are equal.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the values of the specified attributes are equal.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' equals attribute 'b'
+            equal_items = collection.filter(collection.eq('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) == self._get(i, right, default)
+
+    def ne(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if two attributes are not equal.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the values of the specified attributes are not equal.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' is not equal to attribute 'b'
+            unequal_items = collection.filter(collection.ne('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) != self._get(i, right, default)
+
+    def gt(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if the left > the right.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the left attribute value is greater than the right attribute value.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' is greater than attribute 'b'
+            items = collection.filter(collection.gt('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) > self._get(i, right, default)
+
+    def lt(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if the left < the right.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value
+                to use if either attribute is not found. If callable, it
+                will be called with the item.
+
+        Returns:
+            Callable[[I], bool]: A function that takes an item and returns
+            True if the left attribute value is less than the right attribute value.
+
+        Examples:
+            ```python
+            # Find items where attribute 'a' is less than attribute 'b'
+            items = collection.filter(collection.lt('a', 'b'))
+            ```
+
+        """
+        return lambda i: self._get(i, left, default) < self._get(i, right, default)
+
+    def ge(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if the left >= the right.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value.
+
+        Returns:
+            Callable[[I], bool]: A predicate function for filtering.
+
+        """
+        return lambda i: self._get(i, left, default) >= self._get(i, right, default)
+
+    def le(
+        self,
+        left: str,
+        right: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if the left <= the right.
+
+        Args:
+            left (str): The name of the left attribute to compare.
+            right (str): The name of the right attribute to compare.
+            default (Any | Callable[[I], Any], optional): The default value.
+
+        Returns:
+            Callable[[I], bool]: A predicate function for filtering.
+
+        """
+        return lambda i: self._get(i, left, default) <= self._get(i, right, default)
+
+    def startswith(
+        self,
+        key: str,
+        prefix: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if an attribute starts with a prefix.
+
+        Args:
+            key (str): The name of the attribute to check.
+            prefix (str): The prefix to check for.
+            default (Any | Callable[[I], Any], optional): The default value.
+
+        Returns:
+            Callable[[I], bool]: A predicate function for filtering.
+
+        """
+        return lambda i: str(self._get(i, key, default)).startswith(prefix)
+
+    def endswith(
+        self,
+        key: str,
+        suffix: str,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if an attribute ends with a suffix.
+
+        Args:
+            key (str): The name of the attribute to check.
+            suffix (str): The suffix to check for.
+            default (Any | Callable[[I], Any], optional): The default value.
+
+        Returns:
+            Callable[[I], bool]: A predicate function for filtering.
+
+        """
+        return lambda i: str(self._get(i, key, default)).endswith(suffix)
+
+    def match(
+        self,
+        key: str,
+        pattern: str | re.Pattern,
+        *,
+        default: Any | Callable[[I], Any] = MISSING,
+    ) -> Callable[[I], bool]:
+        """Create a predicate function that checks if an attribute matches a pattern.
+
+        Args:
+            key (str): The name of the attribute to check.
+            pattern (str | re.Pattern): The pattern to check for.
+            default (Any | Callable[[I], Any], optional): The default value.
+
+        Returns:
+            Callable[[I], bool]: A predicate function for filtering.
+
+        """
+        return lambda i: re.match(pattern, str(self._get(i, key, default))) is not None
 
 
 def to_hashable(value: Any) -> Hashable:
