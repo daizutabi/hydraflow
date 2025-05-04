@@ -1,3 +1,4 @@
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import product
@@ -414,3 +415,7 @@ def test_endswith(rcd: Collection):
 
 def test_match(rcd: Collection):
     assert len(rcd.filter(rcd.match("z", r".*ac.*"))) == 2
+
+
+def test_match_flags(rcd: Collection):
+    assert len(rcd.filter(rcd.match("z", r".*AC.*", flags=re.IGNORECASE))) == 2

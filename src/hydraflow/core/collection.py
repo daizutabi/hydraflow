@@ -17,6 +17,7 @@ from .group_by import GroupBy
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+    from re import Pattern, _FlagsType
     from typing import Any, Self
 
     from numpy.typing import NDArray
@@ -807,9 +808,10 @@ class Collection[I](Sequence[I]):
     def match(
         self,
         key: str,
-        pattern: str | re.Pattern,
+        pattern: str | Pattern[str],
         *,
         default: Any | Callable[[I], Any] = MISSING,
+        flags: _FlagsType = 0,
     ) -> Callable[[I], bool]:
         """Create a predicate function that checks if an attribute matches a pattern.
 
@@ -817,12 +819,16 @@ class Collection[I](Sequence[I]):
             key (str): The name of the attribute to check.
             pattern (str | re.Pattern): The pattern to check for.
             default (Any | Callable[[I], Any], optional): The default value.
+            flags (re.RegexFlag, optional): Flags for the regex pattern.
 
         Returns:
             Callable[[I], bool]: A predicate function for filtering.
 
         """
-        return lambda i: re.match(pattern, str(self._get(i, key, default))) is not None
+        return (
+            lambda i: re.match(pattern, str(self._get(i, key, default)), flags)
+            is not None
+        )
 
 
 def to_hashable(value: Any) -> Hashable:
