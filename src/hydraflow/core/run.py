@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from typing import Any, Self
 
-    from polars import Expr
+    from polars import DataFrame, Expr
     from polars._typing import PolarsDataType
 
     from .run_collection import RunCollection
@@ -340,6 +340,27 @@ class Run[C, I = None]:
         """
         value = self.get(key, default)
         return pl.lit(value, dtype).alias(key)
+
+    def to_frame(
+        self,
+        func: Callable[[Self], DataFrame],
+        *keys: str | tuple[str, Any | Callable[[Self], Any]],
+    ) -> DataFrame:
+        """Convert the Run to a DataFrame.
+
+        Args:
+            func (Callable[[Run], DataFrame]): A function that takes a Run
+                instance and returns a DataFrame.
+            keys (str | tuple[str, Any | Callable[[Run], Any]]): The keys to
+                add to the DataFrame.
+
+        Returns:
+            DataFrame: A DataFrame representation of the Run.
+
+        """
+        return func(self).with_columns(
+            self.lit(k) if isinstance(k, str) else self.lit(k[0], k[1]) for k in keys
+        )
 
     def to_dict(self, flatten: bool = True) -> dict[str, Any]:
         """Convert the Run to a dictionary.

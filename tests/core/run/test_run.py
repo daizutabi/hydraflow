@@ -138,6 +138,20 @@ def test_lit(run: Run[Config]):
     assert df.item(2, "db.b") == 100
 
 
+def test_to_frame(run: Run[Config]):
+    def func(run: Run[Config]) -> pl.DataFrame:
+        return pl.DataFrame({"a": [run.get("a"), 20]})
+
+    run.update("a", 10)
+    run.update("db.b", 100)
+    df = run.to_frame(func, "db.b", ("x", 123), ("y", lambda r: r.get("a")))
+    assert df.shape == (2, 4)
+    assert df["a"].to_list() == [10, 20]
+    assert df["db.b"].to_list() == [100, 100]
+    assert df["x"].to_list() == [123, 123]
+    assert df["y"].to_list() == [10, 10]
+
+
 def test_to_dict(run: Run[Config]):
     run.update("a", 10)
     run.update("db.name", "abc")
