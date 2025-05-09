@@ -43,6 +43,8 @@ from __future__ import annotations
 from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
+import polars as pl
+
 from .collection import Collection
 from .run import Run
 
@@ -50,6 +52,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from pathlib import Path
     from typing import Any, Self
+
+    from polars import DataFrame
 
 
 class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
@@ -167,6 +171,28 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
         """
         for run in self:
             run.update(key, value, force=force)
+
+    def concat(
+        self,
+        func: Callable[[R], DataFrame],
+        *keys: str | tuple[str, Any | Callable[[R], Any]],
+    ) -> DataFrame:
+        """Concatenate the results of a function applied to all runs in the collection.
+
+        This method applies the provided function to each run in the collection
+        and concatenates the resulting DataFrames along the specified keys.
+
+        Args:
+            func (Callable[[R], DataFrame]): A function that takes a Run
+                instance and returns a DataFrame.
+            keys (str | tuple[str, Any | Callable[[R], Any]]): The keys to
+                add to the DataFrame.
+
+        Returns:
+            DataFrame: A DataFrame representation of the Run.
+
+        """
+        return pl.concat(run.to_frame(func, *keys) for run in self)
 
     @cached_property
     def impls(self) -> Collection[I]:

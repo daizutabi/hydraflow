@@ -207,6 +207,36 @@ runs = Run.load(run_dirs)
 runs = Run.load(run_dirs, n_jobs=4)  # Use 4 parallel jobs for loading
 runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
 ```
+## Converting to DataFrame
+
+To convert a Run instance to a Polars DataFrame, use the
+[`to_frame`][hydraflow.core.run.Run.to_frame] method.
+This method adds the Run's information as columns to the DataFrame.
+
+```python
+# Basic usage
+df = run.to_frame(
+    lambda r: DataFrame({"value": [1, 2, 3]}),
+    "run_id",
+    "experiment_name"
+)
+
+# With default values
+df = run.to_frame(
+    lambda r: DataFrame({"value": [1, 2, 3]}),
+    "run_id",
+    ("status", lambda r: "completed")
+)
+```
+
+The `to_frame` method accepts the following parameters:
+
+- `func`: A function that takes a Run instance and returns a DataFrame
+- `*keys`: Keys for the Run's information to add. Accepts the following formats:
+  - String: A simple key (e.g., "run_id")
+  - Tuple: A tuple of (key, default value or function returning default value)
+
+
 
 ### Finding Runs with `iter_run_dirs`
 

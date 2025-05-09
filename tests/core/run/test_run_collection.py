@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from polars import DataFrame
 
 from hydraflow.core.run import Run
 from hydraflow.core.run_collection import RunCollection
@@ -278,7 +279,19 @@ def test_group_by(rc: Rc):
     assert isinstance(gp, GroupBy)
 
 
-def test_impl(rc: Rc):
+def test_concat(rc: Rc):
+    def func(r: Run[Config, Impl]) -> DataFrame:
+        return DataFrame({"a": [r.get("count"), 20]})
+
+    df = rc.concat(func, "size.width", ("z", lambda r: r.get("count") * 20))
+    assert df.shape == (24, 3)
+    assert df["a"].to_list()[:4] == [1, 20, 1, 20]
+    assert df["size.width"].to_list()[-6:] == [10, 10, 20, 20, 30, 30]
+    assert df["z"].to_list()[:6] == [20, 20, 20, 20, 20, 20]
+    assert df["z"].to_list()[-6:] == [40, 40, 40, 40, 40, 40]
+
+
+def test_impls(rc: Rc):
     impls = rc.impls
     assert len(impls) == 12
     assert len(impls.filter(lambda i: i.y[0] == "1")) == 6

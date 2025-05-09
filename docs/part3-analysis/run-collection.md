@@ -303,6 +303,35 @@ filled_df = missing_values_df.with_columns(
 )
 ```
 
+## Concatenating Multiple Runs
+
+To convert and concatenate multiple Run instances into a DataFrame,
+use the [`concat`][hydraflow.core.run_collection.RunCollection.concat] method.
+This method adds each Run's information as columns to the DataFrame and concatenates them.
+
+```python
+# Basic usage
+df = run_collection.concat(
+    lambda r: DataFrame({"value": [1, 2, 3]}),
+    "run_id",
+    "experiment_name"
+)
+
+# With default values
+df = run_collection.concat(
+    lambda r: DataFrame({"value": [1, 2, 3]}),
+    "run_id",
+    ("status", lambda r: "completed")
+)
+```
+
+The `concat` method accepts the following parameters:
+
+- `func`: A function that takes each Run instance and returns a DataFrame
+- `*keys`: Keys for the Run's information to add. Accepts the following formats:
+  - String: A simple key (e.g., "run_id")
+  - Tuple: A tuple of (key, default value or function returning default value)
+
 ## Grouping Runs
 
 The `group_by` method allows you to organize runs based on parameter values:
