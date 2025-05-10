@@ -343,13 +343,13 @@ class Run[C, I = None]:
 
     def to_frame(
         self,
-        func: Callable[[Self], DataFrame],
+        function: Callable[[Self], DataFrame],
         *keys: str | tuple[str, Any | Callable[[Self], Any]],
     ) -> DataFrame:
         """Convert the Run to a DataFrame.
 
         Args:
-            func (Callable[[Run], DataFrame]): A function that takes a Run
+            function (Callable[[Run], DataFrame]): A function that takes a Run
                 instance and returns a DataFrame.
             keys (str | tuple[str, Any | Callable[[Run], Any]]): The keys to
                 add to the DataFrame.
@@ -358,7 +358,7 @@ class Run[C, I = None]:
             DataFrame: A DataFrame representation of the Run.
 
         """
-        return func(self).with_columns(
+        return function(self).with_columns(
             self.lit(k) if isinstance(k, str) else self.lit(k[0], k[1]) for k in keys
         )
 
