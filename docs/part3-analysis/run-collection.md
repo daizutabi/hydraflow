@@ -327,10 +327,10 @@ df = run_collection.concat(
 
 The `concat` method accepts the following parameters:
 
-- `func`: A function that takes each Run instance and returns a DataFrame
+- `function`: A function that takes each Run instance and returns a DataFrame
 - `*keys`: Keys for the Run's information to add. Accepts the following formats:
-  - String: A simple key (e.g., "run_id")
-  - Tuple: A tuple of (key, default value or function returning default value)
+    - String: A simple key (e.g., "run_id")
+    - Tuple: A tuple of (key, default value or function returning default value)
 
 ## Grouping Runs
 

@@ -191,22 +191,6 @@ run = Run[Config, AdvancedModelLoader](run_dir, AdvancedModelLoader)
 model = run.impl.load_model()  # Uses configuration information
 ```
 
-## Loading Multiple Runs
-
-The `load` class method can load both individual runs and collections of runs:
-
-```python
-# Load a single run
-run = Run.load("mlruns/exp_id/run_id")
-
-# Load multiple runs to create a RunCollection
-run_dirs = ["mlruns/exp_id/run_id1", "mlruns/exp_id/run_id2"]
-runs = Run.load(run_dirs)
-
-# Load runs with parallel processing
-runs = Run.load(run_dirs, n_jobs=4)  # Use 4 parallel jobs for loading
-runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
-```
 ## Converting to DataFrame
 
 To convert a Run instance to a Polars DataFrame, use the
@@ -231,12 +215,27 @@ df = run.to_frame(
 
 The `to_frame` method accepts the following parameters:
 
-- `func`: A function that takes a Run instance and returns a DataFrame
+- `function`: A function that takes a Run instance and returns a DataFrame
 - `*keys`: Keys for the Run's information to add. Accepts the following formats:
-  - String: A simple key (e.g., "run_id")
-  - Tuple: A tuple of (key, default value or function returning default value)
+    - String: A simple key (e.g., "run_id")
+    - Tuple: A tuple of (key, default value or function returning default value)
 
+## Loading Multiple Runs
 
+The `load` class method can load both individual runs and collections of runs:
+
+```python
+# Load a single run
+run = Run.load("mlruns/exp_id/run_id")
+
+# Load multiple runs to create a RunCollection
+run_dirs = ["mlruns/exp_id/run_id1", "mlruns/exp_id/run_id2"]
+runs = Run.load(run_dirs)
+
+# Load runs with parallel processing
+runs = Run.load(run_dirs, n_jobs=4)  # Use 4 parallel jobs for loading
+runs = Run.load(run_dirs, n_jobs=-1)  # Use all available CPU cores
+```
 
 ### Finding Runs with `iter_run_dirs`
 
