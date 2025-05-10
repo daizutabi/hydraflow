@@ -174,7 +174,7 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
 
     def concat(
         self,
-        func: Callable[[R], DataFrame],
+        function: Callable[[R], DataFrame],
         *keys: str | tuple[str, Any | Callable[[R], Any]],
     ) -> DataFrame:
         """Concatenate the results of a function applied to all runs in the collection.
@@ -183,16 +183,16 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
         and concatenates the resulting DataFrames along the specified keys.
 
         Args:
-            func (Callable[[R], DataFrame]): A function that takes a Run
+            function (Callable[[R], DataFrame]): A function that takes a Run
                 instance and returns a DataFrame.
             keys (str | tuple[str, Any | Callable[[R], Any]]): The keys to
                 add to the DataFrame.
 
         Returns:
-            DataFrame: A DataFrame representation of the Run.
+            DataFrame: A DataFrame representation of the Run collection.
 
         """
-        return pl.concat(run.to_frame(func, *keys) for run in self)
+        return pl.concat(run.to_frame(function, *keys) for run in self)
 
     @cached_property
     def impls(self) -> Collection[I]:
