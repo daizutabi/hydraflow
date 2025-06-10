@@ -40,7 +40,6 @@ Note:
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import TYPE_CHECKING, overload
 
 import polars as pl
@@ -56,7 +55,7 @@ if TYPE_CHECKING:
     from polars import DataFrame
 
 
-class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
+class RunCollection[R: Run[Any, Any]](Collection[R]):
     """A collection of Run instances that implements the Sequence protocol.
 
     RunCollection provides methods for filtering, sorting, grouping, and analyzing
@@ -193,16 +192,6 @@ class RunCollection[R: Run[Any, Any], I = None](Collection[R]):
 
         """
         return pl.concat(run.to_frame(function, *keys) for run in self)
-
-    @cached_property
-    def impls(self) -> Collection[I]:
-        """Get the implementation objects for all runs in the collection.
-
-        Returns:
-            Collection[I]: A collection of implementation objects for all runs.
-
-        """
-        return Collection(run.impl for run in self)
 
     def iterdir(self, relative_dir: str = "") -> Iterator[Path]:
         """Iterate over the artifact directories for all runs in the collection.

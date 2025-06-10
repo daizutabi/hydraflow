@@ -140,7 +140,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
         *,
         n_jobs: int = 0,
-    ) -> RunCollection[Self, I]: ...
+    ) -> RunCollection[Self]: ...
 
     @classmethod
     def load(
@@ -149,7 +149,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
         *,
         n_jobs: int = 0,
-    ) -> Self | RunCollection[Self, I]:
+    ) -> Self | RunCollection[Self]:
         """Load a Run from a run directory.
 
         Args:
