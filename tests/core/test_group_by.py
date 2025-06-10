@@ -52,7 +52,7 @@ def rc(run_factory):
     return RunCollection(runs, Run.get)
 
 
-type Rc = RunCollection[Run[Config, Impl], Impl]
+type Rc = RunCollection[Run[Config, Impl]]
 
 
 def test_getitem_key(rc: Rc):

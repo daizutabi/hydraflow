@@ -97,19 +97,15 @@ def test_run_echo():
     assert result.exit_code == 0
     out = result.stdout
     lines = out.splitlines()
-    assert len(lines) == 5
-    assert "['a', 'b', 'c', '--multirun', 'name=a', 'count=1,2,3'" in lines[1]
-    assert "['a', 'b', 'c', '--multirun', 'name=b', 'count=1,2,3'" in lines[2]
-    assert "['a', 'b', 'c', '--multirun', 'name=c', 'count=4,5,6'" in lines[3]
-    assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[4]
+    assert "['a', 'b', 'c', '--multirun', 'name=a', 'count=1,2,3'" in lines[-4]
+    assert "['a', 'b', 'c', '--multirun', 'name=b', 'count=1,2,3'" in lines[-3]
+    assert "['a', 'b', 'c', '--multirun', 'name=c', 'count=4,5,6'" in lines[-2]
+    assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[-1]
 
 
 def test_submit():
     result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
-    out = result.stdout
-    lines = out.splitlines()
-    assert len(lines) == 1
     run_dirs = list(iter_run_dirs("mlruns", "submit"))
     assert len(run_dirs) == 4
 

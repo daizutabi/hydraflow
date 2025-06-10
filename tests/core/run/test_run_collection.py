@@ -53,7 +53,7 @@ def rc(run_factory):
     return RunCollection(runs, Run.get)
 
 
-type Rc = RunCollection[Run[Config, Impl], Impl]
+type Rc = RunCollection[Run[Config, Impl]]
 
 
 def test_repr(rc: Rc):
@@ -289,9 +289,3 @@ def test_concat(rc: Rc):
     assert df["size.width"].to_list()[-6:] == [10, 10, 20, 20, 30, 30]
     assert df["z"].to_list()[:6] == [20, 20, 20, 20, 20, 20]
     assert df["z"].to_list()[-6:] == [40, 40, 40, 40, 40, 40]
-
-
-def test_impls(rc: Rc):
-    impls = rc.impls
-    assert len(impls) == 12
-    assert len(impls.filter(lambda i: i.y[0] == "1")) == 6
