@@ -6,6 +6,7 @@ import pytest
 @pytest.fixture(scope="module")
 def results(collect):
     file = Path(__file__).parent / "force_new_run.py"
+    results = None
     for _ in range(3):
         results = collect(file, ["count=3"])
     return results
