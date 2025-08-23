@@ -17,10 +17,12 @@ from .group_by import GroupBy
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
-    from re import Pattern, _FlagsType
+    from re import Pattern, _FlagsType  # pyright: ignore[reportPrivateUsage]
     from typing import Any, Self
 
     from numpy.typing import NDArray
+
+# pyright: reportUnknownVariableType=false
 
 
 class Collection[I](Sequence[I]):
@@ -280,7 +282,7 @@ class Collection[I](Sequence[I]):
         self,
         key: str,
         default: Any | Callable[[I], Any] = MISSING,
-    ) -> NDArray:
+    ) -> NDArray[Any]:
         """Extract values for a specific key from all items as a NumPy array.
 
         Args:
@@ -323,7 +325,7 @@ class Collection[I](Sequence[I]):
         self,
         key: str,
         default: Any | Callable[[I], Any] = MISSING,
-    ) -> NDArray:
+    ) -> NDArray[Any]:
         """Get the unique values for a specific key across all items.
 
         Args:
@@ -456,13 +458,13 @@ class Collection[I](Sequence[I]):
         it = (delayed(function)(i, *args, **kwargs) for i in self)
 
         if not progress:
-            return parallel(it)  # type: ignore
+            return parallel(it)  # pyright: ignore[reportReturnType]
 
         from hydraflow.utils.progress import Progress
 
         with Progress(*Progress.get_default_columns()) as p:
             p.add_task("", total=len(self))
-            return parallel(it)  # type: ignore
+            return parallel(it)  # pyright: ignore[reportReturnType]
 
     def to_frame(
         self,
@@ -513,12 +515,12 @@ class Collection[I](Sequence[I]):
         keys_ = []
         for k in keys:
             if isinstance(k, tuple):
-                keys_.append(k[0])
+                keys_.append(k[0])  # pyright: ignore[reportUnknownMemberType]
                 defaults[k[0]] = k[1]
             else:
-                keys_.append(k)
+                keys_.append(k)  # pyright: ignore[reportUnknownMemberType]
 
-        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys_}
+        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys_}  # pyright: ignore[reportUnknownArgumentType]
         df = DataFrame(data)
 
         if not kwargs:
@@ -907,11 +909,11 @@ def matches(value: Any, criterion: Any) -> bool:
     if isinstance(criterion, list | set) and not _is_iterable(value):
         return value in criterion
 
-    if isinstance(criterion, tuple) and len(criterion) == 2 and not _is_iterable(value):
+    if isinstance(criterion, tuple) and len(criterion) == 2 and not _is_iterable(value):  # pyright: ignore[reportUnknownArgumentType]
         return criterion[0] <= value <= criterion[1]
 
     if _is_iterable(criterion):
-        criterion = list(criterion)
+        criterion = list(criterion)  # pyright: ignore[reportUnknownArgumentType]
 
     if _is_iterable(value):
         value = list(value)

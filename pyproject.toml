@@ -118,5 +118,17 @@ ignore = [
 "src/hydraflow/executor/conf.py" = ["ANN", "D"]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
 
-[tool.pyright]
-include = ["src", "tests"]
+[tool.basedpyright]
+include = ["src"]
+exclude = ["notebooks", "tests"]
+reportAny = false
+reportExplicitAny = false
+reportImplicitOverride = false
+reportImportCycles = false
+reportIncompatibleVariableOverride = false
+reportMissingTypeStubs = false
+reportUnusedCallResult = false
+
+[tool.ty.rules]
+unresolved-import = "ignore"
+possibly-unbound-attribute = "ignore"

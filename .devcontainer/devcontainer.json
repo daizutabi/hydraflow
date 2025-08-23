@@ -8,10 +8,10 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
+        "detachhead.basedpyright",
         "fill-labs.dependi",
         "markis.code-coverage",
         "ms-python.python",
-        "ms-python.vscode-pylance",
         "tamasfe.even-better-toml"
       ]
     }

@@ -105,7 +105,7 @@ def main[C](
         dry_run = True
         sys.argv.remove("--dry-run")
 
-    finished = RunStatus.to_string(RunStatus.FINISHED)
+    finished = RunStatus.to_string(RunStatus.FINISHED)  # pyright: ignore[reportUnknownMemberType]
 
     def decorator(app: Callable[[Run, C], None]) -> Callable[[], None]:
         ConfigStore.instance().store(config_name, node)
@@ -134,11 +134,11 @@ def main[C](
             else:
                 uri = experiment.artifact_location
                 overrides = hc.overrides.task if match_overrides else None
-                run_id = get_run_id(uri, cfg, overrides)
+                run_id = get_run_id(uri, cfg, overrides)  # pyright: ignore[reportUnknownArgumentType]
 
                 if run_id and not rerun_finished:
                     run = mlflow.get_run(run_id)
-                    if run.info.status == finished:
+                    if run.info.status == finished:  # pyright: ignore[reportUnknownMemberType]
                         return
 
             with start_run(run_id=run_id, chdir=chdir) as run:

@@ -45,6 +45,8 @@ if TYPE_CHECKING:
 
     from .run_collection import RunCollection
 
+# pyright: reportUnknownVariableType=false
+
 
 class Run[C, I = None]:
     """Represent an MLflow Run in HydraFlow.
@@ -76,7 +78,7 @@ class Run[C, I = None]:
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
     ) -> None:
         self.info = RunInfo(run_dir)
-        self.impl_factory = impl_factory or (lambda _: None)  # type: ignore
+        self.impl_factory = impl_factory or (lambda _: None)  # pyright: ignore[reportAttributeAccessIssue]
 
     def __repr__(self) -> str:
         """Return a string representation of the Run."""
@@ -93,9 +95,9 @@ class Run[C, I = None]:
         """The configuration instance loaded from the Hydra configuration file."""
         config_file = self.info.run_dir / "artifacts/.hydra/config.yaml"
         if config_file.exists():
-            return OmegaConf.load(config_file)  # type: ignore
+            return OmegaConf.load(config_file)  # pyright: ignore[reportReturnType]
 
-        return OmegaConf.create()  # type: ignore
+        return OmegaConf.create()  # pyright: ignore[reportReturnType]
 
     @cached_property
     def impl(self) -> I:
@@ -176,13 +178,13 @@ class Run[C, I = None]:
 
         if n_jobs == 0:
             runs = (cls(Path(r), impl_factory) for r in run_dir)
-            return RunCollection(runs, cls.get)  # type: ignore
+            return RunCollection(runs, cls.get)
 
         from joblib import Parallel, delayed
 
         parallel = Parallel(backend="threading", n_jobs=n_jobs)
         runs = parallel(delayed(cls)(Path(r), impl_factory) for r in run_dir)
-        return RunCollection(runs, cls.get)  # type: ignore
+        return RunCollection(runs, cls.get)  # pyright: ignore[reportArgumentType]
 
     @overload
     def update(
@@ -235,7 +237,7 @@ class Run[C, I = None]:
                 an iterable.
 
         """
-        cfg: DictConfig = self.cfg  # type: ignore
+        cfg: DictConfig = self.cfg  # pyright: ignore[reportAssignmentType]
 
         if isinstance(key, str):
             key = key.replace("__", ".")
@@ -296,7 +298,7 @@ class Run[C, I = None]:
         """
         key = key.replace("__", ".")
 
-        value = OmegaConf.select(self.cfg, key, default=MISSING)  # type: ignore
+        value = OmegaConf.select(self.cfg, key, default=MISSING)  # pyright: ignore[reportArgumentType]
         if value is not MISSING:
             return value
 
@@ -377,7 +379,7 @@ class Run[C, I = None]:
         if not isinstance(cfg, dict):
             raise TypeError("Configuration must be a dictionary")
 
-        standard_dict: dict[str, Any] = {str(k): v for k, v in cfg.items()}
+        standard_dict: dict[str, Any] = {str(k): v for k, v in cfg.items()}  # pyright: ignore[reportUnknownArgumentType]
 
         if flatten:
             return _flatten_dict(standard_dict)
@@ -450,12 +452,12 @@ class Run[C, I = None]:
 
 
 def _flatten_dict(d: dict[str, Any], parent_key: str = "") -> dict[str, Any]:
-    items = []
+    items: list[tuple[str, Any]] = []
 
     for k, v in d.items():
         key = f"{parent_key}.{k}" if parent_key else k
         if isinstance(v, dict):
-            items.extend(_flatten_dict(v, key).items())
+            items.extend(_flatten_dict(v, key).items())  # pyright: ignore[reportUnknownArgumentType]
         else:
             items.append((key, v))
 

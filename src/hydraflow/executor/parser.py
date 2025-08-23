@@ -205,7 +205,7 @@ def _arange(start: float, stop: float, step: float) -> list[float]:
 
     epsilon = min(abs(start), abs(stop)) * 1e-5
 
-    result = []
+    result: list[float] = []
     current = start
 
     if step > 0:
@@ -412,8 +412,8 @@ def split(arg: str) -> list[str]:
         ['(a,b)m', '(1,2:4)k']
 
     """
-    result = []
-    current = []
+    result: list[str] = []
+    current: list[str] = []
     bracket_count = 0
     paren_count = 0
     in_single_quote = False

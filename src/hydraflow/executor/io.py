@@ -10,7 +10,7 @@ from omegaconf import DictConfig, OmegaConf
 from .conf import HydraflowConf
 
 if TYPE_CHECKING:
-    from .job import Job
+    from .conf import Job
 
 
 def find_config_file() -> Path | None:
@@ -38,7 +38,7 @@ def load_config() -> HydraflowConf:
     if not isinstance(cfg, DictConfig):
         return schema
 
-    return OmegaConf.merge(schema, cfg)  # type: ignore[return-value]
+    return OmegaConf.merge(schema, cfg)  # pyright: ignore[reportReturnType]
 
 
 def get_job(name: str) -> Job:

@@ -15,7 +15,7 @@ app = typer.Typer(add_completion=False)
 
 
 @app.command("run", context_settings={"ignore_unknown_options": True})
-def _run(
+def _run(  # pyright: ignore[reportUnusedFunction]
     name: Annotated[str, Argument(help="Job name.", show_default=False)],
     *,
     args: Annotated[

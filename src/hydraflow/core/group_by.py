@@ -193,10 +193,10 @@ class GroupBy[C: Collection[Any], I]:
         else:
             df = DataFrame(dict(zip(self.by, k, strict=True)) for k in gp)
 
-        columns = []
+        columns: list[Series] = []
 
         for agg in aggs:
-            values = [[c._get(i, agg, MISSING) for i in c] for c in gp.values()]  # noqa: SLF001
+            values = [[c._get(i, agg, MISSING) for i in c] for c in gp.values()]  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
             columns.append(Series(agg, values))
 
         for k, v in named_aggs.items():

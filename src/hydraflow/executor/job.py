@@ -99,7 +99,7 @@ def merge_args(first: list[str], second: list[str]) -> list[str]:
         list[str]: A merged list of arguments.
 
     """
-    merged = {}
+    merged: dict[str, str | None] = {}
 
     for item in [*first, *second]:
         if "=" in item:
@@ -158,7 +158,7 @@ def submit(
     iterable: Iterable[list[str]],
     *,
     dry_run: bool = False,
-) -> CompletedProcess | tuple[list[str], str]:
+) -> CompletedProcess[bytes] | tuple[list[str], str]:
     """Submit entire job using a shell command."""
     executable, *args = args
     if executable == "python" and sys.platform == "win32":
@@ -181,7 +181,7 @@ def submit(
         file.unlink(missing_ok=True)
 
 
-def get_callable(name: str) -> Callable:
+def get_callable(name: str) -> Callable[[list[str]], Any]:
     """Get a callable from a function name."""
     if "." not in name:
         msg = f"Invalid function path: {name}."
