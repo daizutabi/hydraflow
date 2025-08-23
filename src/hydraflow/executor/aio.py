@@ -68,7 +68,7 @@ async def arun(
 ) -> int | None:
     """Run a command asynchronously."""
     process = await asyncio.create_subprocess_exec(*args, stdout=PIPE, stderr=PIPE)
-    coros = alog(process.stdout, stdout), alog(process.stderr, stderr)  # type:ignore
+    coros = alog(process.stdout, stdout), alog(process.stderr, stderr)  # pyright: ignore[reportArgumentType]
     await asyncio.gather(*coros)
     await process.communicate()
 

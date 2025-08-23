@@ -38,7 +38,7 @@ def get_artifact_dir(run: Run) -> Path:
         The local path to the directory where the artifacts are downloaded.
 
     """
-    uri = run.info.artifact_uri
+    uri = run.info.artifact_uri  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
 
     if not isinstance(uri, str):
         raise NotImplementedError

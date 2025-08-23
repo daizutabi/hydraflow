@@ -54,6 +54,8 @@ if TYPE_CHECKING:
 
     from polars import DataFrame
 
+# pyright: reportUnknownVariableType=false
+
 
 class RunCollection[R: Run[Any, Any]](Collection[R]):
     """A collection of Run instances that implements the Sequence protocol.

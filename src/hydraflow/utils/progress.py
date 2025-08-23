@@ -57,12 +57,12 @@ class Progress(Super):
         def _update(parallel: Parallel) -> None:
             update(self, parallel)
 
-        Parallel.print_progress = _update  # type: ignore
+        Parallel.print_progress = _update  # pyright: ignore[reportAttributeAccessIssue]
 
     def stop(self) -> None:
         """Stop the progress display."""
         if self._print_progress:
-            Parallel.print_progress = self._print_progress  # type: ignore
+            Parallel.print_progress = self._print_progress  # pyright: ignore[reportAttributeAccessIssue]
 
         super().stop()
 
@@ -86,5 +86,5 @@ def update(progress: Progress, parallel: Parallel) -> None:
 
     progress.update(task_id, completed=parallel.n_completed_tasks, refresh=True)
 
-    if progress._print_progress:  # noqa: SLF001
-        progress._print_progress(parallel)  # noqa: SLF001
+    if progress._print_progress:  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
+        progress._print_progress(parallel)  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]

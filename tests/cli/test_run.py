@@ -1,3 +1,6 @@
+import sys
+
+import pytest
 from typer.testing import CliRunner
 
 from hydraflow.cli import app
@@ -80,6 +83,10 @@ def test_run_batch():
     assert len(run_dirs) == 8
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="joblib 1.5: Not supported on Windows",
+)
 def test_run_parallel():
     result = runner.invoke(app, ["run", "parallel"])
     assert result.exit_code == 0
