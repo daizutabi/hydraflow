@@ -6,7 +6,7 @@ import random
 import re
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import MISSING
-from typing import TYPE_CHECKING, Concatenate, overload
+from typing import TYPE_CHECKING, Any, Concatenate, Self, overload
 
 import numpy as np
 from joblib.parallel import Parallel, delayed
@@ -18,7 +18,6 @@ from .group_by import GroupBy
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from re import Pattern, _FlagsType  # pyright: ignore[reportPrivateUsage]
-    from typing import Any, Self
 
     from numpy.typing import NDArray
 

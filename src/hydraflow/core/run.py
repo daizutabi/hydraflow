@@ -29,7 +29,7 @@ from contextlib import contextmanager
 from dataclasses import MISSING
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, cast, overload
+from typing import TYPE_CHECKING, Any, Self, cast, overload
 
 import polars as pl
 from omegaconf import DictConfig, OmegaConf
@@ -38,7 +38,6 @@ from .run_info import RunInfo
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from typing import Any, Self
 
     from polars import DataFrame, Expr
     from polars._typing import PolarsDataType

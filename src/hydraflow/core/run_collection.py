@@ -40,7 +40,7 @@ Note:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Any, Self, overload
 
 import polars as pl
 
@@ -50,7 +50,6 @@ from .run import Run
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from pathlib import Path
-    from typing import Any, Self
 
     from polars import DataFrame
 

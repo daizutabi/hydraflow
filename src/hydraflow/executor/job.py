@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CompletedProcess
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import ulid
 
@@ -35,7 +35,6 @@ from .parser import collect, expand
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
     from subprocess import CompletedProcess
-    from typing import Any
 
     from .conf import Job
 
