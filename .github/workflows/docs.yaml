@@ -17,12 +17,11 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v6
+      - name: Install uv and set up Python
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: 3.13
-      - name: Install uv
-        run: pip install uv
+          activate-environment: true
       - name: Install the project
         run: uv sync --group docs
       - name: Deploy documentation
