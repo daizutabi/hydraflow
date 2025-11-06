@@ -39,7 +39,7 @@ import logging
 import sys
 from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -51,7 +51,6 @@ from hydraflow.core.io import file_uri_to_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Any
 
     from mlflow.entities import Run
 
