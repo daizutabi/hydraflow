@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "hydraflow"
-version = "0.19.3"
+version = "0.20.0"
 description = "HydraFlow seamlessly integrates Hydra and MLflow to streamline ML experiment management, combining Hydra's configuration management with MLflow's tracking capabilities."
 readme = "README.md"
 license = { file = "LICENSE" }
