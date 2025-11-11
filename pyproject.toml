@@ -126,7 +126,7 @@ ignore = [
 "src/hydraflow/executor/conf.py" = ["ANN", "D"]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
 
-[tool.pyright]
+[tool.basedpyright]
 include = ["src"]
 exclude = ["notebooks", "tests"]
 reportAny = false
