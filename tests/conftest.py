@@ -13,14 +13,13 @@ from hydraflow.core.io import iter_artifacts_dirs
 
 @pytest.fixture(scope="module")
 def chdir(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
-    cwd = Path()
-    name = str(uuid.uuid4())
+    orig_dir = Path().absolute()
 
-    os.chdir(tmp_path_factory.mktemp(name, numbered=False))
+    os.chdir(tmp_path_factory.mktemp(str(uuid.uuid4()), numbered=False))
 
     yield Path().absolute()
 
-    os.chdir(cwd)
+    os.chdir(orig_dir)
 
 
 @pytest.fixture(scope="module")
