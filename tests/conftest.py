@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import uuid
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -11,20 +12,20 @@ from hydraflow.core.io import iter_artifacts_dirs
 
 
 @pytest.fixture(scope="module")
-def chdir(tmp_path_factory: pytest.TempPathFactory):
-    cwd = Path.cwd()
+def chdir(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    cwd = Path()
     name = str(uuid.uuid4())
 
     os.chdir(tmp_path_factory.mktemp(name, numbered=False))
 
-    yield
+    yield Path().absolute()
 
     os.chdir(cwd)
 
 
 @pytest.fixture(scope="module")
-def experiment_name(chdir):
-    return Path.cwd().name
+def experiment_name(chdir: Path) -> str:
+    return chdir.name
 
 
 @pytest.fixture(scope="module")
@@ -54,7 +55,7 @@ def list_artifacts_dirs(run_script):
 
 def load(path: Path) -> DictConfig:
     config_file = path / ".hydra/config.yaml"
-    return OmegaConf.load(config_file)  # type: ignore
+    return OmegaConf.load(config_file)  # pyright: ignore[reportReturnType]
 
 
 @pytest.fixture(scope="module")
