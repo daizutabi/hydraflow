@@ -121,6 +121,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*.py" = ["D", "G", "INP", "T"]
+"src/hydraflow/__init__.py" = ["E402"]
+"src/hydraflow/_py314_compat.py" = ["ANN202", "ARG005", "SLF001"]
 "src/hydraflow/cli.py" = ["ANN", "D"]
 "src/hydraflow/core/main.py" = ["ANN201", "D401"]
 "src/hydraflow/executor/conf.py" = ["ANN", "D"]

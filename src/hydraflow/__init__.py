@@ -1,3 +1,10 @@
+# Apply Python 3.14 compatibility patch for Hydra
+from ._py314_compat import apply_hydra_argparse_patch
+
+apply_hydra_argparse_patch()
+del apply_hydra_argparse_patch
+
+
 """Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
 from hydraflow.core.collection import Collection
