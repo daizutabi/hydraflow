@@ -1,7 +1,7 @@
 {
   "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu24.04",
-  "remoteUser": "vscode",
   "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers-extra/features/starship:1": {}
   },
   "customizations": {
@@ -12,6 +12,7 @@
         "fill-labs.dependi",
         "markis.code-coverage",
         "ms-python.python",
+        "redhat.vscode-yaml",
         "tamasfe.even-better-toml"
       ]
     }
