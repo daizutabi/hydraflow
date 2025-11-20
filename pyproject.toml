@@ -120,6 +120,9 @@ ignore = [
   "TRY003",
 ]
 
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
 [tool.ruff.lint.per-file-ignores]
 "examples/*.py" = ["D", "G", "INP", "T"]
 "src/hydraflow/__init__.py" = ["E402"]

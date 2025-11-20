@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
@@ -22,8 +24,10 @@ def test_file_uri_to_path_win_python_310_311():
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
-@pytest.fixture(scope="module")
-def tracking_dir(chdir: Path):
+# @pytest.fixture(scope="module", params=["mlruns", "sqlite:///mlflow.db"])
+@pytest.fixture(scope="module", params=["mlruns"])
+def tracking_dir(request: pytest.FixtureRequest, chdir: Path):
+    mlflow.set_tracking_uri(request.param)
     return chdir.joinpath("mlruns").absolute()
 
 
