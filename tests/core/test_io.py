@@ -9,7 +9,7 @@ import pytest
     ("uri", "path"),
     [("/a/b/c", "/a/b/c"), ("file:///a/b/c", "/a/b/c"), ("file:C:/a/b/c", "C:/a/b/c")],
 )
-def test_file_uri_to_path(uri, path):
+def test_file_uri_to_path(uri: str, path: str):
     from hydraflow.core.io import file_uri_to_path
 
     assert file_uri_to_path(uri).as_posix() == path
@@ -23,13 +23,15 @@ def test_file_uri_to_path_win_python_310_311():
 
 
 @pytest.fixture(scope="module")
-def tracking_dir(chdir):
-    return Path("mlruns").absolute()
+def tracking_dir(chdir: Path):
+    return chdir.joinpath("mlruns").absolute()
 
 
 @pytest.fixture(scope="module", autouse=True)
-def setup(chdir):
+def setup(tracking_dir: Path):
     mlflow.set_experiment("e1")
+    assert tracking_dir.exists()
+
     with mlflow.start_run():
         mlflow.log_text("1", "text.txt")
     with mlflow.start_run():
@@ -60,7 +62,7 @@ def test_iter_experiment_dirs(tracking_dir: Path):
     ("e", "es"),
     [("e1", ["e1"]), ("e*", ["e1", "e2"]), ("*", ["e1", "e2"]), ("*2", ["e2"])],
 )
-def test_iter_experiment_dirs_glob(tracking_dir: Path, e, es):
+def test_iter_experiment_dirs_glob(tracking_dir: Path, e: str, es: list[str]):
     from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
 
     names = [get_experiment_name(p) for p in iter_experiment_dirs(tracking_dir, e)]
