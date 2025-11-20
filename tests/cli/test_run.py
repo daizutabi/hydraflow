@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import sys
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -134,5 +137,5 @@ def test_run():
 
     runner.invoke(app, ["run", "job-name"])
     run_dir = next(iter_run_dirs("mlruns", "job-name"))
-    run = Run(run_dir)
+    run: Run[Any, None] = Run(run_dir)
     assert run.info.job_name == "job-name"

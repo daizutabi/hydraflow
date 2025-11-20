@@ -75,8 +75,8 @@ addopts = [
   "--doctest-modules",
 ]
 filterwarnings = [
-  "ignore:Support for class-based `config` is deprecated",
-  "ignore:Pydantic V1 style",
+  "ignore:Filesystem (tracking|model registry) backend.*is deprecated:FutureWarning",
+  "ignore:codecs.*:DeprecationWarning:mlflow.*",
 ]
 strict_config = true
 strict_markers = true
@@ -120,6 +120,9 @@ ignore = [
   "TRY003",
 ]
 
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
 [tool.ruff.lint.per-file-ignores]
 "examples/*.py" = ["D", "G", "INP", "T"]
 "src/hydraflow/__init__.py" = ["E402"]
@@ -131,7 +134,6 @@ ignore = [
 
 [tool.basedpyright]
 include = ["src"]
-exclude = ["notebooks", "tests"]
 reportAny = false
 reportExplicitAny = false
 reportImplicitOverride = false
