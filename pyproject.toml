@@ -131,7 +131,6 @@ ignore = [
 
 [tool.basedpyright]
 include = ["src"]
-exclude = ["notebooks", "tests"]
 reportAny = false
 reportExplicitAny = false
 reportImplicitOverride = false
