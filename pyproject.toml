@@ -75,8 +75,8 @@ addopts = [
   "--doctest-modules",
 ]
 filterwarnings = [
-  "ignore:Support for class-based `config` is deprecated",
-  "ignore:Pydantic V1 style",
+  "ignore:Filesystem (tracking|model registry) backend.*is deprecated:FutureWarning",
+  "ignore:codecs.*:DeprecationWarning:mlflow.*",
 ]
 strict_config = true
 strict_markers = true
