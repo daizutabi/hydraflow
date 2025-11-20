@@ -1,10 +1,22 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
+
+from hydraflow.core.io import (
+    get_experiment_name,
+    get_experiment_names,
+    iter_artifact_paths,
+    iter_artifacts_dirs,
+    iter_experiment_dirs,
+    iter_run_dirs,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.mark.parametrize(
@@ -24,22 +36,27 @@ def test_file_uri_to_path_win_python_310_311():
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
-# @pytest.fixture(scope="module", params=["mlruns", "sqlite:///mlflow.db"])
-@pytest.fixture(scope="module", params=["mlruns"])
-def tracking_dir(request: pytest.FixtureRequest, chdir: Path):
-    mlflow.set_tracking_uri(request.param)
-    return chdir.joinpath("mlruns").absolute()
+@pytest.fixture(scope="module", autouse=True, params=["mlruns", "mlflow.db"])
+def setup(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+    chdir: Path,  # pyright: ignore[reportUnusedParameter]
+) -> None:
+    tmpdir = tmp_path_factory.mktemp(request.param)
+    assert isinstance(request.param, str)
 
+    uri = (tmpdir / request.param).as_posix()
+    if "." in request.param:
+        uri = f"sqlite:///{uri}"
 
-@pytest.fixture(scope="module", autouse=True)
-def setup(tracking_dir: Path):
+    mlflow.set_tracking_uri(uri)
+
     mlflow.set_experiment("e1")
-    assert tracking_dir.exists()
-
     with mlflow.start_run():
         mlflow.log_text("1", "text.txt")
     with mlflow.start_run():
         mlflow.log_text("2", "text.txt")
+
     mlflow.set_experiment("e2")
     with mlflow.start_run():
         mlflow.log_text("3", "text.txt")
@@ -49,78 +66,47 @@ def setup(tracking_dir: Path):
         mlflow.log_text("5", "text.txt")
 
 
-def test_get_experiment_names(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_names
-
-    assert sorted(get_experiment_names(tracking_dir)) == ["e1", "e2"]  # type: ignore
+def test_get_experiment_names():
+    assert sorted(get_experiment_names()) == ["e1", "e2"]
 
 
-def test_iter_experiment_dirs(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
-
-    names = [get_experiment_name(p) for p in iter_experiment_dirs(tracking_dir)]
-    assert sorted(names) == ["e1", "e2"]  # type: ignore
+def test_iter_experiment_dirs():
+    names = [get_experiment_name(p) for p in iter_experiment_dirs()]
+    assert sorted(names) == ["e1", "e2"]
 
 
 @pytest.mark.parametrize(
     ("e", "es"),
     [("e1", ["e1"]), ("e*", ["e1", "e2"]), ("*", ["e1", "e2"]), ("*2", ["e2"])],
 )
-def test_iter_experiment_dirs_glob(tracking_dir: Path, e: str, es: list[str]):
-    from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
-
-    names = [get_experiment_name(p) for p in iter_experiment_dirs(tracking_dir, e)]
-    assert sorted(names) == es  # type: ignore
+def test_iter_experiment_dirs_glob(e: str, es: list[str]):
+    names = [get_experiment_name(p) for p in iter_experiment_dirs(e)]
+    assert sorted(names) == es
 
 
-def test_iter_experiment_dirs_filter(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
-
-    it = iter_experiment_dirs(tracking_dir, experiment_names="e1")
+def test_iter_experiment_dirs_filter():
+    it = iter_experiment_dirs(experiment_names="e1")
     assert [get_experiment_name(p) for p in it] == ["e1"]
 
 
-def test_iter_experiment_dirs_filter_callable(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_name, iter_experiment_dirs
-
-    it = iter_experiment_dirs(tracking_dir, experiment_names=lambda name: name == "e2")
+def test_iter_experiment_dirs_filter_callable():
+    it = iter_experiment_dirs(experiment_names=lambda name: name == "e2")
     assert [get_experiment_name(p) for p in it] == ["e2"]
 
 
-def test_predicate_experiment_dir():
-    from hydraflow.core.io import predicate_experiment_dir
-
-    assert predicate_experiment_dir(Path()) is False
+def test_get_experiment_name_none():
+    assert get_experiment_name("invalid") == ""
 
 
-def test_get_experiment_name_none(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_name
-
-    assert get_experiment_name(tracking_dir.parent) == ""
+def test_iter_run_dirs():
+    assert len(list(iter_run_dirs())) == 5
 
 
-def test_get_experiment_name_metafile_none(tracking_dir: Path):
-    from hydraflow.core.io import get_experiment_name
-
-    (tracking_dir / "meta.yaml").touch()
-    assert get_experiment_name(tracking_dir) == ""
+def test_iter_artifacts_dirs():
+    assert len(list(iter_artifacts_dirs())) == 5
 
 
-def test_iter_run_dirs(tracking_dir: Path):
-    from hydraflow.core.io import iter_run_dirs
-
-    assert len(list(iter_run_dirs(tracking_dir))) == 5
-
-
-def test_iter_artifacts_dirs(tracking_dir: Path):
-    from hydraflow.core.io import iter_artifacts_dirs
-
-    assert len(list(iter_artifacts_dirs(tracking_dir))) == 5
-
-
-def test_iter_artifact_paths(tracking_dir: Path):
-    from hydraflow.core.io import iter_artifact_paths
-
-    it = iter_artifact_paths(tracking_dir, "text.txt")
+def test_iter_artifact_paths():
+    it = iter_artifact_paths("text.txt")
     text = sorted("".join(p.read_text() for p in it))
     assert text == ["1", "2", "3", "4", "5"]

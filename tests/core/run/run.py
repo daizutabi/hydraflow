@@ -23,7 +23,7 @@ class Config:
 
 
 @hydraflow.main(Config)
-def app(run: Run, cfg: Config):
+def app(_run: Run, _cfg: Config):
     pass
 
 

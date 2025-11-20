@@ -54,7 +54,7 @@ def list_artifacts_dirs(
 ) -> Callable[[Path | str, list[str]], list[Path]]:
     def artifacts_dirs(filename: Path | str, args: list[str]) -> list[Path]:
         experiment_name = run_script(filename, args)
-        return list(iter_artifacts_dirs("mlruns", experiment_name))
+        return list(iter_artifacts_dirs(experiment_name))
 
     return artifacts_dirs
 
@@ -64,14 +64,15 @@ def load(path: Path) -> DictConfig:
     return OmegaConf.load(config_file)  # pyright: ignore[reportReturnType]
 
 
-type Collect = Callable[[Path | str, list[str]], list[tuple[Path, DictConfig]]]
+type Results = list[tuple[Path, DictConfig]]
+type Collect = Callable[[Path | str, list[str]], Results]
 
 
 @pytest.fixture(scope="module")
 def collect(
     list_artifacts_dirs: Callable[[Path | str, list[str]], list[Path]],
 ) -> Collect:
-    def collect(filename: Path | str, args: list[str]) -> list[tuple[Path, DictConfig]]:
+    def collect(filename: Path | str, args: list[str]) -> Results:
         artifacts_dirs = list_artifacts_dirs(filename, args)
         configs = [load(artifacts_dir) for artifacts_dir in artifacts_dirs]
         return list(zip(artifacts_dirs, configs, strict=True))
