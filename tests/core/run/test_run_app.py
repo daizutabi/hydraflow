@@ -25,9 +25,9 @@ class Config:
     db: Db = Db()
 
 
-@pytest.fixture(scope="module")
-def results(collect: Collect):
-    file = Path(__file__).parent / "run.py"
+@pytest.fixture(scope="module", params=["file", "sqlite"])
+def results(collect: Collect, request: pytest.FixtureRequest) -> Results:
+    file = Path(__file__).parent / f"run_{request.param}.py"
     return collect(file, ["count=10", "name=abc", "size.width=1", "size.height=3"])
 
 

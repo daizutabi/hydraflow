@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import os
 import sys
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import mlflow
 import pytest
@@ -14,9 +15,6 @@ from hydraflow.core.io import (
     iter_experiment_dirs,
     iter_run_dirs,
 )
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @pytest.mark.parametrize(
@@ -40,9 +38,10 @@ def test_file_uri_to_path_win_python_310_311():
 def setup(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
-    chdir: Path,  # pyright: ignore[reportUnusedParameter]
-) -> None:
+):
+    curdir = Path.cwd()
     tmpdir = tmp_path_factory.mktemp(request.param)
+    os.chdir(tmpdir)
     assert isinstance(request.param, str)
 
     uri = (tmpdir / request.param).as_posix()
@@ -64,6 +63,10 @@ def setup(
         mlflow.log_text("4", "text.txt")
     with mlflow.start_run():
         mlflow.log_text("5", "text.txt")
+
+    yield
+
+    os.chdir(curdir)
 
 
 def test_get_experiment_names():
