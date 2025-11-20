@@ -5,6 +5,8 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import mlflow
+
 import hydraflow
 
 if TYPE_CHECKING:
@@ -51,4 +53,5 @@ def app(_run: Run, _cfg: Config):
 
 
 if __name__ == "__main__":
+    mlflow.set_tracking_uri("")
     app()
