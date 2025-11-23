@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
 
-import pytest
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed  # pyright: ignore[reportUnknownVariableType]
 
-# from rich.progress import
+if TYPE_CHECKING:
+    import pytest
 
 
-def f(x):
+def f(x: int) -> int:
     time.sleep(0.1)
     return x
 

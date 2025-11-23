@@ -1,11 +1,29 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
 
+from hydraflow.executor.parser import (
+    _arange,
+    _get_range,
+    collect,
+    collect_arg,
+    collect_values,
+    count_decimal_digits,
+    count_integer_digits,
+    expand,
+    expand_arg,
+    expand_values,
+    split_arg,
+    split_suffix,
+    to_number,
+)
+
+# pyright: reportPrivateUsage=false
+
 
 @pytest.mark.parametrize(("s", "x"), [("1", 1), ("1.2", 1.2), ("", 0)])
-def test_to_number(s, x):
-    from hydraflow.executor.parser import to_number
-
+def test_to_number(s: str, x: float):
     assert to_number(s) == x
 
 
@@ -13,9 +31,7 @@ def test_to_number(s, x):
     ("s", "x"),
     [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0), ("1.234e-10", 3)],
 )
-def test_count_decimal_digits(s, x):
-    from hydraflow.executor.parser import count_decimal_digits
-
+def test_count_decimal_digits(s: str, x: int):
     assert count_decimal_digits(s) == x
 
 
@@ -23,9 +39,7 @@ def test_count_decimal_digits(s, x):
     ("s", "x"),
     [("1", 1), ("1.2", 1), ("1.234", 1), ("123.", 3), ("", 0), ("1.234e-10", 1)],
 )
-def test_count_integer_digits(s, x):
-    from hydraflow.executor.parser import count_integer_digits
-
+def test_count_integer_digits(s: str, x: int):
     assert count_integer_digits(s) == x
 
 
@@ -38,9 +52,7 @@ def test_count_integer_digits(s, x):
         ("1.2:1.4:0.1", (1.2, 1.4, 0.1)),
     ],
 )
-def test_get_range(s, x):
-    from hydraflow.executor.parser import _get_range
-
+def test_get_range(s: str, x: tuple[float, float, float]):
     assert _get_range(s) == x
 
 
@@ -53,9 +65,11 @@ def test_get_range(s, x):
         ("4.5:3.5:1.0", ValueError, "start cannot be greater than stop"),
     ],
 )
-def test_get_range_errors(arg, expected_exception, expected_message):
-    from hydraflow.executor.parser import _get_range
-
+def test_get_range_errors(
+    arg: str,
+    expected_exception: type[BaseException],
+    expected_message: str,
+):
     with pytest.raises(expected_exception) as excinfo:
         _get_range(arg)
     assert str(excinfo.value) == expected_message
@@ -71,15 +85,11 @@ def test_get_range_errors(arg, expected_exception, expected_message):
         (1.02e-3, 1.04e-3, 0.01e-3, [0.00102, 0.00103, 0.00104]),
     ],
 )
-def test_arange(start, stop, step, expected):
-    from hydraflow.executor.parser import _arange
-
+def test_arange(start: float, stop: float, step: float, expected: list[float]):
     np.testing.assert_allclose(_arange(start, stop, step), expected)
 
 
 def test_arange_error():
-    from hydraflow.executor.parser import _arange
-
     with pytest.raises(ValueError):
         _arange(1.0, 1.0, 0.0)
 
@@ -106,9 +116,7 @@ def test_arange_error():
         ("ab", ("ab", "")),
     ],
 )
-def test_split_suffix(s, x):
-    from hydraflow.executor.parser import split_suffix
-
+def test_split_suffix(s: str, x: tuple[str, str]):
     assert split_suffix(s) == x
 
 
@@ -148,9 +156,7 @@ def test_split_suffix(s, x):
         ("(1:3,5:9:2,20)k", ["1e3", "2e3", "3e3", "5e3", "7e3", "9e3", "20e3"]),
     ],
 )
-def test_collect_value(s, x):
-    from hydraflow.executor.parser import collect_values
-
+def test_collect_value(s: str, x: list[str]):
     assert collect_values(s) == x
 
 
@@ -171,9 +177,7 @@ def test_collect_value(s, x):
         ("(1:3)e-2,(5:7)e-3", ["1e-2", "2e-2", "3e-2", "5e-3", "6e-3", "7e-3"]),
     ],
 )
-def test_expand_value(s, x):
-    from hydraflow.executor.parser import expand_values
-
+def test_expand_value(s: str, x: list[str]):
     assert list(expand_values(s)) == x
 
 
@@ -186,15 +190,11 @@ def test_expand_value(s, x):
         ("3", ["3e3"]),
     ],
 )
-def test_expand_value_suffix(s, x):
-    from hydraflow.executor.parser import expand_values
-
+def test_expand_value_suffix(s: str, x: list[str]):
     assert list(expand_values(s, "k")) == x
 
 
 def test_split_arg_error():
-    from hydraflow.executor.parser import split_arg
-
     with pytest.raises(ValueError):
         split_arg("1,2,3")
 
@@ -215,9 +215,7 @@ def test_split_arg_error():
         ("a/m=1:3,8:10", "a=1e-3,2e-3,3e-3,8e-3,9e-3,10e-3"),
     ],
 )
-def test_collect_arg(s, x):
-    from hydraflow.executor.parser import collect_arg
-
+def test_collect_arg(s: str, x: str):
     assert collect_arg(s) == x
 
 
@@ -242,15 +240,11 @@ def test_collect_arg(s, x):
         ("a/k=1,2|b/m=3,4|c/u=5,6", ["a=1e3,2e3", "b=3e-3,4e-3", "c=5e-6,6e-6"]),
     ],
 )
-def test_expand_arg(s, x):
-    from hydraflow.executor.parser import expand_arg
-
+def test_expand_arg(s: str, x: list[str]):
     assert list(expand_arg(s)) == x
 
 
 def test_expand_arg_error():
-    from hydraflow.executor.parser import expand_arg
-
     with pytest.raises(ValueError):
         list(expand_arg("1,2|3,4|"))
 
@@ -265,9 +259,7 @@ def test_expand_arg_error():
         (["a/k=1:3", "b/m=4:6"], ["a=1e3,2e3,3e3", "b=4e-3,5e-3,6e-3"]),
     ],
 )
-def test_collect_list(s, x):
-    from hydraflow.executor.parser import collect
-
+def test_collect_list(s: list[str], x: list[str]):
     assert collect(s) == x
 
 
@@ -280,9 +272,7 @@ def test_collect_list(s, x):
         ("", []),
     ],
 )
-def test_collect_str(s, x):
-    from hydraflow.executor.parser import collect
-
+def test_collect_str(s: str, x: list[str]):
     assert collect(s) == x
 
 
@@ -317,15 +307,13 @@ def test_collect_str(s, x):
         ),
     ],
 )
-def test_expand_list(s, x):
-    from hydraflow.executor.parser import expand
-
+def test_expand_list(s: list[str], x: list[list[str]]):
     assert expand(s) == x
 
 
 @pytest.mark.parametrize(
     ("s", "x"),
-    [
+    [  # pyright: ignore[reportUnknownArgumentType]
         (
             "a/m=1:2|3,4 b/k=5:6|c=7,8",
             [
@@ -338,7 +326,5 @@ def test_expand_list(s, x):
         ("", [[]]),
     ],
 )
-def test_expand_str(s, x):
-    from hydraflow.executor.parser import expand
-
+def test_expand_str(s: str, x: list[list[str]]):
     assert expand(s) == x
