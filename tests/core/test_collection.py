@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import pytest
 from omegaconf import ListConfig
 
-from hydraflow.core.collection import Collection
+from hydraflow.core.collection import Collection, matches, to_hashable
+from hydraflow.core.group_by import GroupBy
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # pyright: reportPrivateUsage=false
 # pyright: reportUnknownLambdaType=false
@@ -269,8 +274,6 @@ def test_to_frame_parallel(rc: Rc, progress: bool):
 
 
 def test_group_by(rc: Rc):
-    from hydraflow.core.group_by import GroupBy
-
     gp = rc.group_by("y")
     assert isinstance(gp, GroupBy)
     assert len(gp) == 4
@@ -281,8 +284,6 @@ def test_group_by(rc: Rc):
 
 
 def test_group_by_multi(rc: Rc):
-    from hydraflow.core.group_by import GroupBy
-
     gp = rc.group_by("x", "run_id")
     assert isinstance(gp, GroupBy)
     assert len(gp) == 3
@@ -293,20 +294,14 @@ def test_group_by_multi(rc: Rc):
 
 
 def test_to_hashable_list_config():
-    from hydraflow.core.collection import to_hashable
-
     assert to_hashable(ListConfig([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_ndarray():
-    from hydraflow.core.collection import to_hashable
-
     assert to_hashable(np.array([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_fallback_str():
-    from hydraflow.core.collection import to_hashable
-
     class C:
         __hash__ = None  # pyright: ignore[reportAssignmentType, reportUnannotatedClassAttribute]
 
@@ -334,22 +329,16 @@ def test_to_hashable_fallback_str():
     ],
 )
 def test_matches(criterion: Any, expected: bool):
-    from hydraflow.core.collection import matches
-
     assert matches(10, criterion) is expected
 
 
 def test_matches_list_config():
-    from hydraflow.core.collection import matches
-
     assert matches(ListConfig([10, 20]), [10, 20])
     assert matches(ListConfig([10, 20]), ListConfig([10, 20]))
 
 
 @pytest.mark.parametrize("seed", [None, 1])
 def test_sample(seed: int | None):
-    from hydraflow.core.collection import Collection
-
     x = Collection(list(range(100)))
 
     sample = x.sample(50, seed=seed)
@@ -359,8 +348,6 @@ def test_sample(seed: int | None):
 
 
 def test_sample_error():
-    from hydraflow.core.collection import Collection
-
     x = Collection(list(range(10)))
     with pytest.raises(ValueError):
         x.sample(11)
@@ -368,8 +355,6 @@ def test_sample_error():
 
 @pytest.mark.parametrize("seed", [None, 1])
 def test_shuffle(seed: int | None):
-    from hydraflow.core.collection import Collection
-
     x = Collection(list(range(10)))
     shuffled = x.shuffle(seed)
     assert len(shuffled) == 10

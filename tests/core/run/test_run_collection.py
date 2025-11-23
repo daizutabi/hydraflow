@@ -1,13 +1,20 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
 from polars import DataFrame
 
+from hydraflow.core.group_by import GroupBy
 from hydraflow.core.run import Run
 from hydraflow.core.run_collection import RunCollection
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -45,15 +52,15 @@ def run_factory():
     return run_factory
 
 
+type Rc = RunCollection[Run[Config, Impl]]
+
+
 @pytest.fixture
-def rc(run_factory):
+def rc(run_factory: Callable[..., Run[Config, Impl]]) -> Rc:
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
     runs = [run_factory(*p) for p in it]
-    return RunCollection(runs, Run.get)
-
-
-type Rc = RunCollection[Run[Config, Impl]]
+    return RunCollection[Run[Config, Impl]](runs, Run.get)  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
 
 
 def test_repr(rc: Rc):
@@ -61,7 +68,7 @@ def test_repr(rc: Rc):
 
 
 def test_repr_empty():
-    assert repr(RunCollection([])) == "RunCollection(empty)"
+    assert repr(RunCollection[Any]([])) == "RunCollection(empty)"
 
 
 def test_len(rc: Rc):
@@ -273,8 +280,6 @@ def test_to_frame_kwargs(rc: Rc):
 
 
 def test_group_by(rc: Rc):
-    from hydraflow.core.group_by import GroupBy
-
     gp = rc.group_by("count", "name")
     assert isinstance(gp, GroupBy)
 

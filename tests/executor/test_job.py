@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from hydraflow.executor.job import (
     iter_args,
     iter_batches,
     iter_calls,
+    iter_tasks,
     merge_args,
     submit,
 )
@@ -77,10 +79,6 @@ def test_sweep_args(batches: list[list[str]], i: int, x: str):
 
 
 def test_iter_tasks(job: Job, tmp_path: Path):
-    import subprocess
-
-    from hydraflow.executor.job import iter_batches, iter_tasks
-
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "echo.py"
 

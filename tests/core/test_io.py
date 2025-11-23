@@ -8,6 +8,7 @@ import mlflow
 import pytest
 
 from hydraflow.core.io import (
+    file_uri_to_path,
     get_experiment_name,
     get_experiment_names,
     iter_artifact_paths,
@@ -22,15 +23,11 @@ from hydraflow.core.io import (
     [("/a/b/c", "/a/b/c"), ("file:///a/b/c", "/a/b/c"), ("file:C:/a/b/c", "C:/a/b/c")],
 )
 def test_file_uri_to_path(uri: str, path: str):
-    from hydraflow.core.io import file_uri_to_path
-
     assert file_uri_to_path(uri).as_posix() == path
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="This test is for Windows")
 def test_file_uri_to_path_win_python_310_311():
-    from hydraflow.core.io import file_uri_to_path
-
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
