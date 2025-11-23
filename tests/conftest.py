@@ -28,11 +28,15 @@ type Collect = Callable[..., Results]
 
 @pytest.fixture(scope="module")
 def collect(tmp_path_factory: pytest.TempPathFactory) -> Collect:
-    def collect(filename: Path, *args: list[str]) -> Results:
+    def collect(filename: Path, *args: list[str], cwd: Path | None = None) -> Results:
         orig_dir = Path().absolute()
 
-        job_name = str(uuid.uuid4())
-        os.chdir(tmp_path_factory.mktemp(job_name))
+        if cwd is None:
+            job_name = str(uuid.uuid4())
+            os.chdir(tmp_path_factory.mktemp(job_name))
+        else:
+            job_name = cwd.name
+            os.chdir(cwd)
 
         job_name_arg = f"hydra.job.name={job_name}"
 

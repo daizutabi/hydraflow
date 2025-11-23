@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import mlflow
+
 import hydraflow
 
 if TYPE_CHECKING:
@@ -27,9 +29,10 @@ class Config:
 
 
 @hydraflow.main(Config, chdir=True, update=Config.update)
-def app(run: Run, cfg: Config):
+def app(_run: Run, _cfg: Config):
     pass
 
 
 if __name__ == "__main__":
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

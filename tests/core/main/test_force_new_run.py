@@ -1,28 +1,34 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+    from tests.conftest import Collect, Results
+
 
 @pytest.fixture(scope="module")
-def results(collect):
+def results(collect: Collect) -> Results:
     file = Path(__file__).parent / "force_new_run.py"
-    results = None
-    for _ in range(3):
-        results = collect(file, ["count=3"])
-    return results
+    return collect(file, ["count=3"], ["count=3"], ["count=3"])
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 3
 
 
 @pytest.fixture(scope="module", params=range(3))
-def result(results, request: pytest.FixtureRequest):
+def result(results: Results, request: pytest.FixtureRequest):
+    assert isinstance(request.param, int)
     return results[request.param]
 
 
 @pytest.fixture(scope="module")
-def path(result):
+def path(result: tuple[Path, DictConfig]):
     return result[0]
 
 

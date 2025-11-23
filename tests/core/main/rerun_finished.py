@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import mlflow
+
 import hydraflow
 
 if TYPE_CHECKING:
@@ -23,11 +25,12 @@ class Config:
 
 
 @hydraflow.main(Config, chdir=True, rerun_finished=True)
-def app(run: Run, cfg: Config):
+def app(_run: Run, cfg: Config):
     file = Path("a.txt")
     text = file.read_text() if file.exists() else ""
     file.write_text(text + f"{cfg.count}")
 
 
 if __name__ == "__main__":
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

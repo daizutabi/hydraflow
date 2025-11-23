@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import mlflow
+
 import hydraflow
 
 if TYPE_CHECKING:
@@ -23,4 +25,5 @@ def app(run: Run, cfg: Config):
 
 
 if __name__ == "__main__":
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

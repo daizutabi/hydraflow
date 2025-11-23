@@ -1,18 +1,27 @@
+from __future__ import annotations
+
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from tests.conftest import Collect, Results
+
 
 @pytest.fixture(scope="module")
-def results(collect):
+def results(collect: Collect) -> Results:
     file = Path(__file__).parent / "update.py"
-    collect(file, ["width=1", "height=1"])
-    return collect(file, ["-m", "width=2,3", "height=4,5", "--dry-run"])
+    return collect(
+        file,
+        ["width=1", "height=1"],
+        ["-m", "width=2,3", "height=4,5", "--dry-run"],
+    )
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 1
 
 
