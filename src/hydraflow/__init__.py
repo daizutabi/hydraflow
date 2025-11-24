@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Apply Python 3.14 compatibility patch for Hydra
 from ._py314_compat import apply_hydra_argparse_patch
 

@@ -1,14 +1,23 @@
+from __future__ import annotations
+
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import numpy as np
 import pytest
 from omegaconf import ListConfig
 
-from hydraflow.core.collection import Collection
+from hydraflow.core.collection import Collection, matches, to_hashable
+from hydraflow.core.group_by import GroupBy
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+# pyright: reportPrivateUsage=false
+# pyright: reportUnknownLambdaType=false
+# pyright: reportUnknownArgumentType=false
 
 
 @dataclass
@@ -52,7 +61,8 @@ def test_repr(rc: Rc):
 
 
 def test_repr_empty():
-    assert repr(Collection([])) == "Collection(empty)"
+    x: list[int] = []
+    assert repr(Collection(x)) == "Collection(empty)"
 
 
 def test_len(rc: Rc):
@@ -264,8 +274,6 @@ def test_to_frame_parallel(rc: Rc, progress: bool):
 
 
 def test_group_by(rc: Rc):
-    from hydraflow.core.group_by import GroupBy
-
     gp = rc.group_by("y")
     assert isinstance(gp, GroupBy)
     assert len(gp) == 4
@@ -276,8 +284,6 @@ def test_group_by(rc: Rc):
 
 
 def test_group_by_multi(rc: Rc):
-    from hydraflow.core.group_by import GroupBy
-
     gp = rc.group_by("x", "run_id")
     assert isinstance(gp, GroupBy)
     assert len(gp) == 3
@@ -288,22 +294,16 @@ def test_group_by_multi(rc: Rc):
 
 
 def test_to_hashable_list_config():
-    from hydraflow.core.collection import to_hashable
-
     assert to_hashable(ListConfig([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_ndarray():
-    from hydraflow.core.collection import to_hashable
-
     assert to_hashable(np.array([1, 2, 3])) == (1, 2, 3)
 
 
 def test_to_hashable_fallback_str():
-    from hydraflow.core.collection import to_hashable
-
     class C:
-        __hash__ = None  # type: ignore
+        __hash__ = None  # pyright: ignore[reportAssignmentType, reportUnannotatedClassAttribute]
 
         def __str__(self) -> str:
             return "abc"
@@ -328,23 +328,17 @@ def test_to_hashable_fallback_str():
         (lambda x: x > 10, False),
     ],
 )
-def test_matches(criterion, expected):
-    from hydraflow.core.collection import matches
-
+def test_matches(criterion: Any, expected: bool):
     assert matches(10, criterion) is expected
 
 
 def test_matches_list_config():
-    from hydraflow.core.collection import matches
-
     assert matches(ListConfig([10, 20]), [10, 20])
     assert matches(ListConfig([10, 20]), ListConfig([10, 20]))
 
 
 @pytest.mark.parametrize("seed", [None, 1])
-def test_sample(seed):
-    from hydraflow.core.collection import Collection
-
+def test_sample(seed: int | None):
     x = Collection(list(range(100)))
 
     sample = x.sample(50, seed=seed)
@@ -354,17 +348,13 @@ def test_sample(seed):
 
 
 def test_sample_error():
-    from hydraflow.core.collection import Collection
-
     x = Collection(list(range(10)))
     with pytest.raises(ValueError):
         x.sample(11)
 
 
 @pytest.mark.parametrize("seed", [None, 1])
-def test_shuffle(seed):
-    from hydraflow.core.collection import Collection
-
+def test_shuffle(seed: int | None):
     x = Collection(list(range(10)))
     shuffled = x.shuffle(seed)
     assert len(shuffled) == 10
@@ -381,41 +371,41 @@ def rcd():
     return Collection(items, lambda i, k, d: i.get(k, d))
 
 
-def test_eq(rcd: Collection):
+def test_eq(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.eq("x", "y"))) == 2
 
 
-def test_ne(rcd: Collection):
+def test_ne(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.ne("x", "y"))) == 3
 
 
-def test_gt(rcd: Collection):
+def test_gt(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.gt("x", "y"))) == 3
 
 
-def test_lt(rcd: Collection):
+def test_lt(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.lt("x", "y"))) == 0
 
 
-def test_ge(rcd: Collection):
+def test_ge(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.ge("x", "y"))) == 5
 
 
-def test_le(rcd: Collection):
+def test_le(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.le("x", "y"))) == 2
 
 
-def test_startswith(rcd: Collection):
+def test_startswith(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.startswith("z", "ab"))) == 3
 
 
-def test_endswith(rcd: Collection):
+def test_endswith(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.endswith("z", "cd"))) == 3
 
 
-def test_match(rcd: Collection):
+def test_match(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.match("z", r".*ac.*"))) == 2
 
 
-def test_match_flags(rcd: Collection):
+def test_match_flags(rcd: Collection[dict[str, int | str]]):
     assert len(rcd.filter(rcd.match("z", r".*AC.*", flags=re.IGNORECASE))) == 2

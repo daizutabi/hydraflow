@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from itertools import product
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from polars import DataFrame
 
 from hydraflow.core.run import Run
 from hydraflow.core.run_collection import RunCollection
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -44,12 +50,12 @@ def run_factory():
     return run_factory
 
 
-@pytest.fixture
-def rc(run_factory):
+@pytest.fixture(scope="module")
+def rc(run_factory: Callable[..., Run[Config, Impl]]):
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
     runs = [run_factory(*p) for p in it]
-    return RunCollection(runs, Run.get)
+    return RunCollection[Run[Config, Impl]](runs, Run.get)  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
 
 
 type Rc = RunCollection[Run[Config, Impl]]

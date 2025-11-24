@@ -1,19 +1,22 @@
+from __future__ import annotations
+
 import time
+from typing import TYPE_CHECKING
 
-import pytest
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed  # pyright: ignore[reportUnknownVariableType]
 
-# from rich.progress import
+from hydraflow.utils.progress import Progress
+
+if TYPE_CHECKING:
+    import pytest
 
 
-def f(x):
+def f(x: int) -> int:
     time.sleep(0.1)
     return x
 
 
 def test_progress(capsys: pytest.CaptureFixture[str]):
-    from hydraflow.utils.progress import Progress
-
     with Progress(*Progress.get_default_columns()) as progress:
         progress.add_task("test", total=100)
         Parallel(n_jobs=8, backend="threading")(delayed(f)(i) for i in range(100))
@@ -25,8 +28,6 @@ def test_progress(capsys: pytest.CaptureFixture[str]):
 
 
 def test_progress_without_tasks(capsys: pytest.CaptureFixture[str]):
-    from hydraflow.utils.progress import Progress
-
     with Progress(*Progress.get_default_columns()):
         Parallel(n_jobs=8, backend="threading")(delayed(f)(i) for i in range(100))
 

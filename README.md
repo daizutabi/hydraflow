@@ -120,10 +120,12 @@ jobs:
 Analyze experiment results with powerful APIs:
 
 ```python
+import mlflow
 from hydraflow import Run, iter_run_dirs
 
 # Load runs
-runs = Run.load(iter_run_dirs("mlruns"))
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+runs = Run.load(iter_run_dirs())
 
 # Filter and analyze
 best_runs = runs.filter(model_type="transformer").to_frame("learning_rate", "accuracy")

@@ -1,21 +1,29 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from omegaconf import DictConfig
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+    from tests.core.conftest import Collect, Results
 
 
 @pytest.fixture(scope="module")
-def results(collect):
+def results(collect: Collect):
     file = Path(__file__).parent / "chdir.py"
     return collect(file, ["-m", "count=1,2"])
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 2
 
 
 @pytest.fixture(scope="module", params=range(2))
-def result(results, request: pytest.FixtureRequest):
+def result(results: Results, request: pytest.FixtureRequest):
+    assert isinstance(request.param, int)
     return results[request.param]
 
 

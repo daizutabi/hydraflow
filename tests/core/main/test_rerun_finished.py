@@ -1,21 +1,24 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from tests.core.conftest import Collect, Results
+
 
 @pytest.fixture(scope="module")
-def results(collect):
+def results(collect: Collect) -> Results:
     file = Path(__file__).parent / "rerun_finished.py"
-    results = None
-    for _ in range(3):
-        results = collect(file, ["count=3"])
-    return results
+    return collect(file, ["count=3"], ["count=3"], ["count=3"])
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 1
 
 
-def test_count(results):
-    path: Path = results[0][0]
+def test_count(results: Results):
+    path = results[0][0]
     assert path.joinpath("a.txt").read_text() == "333"

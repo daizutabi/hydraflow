@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 import mlflow
@@ -12,12 +12,19 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class Size:
+    width: int = 0
+    height: int = 0
+
+
+@dataclass
 class Config:
     count: int = 1
     name: str = "a"
+    size: Size = field(default_factory=Size)
 
 
-@hydraflow.main(Config, match_overrides=True)
+@hydraflow.main(Config)
 def app(_run: Run, _cfg: Config):
     pass
 

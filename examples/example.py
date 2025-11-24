@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-
-from mlflow.entities import Run
+from typing import TYPE_CHECKING
 
 import hydraflow
 
-log = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from mlflow.entities import Run
+
+# pyright: reportUnknownArgumentType=false
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -16,8 +22,8 @@ class Config:
 
 @hydraflow.main(Config)
 def app(run: Run, cfg: Config) -> None:
-    log.info(run.info.run_id)
-    log.info(cfg)
+    logger.info(run.info.run_id)
+    logger.info(cfg)
 
 
 if __name__ == "__main__":

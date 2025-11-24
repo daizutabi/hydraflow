@@ -163,7 +163,11 @@ def get_run_id(uri: str, config: Any, overrides: list[str] | None) -> str | None
         no run ID is found.
 
     """
-    for run_dir in file_uri_to_path(uri).iterdir():
+    path = file_uri_to_path(uri)
+    if not path.is_dir():
+        return None
+
+    for run_dir in path.iterdir():
         if run_dir.is_dir() and equals(run_dir, config, overrides):
             return run_dir.name
 

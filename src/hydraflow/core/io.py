@@ -7,14 +7,14 @@ import urllib.parse
 import urllib.request
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from omegaconf import OmegaConf
+import mlflow
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-    from mlflow.entities import Run
+    from mlflow.entities import Experiment, Run
 
 
 def file_uri_to_path(uri: str) -> Path:
@@ -57,8 +57,6 @@ def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
         pattern (str): The pattern to match the logs.
 
     """
-    import mlflow
-
     artifact_dir = get_artifact_dir(run)
 
     for file in from_dir.glob(pattern):
@@ -77,6 +75,21 @@ def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
         mlflow.log_text(text, file.name)
 
 
+def predicate_experiment(
+    experiment: Experiment,
+    experiment_names: list[str] | Callable[[str], bool] | None = None,
+) -> bool:
+    """Predicate an experiment based on the experiment names."""
+    if experiment_names is None:
+        return True
+
+    name = cast("str", experiment.name)
+    if isinstance(experiment_names, list):
+        return any(fnmatch.fnmatch(name, e) for e in experiment_names)
+
+    return experiment_names(name)
+
+
 @cache
 def get_experiment_name(experiment_dir: Path) -> str:
     """Get the job name from an experiment directory.
@@ -91,84 +104,62 @@ def get_experiment_name(experiment_dir: Path) -> str:
         The job name as a string, or an empty string if the file does not exist
 
     """
-    path = experiment_dir / "meta.yaml"
-    if not path.exists():
-        return ""
+    es = mlflow.search_experiments(filter_string='name != "Default"')
+    for experiment in es:
+        loc = cast("str", experiment.artifact_location)
+        if Path(file_uri_to_path(loc)) == experiment_dir:
+            return cast("str", experiment.name)
 
-    meta = OmegaConf.load(experiment_dir / "meta.yaml")
-    return OmegaConf.select(meta, "name", default="")
-
-
-def predicate_experiment_dir(
-    experiment_dir: Path,
-    experiment_names: list[str] | Callable[[str], bool] | None = None,
-) -> bool:
-    """Predicate an experiment directory based on the path and experiment names."""
-    if not experiment_dir.is_dir() or experiment_dir.name in [".trash", "0"]:
-        return False
-
-    name = get_experiment_name(experiment_dir)
-    if not name:
-        return False
-
-    if experiment_names is None:
-        return True
-
-    if isinstance(experiment_names, list):
-        return any(fnmatch.fnmatch(name, e) for e in experiment_names)
-
-    return experiment_names(name)
+    return ""
 
 
-def get_experiment_names(tracking_dir: str | Path) -> list[str]:
-    """Get the experiment names from the tracking directory.
+def get_experiment_names() -> list[str]:
+    """Get the experiment names.
 
     Returns:
         list[str]: A list of experiment names sorted by the name.
 
     """
-    names = [get_experiment_name(path) for path in Path(tracking_dir).iterdir()]
-    return sorted(name for name in names if name and name != "Default")
+    es = mlflow.search_experiments(filter_string='name != "Default"')
+    return [e.name for e in es]  # pyright: ignore[reportUnknownMemberType]
 
 
 def iter_experiment_dirs(
-    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the experiment directories in the tracking directory."""
+    """Iterate over the experiment directories."""
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
-    for path in Path(tracking_dir).iterdir():
-        if predicate_experiment_dir(path, experiment_names):
-            yield path
+    es = mlflow.search_experiments(filter_string='name != "Default"')
+    for experiment in es:
+        if predicate_experiment(experiment, experiment_names):
+            loc = cast("str", experiment.artifact_location)
+            yield Path(file_uri_to_path(loc))
 
 
 def iter_run_dirs(
-    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
     """Iterate over the run directories in the tracking directory."""
-    for experiment_dir in iter_experiment_dirs(tracking_dir, experiment_names):
+    for experiment_dir in iter_experiment_dirs(experiment_names):
         for path in experiment_dir.iterdir():
             if path.is_dir() and (path / "artifacts").exists():
                 yield path
 
 
 def iter_artifacts_dirs(
-    tracking_dir: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifacts directories in the tracking directory."""
-    for path in iter_run_dirs(tracking_dir, experiment_names):
+    for path in iter_run_dirs(experiment_names):
         yield path / "artifacts"
 
 
 def iter_artifact_paths(
-    tracking_dir: str | Path,
     artifact_path: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
     """Iterate over the artifact paths in the tracking directory."""
-    for path in iter_artifacts_dirs(tracking_dir, experiment_names):
+    for path in iter_artifacts_dirs(experiment_names):
         yield path / artifact_path

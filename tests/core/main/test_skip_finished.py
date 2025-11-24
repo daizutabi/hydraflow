@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from mlflow.entities import RunStatus
 from mlflow.tracking import MlflowClient
-from omegaconf import DictConfig
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+    from tests.core.conftest import Collect, Results
 
 
 def get_run_id(results: list[tuple[Path, DictConfig]], count: int) -> str:
@@ -14,37 +21,41 @@ def get_run_id(results: list[tuple[Path, DictConfig]], count: int) -> str:
 
 
 @pytest.fixture(scope="module")
-def results(collect):
-    client = MlflowClient()
-    running = RunStatus.to_string(RunStatus.RUNNING)
+def results(collect: Collect, tmp_path_factory: pytest.TempPathFactory) -> Results:
+    cwd = tmp_path_factory.mktemp("mlflow_skip_finished")
+
+    running = RunStatus.to_string(RunStatus.RUNNING)  # pyright: ignore[reportUnknownMemberType]
 
     file = Path(__file__).parent / "skip_finished.py"
     args = ["-m", "count=1,2,3"]
 
-    results = collect(file, args)
+    results = collect(file, args, cwd=cwd)
+    db = str(cwd.joinpath("mlflow.db"))
+    client = MlflowClient(f"sqlite:///{db}")
     client.set_terminated(get_run_id(results, 2), status=running)
     client.set_terminated(get_run_id(results, 3), status=running)
-    results = collect(file, args)
+    results = collect(file, args, cwd=cwd)
     client.set_terminated(get_run_id(results, 3), status=running)
-    return collect(file, args)
+    return collect(file, args, cwd=cwd)
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 3
 
 
 @pytest.fixture(scope="module", params=range(3))
-def result(results, request: pytest.FixtureRequest):
+def result(results: Results, request: pytest.FixtureRequest):
+    assert isinstance(request.param, int)
     return results[request.param]
 
 
 @pytest.fixture(scope="module")
-def path(result):
+def path(result: tuple[Path, DictConfig]):
     return result[0]
 
 
 @pytest.fixture(scope="module")
-def cfg(result):
+def cfg(result: tuple[Path, DictConfig]):
     return result[1]
 
 

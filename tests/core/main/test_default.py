@@ -1,32 +1,40 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from omegaconf import DictConfig
 
+from hydraflow.core.run import Run
+
+if TYPE_CHECKING:
+    from tests.core.conftest import Collect, Results
+
 
 @pytest.fixture(scope="module")
-def results(collect):
+def results(collect: Collect) -> Results:
     file = Path(__file__).parent / "default.py"
-    collect(file, ["-m", "count=1,2"])
-    return collect(file, ["-m", "name=a", "count=1,2,3,4"])
+    return collect(file, ["-m", "count=1,2"], ["-m", "name=a", "count=1,2,3,4"])
 
 
-def test_len(results):
+def test_len(results: Results):
     assert len(results) == 4
 
 
 @pytest.fixture(scope="module", params=range(4))
-def result(results, request: pytest.FixtureRequest):
+def result(results: Results, request: pytest.FixtureRequest):
+    assert isinstance(request.param, int)
     return results[request.param]
 
 
 @pytest.fixture(scope="module")
-def path(result):
+def path(result: tuple[Path, DictConfig]):
     return result[0]
 
 
 @pytest.fixture(scope="module")
-def cfg(result):
+def cfg(result: tuple[Path, DictConfig]):
     return result[1]
 
 
@@ -49,12 +57,10 @@ def cwd(path: Path):
     return Path(path.joinpath("b.txt").read_text())
 
 
-def test_cwd(cwd: Path, experiment_name: str):
-    assert cwd.name == experiment_name
+def test_cwd(cwd: Path, path: Path):
+    assert cwd.name == path.parents[3].name
 
 
 def test_run(path: Path, cfg: DictConfig):
-    from hydraflow.core.run import Run
-
-    run = Run(path.parent)
+    run = Run[DictConfig](path.parent)
     assert run.cfg == cfg

@@ -13,27 +13,16 @@ if TYPE_CHECKING:
     from .conf import Job
 
 
-def find_config_file() -> Path | None:
-    """Find the hydraflow config file."""
-    if Path("hydraflow.yaml").exists():
-        return Path("hydraflow.yaml")
-
-    if Path("hydraflow.yml").exists():
-        return Path("hydraflow.yml")
-
-    return None
-
-
-def load_config() -> HydraflowConf:
+def load_config(config_file: str | Path = "hydraflow.yaml") -> HydraflowConf:
     """Load the hydraflow config."""
     schema = OmegaConf.structured(HydraflowConf)
 
-    path = find_config_file()
+    config_file = Path(config_file)
 
-    if path is None:
+    if not config_file.exists():
         return schema
 
-    cfg = OmegaConf.load(path)
+    cfg = OmegaConf.load(config_file)
 
     if not isinstance(cfg, DictConfig):
         return schema
@@ -41,9 +30,9 @@ def load_config() -> HydraflowConf:
     return OmegaConf.merge(schema, cfg)  # pyright: ignore[reportReturnType]
 
 
-def get_job(name: str) -> Job:
+def get_job(name: str, config_file: str | Path = "hydraflow.yaml") -> Job:
     """Get a job from the config."""
-    cfg = load_config()
+    cfg = load_config(config_file)
     job = cfg.jobs[name]
 
     if not job.name:

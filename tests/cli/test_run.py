@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import sys
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
 from hydraflow.cli import app
 from hydraflow.core.io import iter_run_dirs
+from hydraflow.core.run import Run
 
 runner = CliRunner()
 
@@ -72,14 +76,14 @@ def test_submit_dry_run():
 def test_run_args():
     result = runner.invoke(app, ["run", "args"])
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "args"))
+    run_dirs = list(iter_run_dirs("args"))
     assert len(run_dirs) == 12
 
 
 def test_run_batch():
     result = runner.invoke(app, ["run", "batch"])
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "batch"))
+    run_dirs = list(iter_run_dirs("batch"))
     assert len(run_dirs) == 8
 
 
@@ -90,12 +94,12 @@ def test_run_batch():
 def test_run_parallel():
     result = runner.invoke(app, ["run", "parallel"])
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "parallel"))
+    run_dirs = list(iter_run_dirs("parallel"))
     assert len(run_dirs) == 8
 
     result = runner.invoke(app, ["run", "parallel"])  # skip if already run
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "parallel"))
+    run_dirs = list(iter_run_dirs("parallel"))
     assert len(run_dirs) == 8
 
 
@@ -113,12 +117,12 @@ def test_run_echo():
 def test_submit():
     result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "submit"))
+    run_dirs = list(iter_run_dirs("submit"))
     assert len(run_dirs) == 4
 
     result = runner.invoke(app, ["run", "submit"])  # skip if already run
     assert result.exit_code == 0
-    run_dirs = list(iter_run_dirs("mlruns", "submit"))
+    run_dirs = list(iter_run_dirs("submit"))
     assert len(run_dirs) == 4
 
 
@@ -129,10 +133,7 @@ def test_run_error():
 
 
 def test_run():
-    from hydraflow.core.io import iter_run_dirs
-    from hydraflow.core.run import Run
-
     runner.invoke(app, ["run", "job-name"])
-    run_dir = next(iter_run_dirs("mlruns", "job-name"))
-    run = Run(run_dir)
+    run_dir = next(iter_run_dirs("job-name"))
+    run: Run[Any, None] = Run(run_dir)
     assert run.info.job_name == "job-name"
