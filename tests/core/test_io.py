@@ -41,11 +41,11 @@ def setup(
     os.chdir(tmpdir)
     assert isinstance(request.param, str)
 
-    uri = (tmpdir / request.param).as_posix()
     if "." in request.param:
-        uri = f"sqlite:///{uri}"
+        db = (tmpdir / request.param).as_posix()
+        uri = f"sqlite:///{db}"
     else:
-        uri = f"file:{uri}"
+        uri = tmpdir / request.param
 
     mlflow.set_tracking_uri(uri)
 
