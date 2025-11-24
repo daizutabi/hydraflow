@@ -52,7 +52,7 @@ def collect(tmp_path_factory: pytest.TempPathFactory) -> Collect:
                 mlflow.set_tracking_uri(f"sqlite:///{db}")
             else:
                 file = str(Path("mlruns").absolute())
-                mlflow.set_tracking_uri(file)
+                mlflow.set_tracking_uri(f"file:{file}")
 
             artifacts_dirs = list(iter_artifacts_dirs(job_name))
             configs = [load(artifacts_dir) for artifacts_dir in artifacts_dirs]

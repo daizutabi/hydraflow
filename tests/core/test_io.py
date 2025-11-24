@@ -44,6 +44,8 @@ def setup(
     uri = (tmpdir / request.param).as_posix()
     if "." in request.param:
         uri = f"sqlite:///{uri}"
+    else:
+        uri = f"file:{uri}"
 
     mlflow.set_tracking_uri(uri)
 
