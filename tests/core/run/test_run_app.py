@@ -9,7 +9,7 @@ from hydraflow.core.run import Run
 
 if TYPE_CHECKING:
     from hydraflow.core.run_collection import RunCollection
-    from tests.conftest import Collect, Results
+    from tests.core.conftest import Collect, Results
 
 # pyright: reportUnknownMemberType=false
 # pyright: reportAttributeAccessIssue=false

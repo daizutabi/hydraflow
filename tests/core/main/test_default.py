@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from hydraflow.core.run import Run
 
 if TYPE_CHECKING:
-    from tests.conftest import Collect, Results
+    from tests.core.conftest import Collect, Results
 
 
 @pytest.fixture(scope="module")

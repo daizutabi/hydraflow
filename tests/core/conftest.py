@@ -41,14 +41,18 @@ def collect(tmp_path_factory: pytest.TempPathFactory) -> Collect:
         job_name_arg = f"hydra.job.name={job_name}"
 
         try:
+            mlflow.set_tracking_uri("")
+
             for arg in args:
                 args_ = [sys.executable, filename.as_posix(), *arg, job_name_arg]
                 subprocess.run(args_, check=False)
 
             if Path("mlflow.db").exists():
-                mlflow.set_tracking_uri("sqlite:///mlflow.db")
+                db = str(Path("mlflow.db").absolute())  # must be an absolute path
+                mlflow.set_tracking_uri(f"sqlite:///{db}")
             else:
-                mlflow.set_tracking_uri("mlruns")
+                file = str(Path("mlruns").absolute())
+                mlflow.set_tracking_uri(file)
 
             artifacts_dirs = list(iter_artifacts_dirs(job_name))
             configs = [load(artifacts_dir) for artifacts_dir in artifacts_dirs]

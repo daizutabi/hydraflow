@@ -8,7 +8,7 @@ import pytest
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
-    from tests.conftest import Collect, Results
+    from tests.core.conftest import Collect, Results
 
 
 @pytest.fixture(scope="module")

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from tests.conftest import Collect, Results
+    from tests.core.conftest import Collect, Results
 
 
 @pytest.fixture(scope="module")

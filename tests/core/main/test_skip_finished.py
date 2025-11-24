@@ -10,7 +10,7 @@ from mlflow.tracking import MlflowClient
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
-    from tests.conftest import Collect, Results
+    from tests.core.conftest import Collect, Results
 
 
 def get_run_id(results: list[tuple[Path, DictConfig]], count: int) -> str:
@@ -30,7 +30,8 @@ def results(collect: Collect, tmp_path_factory: pytest.TempPathFactory) -> Resul
     args = ["-m", "count=1,2,3"]
 
     results = collect(file, args, cwd=cwd)
-    client = MlflowClient("sqlite:///mlflow.db")
+    db = str(cwd.joinpath("mlflow.db"))
+    client = MlflowClient(f"sqlite:///{db}")
     client.set_terminated(get_run_id(results, 2), status=running)
     client.set_terminated(get_run_id(results, 3), status=running)
     results = collect(file, args, cwd=cwd)
