@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hydraflow.core.main import equals
+from hydraflow.core.main import equals, get_run_id
+
+
+def test_get_run_id():
+    assert get_run_id("invalid", None, None) is None
 
 
 def test_equals_config():
