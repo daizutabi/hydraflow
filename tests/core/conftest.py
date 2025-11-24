@@ -33,7 +33,7 @@ def collect(tmp_path_factory: pytest.TempPathFactory) -> Collect:
 
         if cwd is None:
             job_name = str(uuid.uuid4())
-            os.chdir(tmp_path_factory.mktemp(job_name))
+            os.chdir(tmp_path_factory.mktemp(job_name, numbered=False))
         else:
             job_name = cwd.name
             os.chdir(cwd)

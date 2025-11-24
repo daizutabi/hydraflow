@@ -11,7 +11,7 @@ from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -28,7 +28,7 @@ def app(cfg: Config):
     mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run():
-        log.info("log.info")
+        logger.info("logger.info")
 
         mlflow.log_text("mlflow.log_text", "text.log")
 
