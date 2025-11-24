@@ -106,7 +106,8 @@ def get_experiment_name(experiment_dir: Path) -> str:
     """
     es = mlflow.search_experiments(filter_string='name != "Default"')
     for experiment in es:
-        if Path(cast("str", experiment.artifact_location)) == experiment_dir:
+        loc = cast("str", experiment.artifact_location)
+        if Path(file_uri_to_path(loc)) == experiment_dir:
             return cast("str", experiment.name)
 
     return ""
