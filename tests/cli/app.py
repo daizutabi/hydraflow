@@ -53,5 +53,5 @@ def app(_run: Run, _cfg: Config):
 
 
 if __name__ == "__main__":
-    mlflow.set_tracking_uri("")
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

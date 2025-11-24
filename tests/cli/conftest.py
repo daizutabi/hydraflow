@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from shutil import copy
 
+import mlflow
 import pytest
 
 
@@ -13,12 +14,17 @@ def setup(tmp_path: Path):
 
     os.chdir(tmp_path)
 
-    src = Path(__file__).parent / "hydraflow.yaml"
+    parent = Path(__file__).parent
+
+    src = parent / "hydraflow.yaml"
     copy(src, src.name)
-    src = Path(__file__).parent / "app.py"
+    src = parent / "app.py"
     copy(src, src.name)
-    src = Path(__file__).parent / "submit.py"
+    src = parent / "submit.py"
     copy(src, src.name)
+
+    db = str(Path("mlflow.db").absolute())  # must be an absolute path
+    mlflow.set_tracking_uri(f"sqlite:///{db}")
 
     try:
         yield
