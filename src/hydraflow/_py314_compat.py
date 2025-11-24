@@ -15,6 +15,8 @@ This module contains patches to fix compatibility issues with Hydra on Python 3.
 Must be imported before any Hydra imports occur.
 """
 
+from __future__ import annotations
+
 import sys
 
 

@@ -9,6 +9,8 @@ from hydra.core.hydra_config import HydraConfig
 
 import hydraflow
 
+# pyright: reportUnknownArgumentType=false
+
 
 @dataclass
 class Config:
