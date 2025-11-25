@@ -4,12 +4,12 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import mlflow
+
 import hydraflow
 
 if TYPE_CHECKING:
     from mlflow.entities import Run
-
-# pyright: reportUnknownArgumentType=false
 
 logger = logging.getLogger(__name__)
 
@@ -27,4 +27,5 @@ def app(run: Run, cfg: Config) -> None:
 
 
 if __name__ == "__main__":
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()
