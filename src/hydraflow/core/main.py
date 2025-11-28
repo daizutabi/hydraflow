@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import hydra
+from filelock import FileLock
 from hydra.core.config_store import ConfigStore
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import OmegaConf
@@ -126,7 +127,16 @@ def main[C](
                 log.info("Dry run:\n%s", OmegaConf.to_yaml(cfg).rstrip())
                 return
 
-            experiment = mlflow.set_experiment(hc.job.name)
+            # Use the parent of sweep_dir for a global lock.
+            # This handles race conditions across different sweeps
+            # under a common parent, and is robust for both single-run
+            # and multi-run scenarios.
+            global_lock_dir = Path(hc.sweep.dir).parent
+            # Ensure the directory exists before creating the lock file
+            global_lock_dir.mkdir(parents=True, exist_ok=True)
+            lock_path = global_lock_dir / ".mlflow.lock"
+            with FileLock(lock_path):
+                experiment = mlflow.set_experiment(hc.job.name)
 
             if force_new_run:
                 run_id = None
