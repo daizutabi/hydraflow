@@ -43,6 +43,8 @@ plugins:
   - markdown-exec
   - mkapi:
       debug: true
+  - mkdocs-nbsync:
+      enabled: true
 markdown_extensions:
   - admonition
   - attr_list
