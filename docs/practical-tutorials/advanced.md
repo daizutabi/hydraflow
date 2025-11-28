@@ -3,7 +3,7 @@
 This tutorial demonstrates how to use HydraFlow's workflow automation
 capabilities to define, manage, and execute complex experiment workflows.
 
-```bash exec="1" workdir="examples"
+```bash exec="on" workdir="examples"
 rm -rf mlruns outputs multirun __pycache__
 ```
 
@@ -19,7 +19,7 @@ Before you begin this tutorial, you should:
 
 First, let's examine our project structure:
 
-```console exec="1" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="nohighlight"
 $ tree --noreport
 ```
 
@@ -70,7 +70,7 @@ documentation.
 
 Before executing our workflows, we can preview what will happen using the `--dry-run` flag:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_sequential --dry-run
 ```
 
@@ -101,7 +101,7 @@ job_sequential:
 This job uses the `each` and `all` parameters to run
 multiple configuration combinations in sequence:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_sequential
 ```
 
@@ -128,11 +128,11 @@ job_parallel:
 
 This job leverages Hydra's parallel execution features using a joblib launcher via `add` parameter:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_parallel --dry-run
 ```
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_parallel
 ```
 
@@ -183,13 +183,13 @@ python submit.py example.py /tmp/hydraflow_parameters_12345.txt
 
 Let's see it in action with a dry run:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_submit --dry-run
 ```
 
 And now let's run it:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ hydraflow run job_submit
 ```
 
@@ -209,13 +209,13 @@ In real-world scenarios, you could customize this handler to:
 
 With HydraFlow, all important data is stored in MLflow, so we can safely delete the Hydra output directories:
 
-```console exec="1" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples"
 $ rm -rf multirun
 ```
 
 Let's check the directory structure:
 
-```console exec="1" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="nohighlight"
 $ tree -L 3 --dirsfirst --noreport
 ```
 
