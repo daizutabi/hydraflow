@@ -5,7 +5,7 @@ application that integrates Hydra's configuration management
 with MLflow's experiment tracking.
 
 ```bash exec="on" workdir="examples"
-rm -rf mlruns outputs multirun __pycache__
+rm -rf mlruns outputs multirun mlflow.db __pycache__
 ```
 
 ## Prerequisites
@@ -20,7 +20,7 @@ Before you begin this tutorial, you should:
 First, let's examine our project structure:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree --noreport
+$ tree -aF --noreport
 ```
 
 In this tutorial, we will only use the `example.py` file.
@@ -95,19 +95,20 @@ When you run the application, HydraFlow automatically:
 Let's use the MLflow CLI to verify that our experiment was created:
 
 ```console exec="on" source="console" workdir="examples"
-$ mlflow experiments search
+$ MLFLOW_TRACKING_URI=sqlite:///mlflow.db mlflow experiments search
 ```
 
 Now, let's examine the directory structure created by Hydra and MlFlow:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree -a -L 5 --dirsfirst -I '.trash|tags' --noreport
+$ tree -aF -L 5 --dirsfirst -I '.trash|tags' --noreport
 ```
 
 The directory structure shows:
 
 - **`outputs` directory**: Created by Hydra to store the run's outputs
-- **`mlruns` directory**: Created by MLflow to store experiment data
+- **`mlflow.db` file**: Created by MLflow to store the experiment tracking database
+- **`mlruns` directory**: Created by MLflow to store experiment artifacts
 - **`artifacts` directory**: Contains configuration files and logs managed by HydraFlow
 
 ### Multi-run Mode (Parameter Sweeps)
@@ -115,7 +116,7 @@ The directory structure shows:
 One of Hydra's most powerful features is the ability to run parameter sweeps.
 Let's try this by overriding our configuration parameters:
 
-```console exec="on" source="console" workdir="examples"
+```console exec="on" source="console" workdir="examples" result="nohighlight"
 $ python example.py -m width=400,600 height=100,200
 ```
 
@@ -130,7 +131,7 @@ the specified parameters. In this case, we'll run 4 combinations:
 Let's see the updated directory structure:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree -a -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
+$ tree -aF -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
 ```
 
 Notice that all runs are added to the same MLflow experiment, making it
@@ -148,7 +149,7 @@ $ rm -rf outputs multirun
 After cleanup, the directory structure is much simpler:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree -L 3 --dirsfirst --noreport
+$ tree -aF -L 3 --dirsfirst --noreport
 ```
 
 All experiment data remains safely stored in the MLflow directory.

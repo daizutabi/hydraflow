@@ -4,7 +4,7 @@ This tutorial demonstrates how to use HydraFlow's workflow automation
 capabilities to define, manage, and execute complex experiment workflows.
 
 ```bash exec="on" workdir="examples"
-rm -rf mlruns outputs multirun __pycache__
+rm -rf mlruns outputs multirun mlflow.db __pycache__
 ```
 
 ## Prerequisites
@@ -20,7 +20,7 @@ Before you begin this tutorial, you should:
 First, let's examine our project structure:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree --noreport
+$ tree -aF --noreport
 ```
 
 In this tutorial, we'll use:
@@ -216,7 +216,7 @@ $ rm -rf multirun
 Let's check the directory structure:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree -L 3 --dirsfirst --noreport
+$ tree -aF -L 3 --dirsfirst --noreport
 ```
 
 After cleanup, we can observe:

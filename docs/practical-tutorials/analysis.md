@@ -34,7 +34,7 @@ rm -rf multirun __pycache__
 After running these commands, our project structure looks like this:
 
 ```console exec="on" workdir="examples" result="nohighlight"
-$ tree -L 3 --dirsfirst --noreport
+$ tree -aF -L 3 --dirsfirst --noreport
 ```
 
 The `mlruns` directory contains all our experiment data.
