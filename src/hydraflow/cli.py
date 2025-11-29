@@ -33,11 +33,6 @@ def _run(  # pyright: ignore[reportUnusedFunction]
     args = args or []
     job = get_job(name)
 
-    if not dry_run:
-        import mlflow
-
-        mlflow.set_experiment(job.name)
-
     if job.submit:
         submit(job, args, dry_run=dry_run)
 
