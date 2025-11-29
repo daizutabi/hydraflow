@@ -51,23 +51,25 @@ run2 = Run(Path("mlruns/exp_id/run_id2"))
 runs = RunCollection([run1, run2])
 
 # Method 4: Using iter_run_dirs to find runs dynamically
+import mlflow
 from hydraflow import iter_run_dirs
 
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+
 # Find all runs in a tracking directory
-tracking_dir = "mlruns"
-runs = Run.load(iter_run_dirs(tracking_dir))
+runs = Run.load(iter_run_dirs())
 
 # Find runs from specific experiments
-runs = Run.load(iter_run_dirs(tracking_dir, ["experiment1", "experiment2"]))
+runs = Run.load(iter_run_dirs(["experiment1", "experiment2"]))
 
 # Use pattern matching for experiment names
-runs = Run.load(iter_run_dirs(tracking_dir, "transformer_*"))
+runs = Run.load(iter_run_dirs("transformer_*"))
 
 # Use a custom filter function for experiment names
 def is_recent_version(name: str) -> bool:
     return name.startswith("model_") and "v2" in name
 
-runs = Run.load(iter_run_dirs(tracking_dir, is_recent_version))
+runs = Run.load(iter_run_dirs(is_recent_version))
 ```
 
 ## Basic Operations

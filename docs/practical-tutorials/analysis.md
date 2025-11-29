@@ -4,7 +4,7 @@ This tutorial demonstrates how to use HydraFlow's powerful analysis
 capabilities to work with your experiment results.
 
 ```bash exec="on" workdir="examples"
-rm -rf mlruns outputs multirun __pycache__
+rm -rf mlruns outputs multirun mlflow.db __pycache__
 ```
 
 ## Prerequisites
@@ -21,7 +21,7 @@ Before you begin this tutorial, you should:
 We'll start by running several experiments that we can analyze.
 We'll execute the three jobs defined in the [Automated Workflows](advanced.md) tutorial:
 
-```console exec="on" source="tabbed-left" workdir="examples" result="nohighlight" tabs="Input|Output"
+```console exec="on" source="tabbed-left" workdir="examples" tabs="Input|Output" result="text"
 $ hydraflow run job_sequential
 $ hydraflow run job_parallel
 $ hydraflow run job_submit
@@ -33,7 +33,7 @@ rm -rf multirun __pycache__
 
 After running these commands, our project structure looks like this:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF -L 3 --dirsfirst --noreport
 ```
 
@@ -48,8 +48,10 @@ HydraFlow provides the [`iter_run_dirs`][hydraflow.iter_run_dirs]
 function to discover runs in your MLflow tracking directory:
 
 ```pycon exec="on" source="console" session="results" workdir="examples"
+>>> import mlflow
 >>> from hydraflow import iter_run_dirs
->>> run_dirs = list(iter_run_dirs("mlruns"))
+>>> mlflow.set_tracking_uri("sqlite:///mlflow.db")
+>>> run_dirs = list(iter_run_dirs())
 >>> print(len(run_dirs))
 >>> for run_dir in run_dirs[:4]:
 ...     print(run_dir)
@@ -63,10 +65,10 @@ directory, making it easy to collect runs for analysis.
 You can filter runs by experiment name to focus on specific experiments:
 
 ```pycon exec="on" source="console" session="results" workdir="examples"
->>> print(len(list(iter_run_dirs("mlruns", "job_sequential"))))
+>>> print(len(list(iter_run_dirs("job_sequential"))))
 >>> names = ["job_sequential", "job_parallel"]
->>> print(len(list(iter_run_dirs("mlruns", names))))
->>> print(len(list(iter_run_dirs("mlruns", "job_*"))))
+>>> print(len(list(iter_run_dirs(names))))
+>>> print(len(list(iter_run_dirs("job_*"))))
 ```
 
 As shown above, you can:
@@ -84,7 +86,7 @@ experiment run in HydraFlow:
 
 ```pycon exec="on" source="console" session="results" workdir="examples"
 >>> from hydraflow import Run
->>> run_dirs = iter_run_dirs("mlruns")
+>>> run_dirs = iter_run_dirs()
 >>> run_dir = next(run_dirs)  # run_dirs is an iterator
 >>> run = Run(run_dir)
 >>> print(run)
@@ -216,7 +218,7 @@ The [`RunCollection`][hydraflow.core.run_collection.RunCollection]
 class helps you analyze multiple runs:
 
 ```pycon exec="on" source="console" session="results" workdir="examples"
->>> run_dirs = iter_run_dirs("mlruns")
+>>> run_dirs = iter_run_dirs()
 >>> rc = Run[Config, Size].load(run_dirs, Size)
 >>> print(rc)
 ```

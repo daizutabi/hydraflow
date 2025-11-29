@@ -165,12 +165,22 @@ This automatic skipping behavior:
 ## Advanced Features
 
 The `hydraflow.main` decorator supports several keyword arguments that
-enhance its functionality. All these options are set to `False` by
+enhance its functionality. All these options are set to `None` or `False` by
 default and must be explicitly enabled when needed:
 
-### Working Directory Management (`chdir`)
+### Tracking URI Management (`tracking_uri`)
 
-Control whether the working directory changes to the run's artifact directory:
+You can set the MLflow tracking URI directly within the decorator.
+HydraFlow calls `mlflow.set_tracking_uri()` with the provided URI before each job execution.
+
+```python
+@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+def train(run: Run, cfg: Config) -> None:
+    # The tracking URI is set before the experiment is created for each job.
+    ...
+```
+
+### Working Directory Management (`chdir`)
 
 Change the current working directory to the run's artifact directory during execution:
 

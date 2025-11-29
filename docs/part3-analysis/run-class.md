@@ -243,26 +243,28 @@ HydraFlow provides the [`iter_run_dirs`][hydraflow.core.io.iter_run_dirs]
 function to easily discover runs in your MLflow tracking directory:
 
 ```python
+import mlflow
 from hydraflow.core.io import iter_run_dirs
 from hydraflow import Run
 
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+
 # Find all runs in the tracking directory
-tracking_dir = "mlruns"
-run_dirs = list(iter_run_dirs(tracking_dir))
+run_dirs = list(iter_run_dirs())
 runs = Run.load(run_dirs)
 
 # Filter runs by experiment name
 # - Use a single experiment name
-runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
+runs = Run.load(iter_run_dirs("my_experiment"))
 
 # - Use multiple experiment names (with pattern matching)
-runs = Run.load(iter_run_dirs(tracking_dir, ["train_*", "eval_*"]))
+runs = Run.load(iter_run_dirs(["train_*", "eval_*"]))
 
 # - Use a custom filtering function
 def filter_experiments(name: str) -> bool:
     return name.startswith("train_") and "v2" in name
 
-runs = Run.load(iter_run_dirs(tracking_dir, filter_experiments))
+runs = Run.load(iter_run_dirs(filter_experiments))
 ```
 
 The `iter_run_dirs` function yields paths to run directories that can be
