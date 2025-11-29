@@ -66,7 +66,7 @@ def main[C](
     node: C | type[C],
     config_name: str = "config",
     *,
-    tracking_uri: str | None = None,
+    tracking_uri: str | Path | None = None,
     chdir: bool = False,
     force_new_run: bool = False,
     match_overrides: bool = False,
@@ -156,12 +156,12 @@ def main[C](
     return decorator
 
 
-def set_experiment(hc: HydraConf, tracking_uri: str | None) -> Experiment:
+def set_experiment(hc: HydraConf, tracking_uri: str | Path | None) -> Experiment:
     """Set the MLflow tracking URI if provided and experiment.
 
     Args:
         hc (HydraConf): The Hydra configuration instance.
-        tracking_uri (str | None): The tracking URI for MLflow. If None,
+        tracking_uri (str | Path | None): The tracking URI for MLflow. If None,
             MLflow's default tracking URI is used.
 
     Returns:
