@@ -126,14 +126,20 @@ def test_submit():
     assert len(run_dirs) == 4
 
 
-def test_run_error():
-    result = runner.invoke(app, ["run", "error"])
-    assert result.exit_code == 1
-    assert "No command found in job: error." in result.stdout
-
-
 def test_run():
     runner.invoke(app, ["run", "job-name"])
     run_dir = next(iter_run_dirs("job-name"))
     run: Run[Any, None] = Run(run_dir)
     assert run.info.job_name == "job-name"
+
+
+def test_run_error():
+    result = runner.invoke(app, ["run", "error"])
+    assert result.exit_code == 1
+    assert "No command found in job: error" in result.stdout
+
+
+def test_run_error_not_found():
+    result = runner.invoke(app, ["run", "not_found"])
+    assert result.exit_code == 1
+    assert "Job not found: not_found" in result.stdout
