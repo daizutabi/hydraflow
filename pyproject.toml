@@ -136,7 +136,7 @@ required-imports = ["from __future__ import annotations"]
 "tests/*" = ["A001", "ANN", "ARG", "D", "FBT", "PD", "PLR", "PT", "S", "SLF"]
 
 [tool.basedpyright]
-include = ["src"]
+include = ["src", "tests"]
 reportAny = false
 reportExplicitAny = false
 reportImplicitOverride = false
