@@ -10,7 +10,7 @@ import hydraflow
 if TYPE_CHECKING:
     from mlflow.entities import Run
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -41,13 +41,13 @@ def app(_run: Run, _cfg: Config):
         cfg: Configuration instance containing run parameters
     """
     # Start the run
-    log.info("start")
+    logger.info("start")
 
     # Simulate some work
     time.sleep(0.2)
 
     # End the run
-    log.info("end")
+    logger.info("end")
 
 
 if __name__ == "__main__":
