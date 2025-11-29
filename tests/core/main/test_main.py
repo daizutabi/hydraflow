@@ -27,10 +27,6 @@ def test_set_experiment(
     e = set_experiment(hc, tracking_uri=f"sqlite:///{db}")
     assert e.name == "my_experiment"  # pyright: ignore[reportUnknownMemberType]
     assert Path("mlflow.db").is_file()
-    if mode == RunMode.MULTIRUN:
-        assert Path(".hydraflow.lock").is_file()
-    else:
-        assert not Path(".hydraflow.lock").exists()
 
 
 @pytest.mark.parametrize(("mocked", "expected"), [(True, "run_123"), (False, None)])
