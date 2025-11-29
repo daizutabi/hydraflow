@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     from mlflow.entities.run import Run
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -49,7 +49,7 @@ def log_run(run: Run) -> Iterator[None]:
 
     except Exception as e:
         msg = f"Error during log_run: {e}"
-        log.exception(msg)
+        logger.exception(msg)
         raise
 
     finally:
