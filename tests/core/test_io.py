@@ -3,19 +3,25 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import mlflow
 import pytest
 
 from hydraflow.core.io import (
     file_uri_to_path,
+    get_artifact_dir,
     get_experiment_name,
     get_experiment_names,
     iter_artifact_paths,
     iter_artifacts_dirs,
     iter_experiment_dirs,
     iter_run_dirs,
+    log_text,
 )
+
+if TYPE_CHECKING:
+    from mlflow.entities import Run
 
 
 @pytest.mark.parametrize(
@@ -47,11 +53,16 @@ def setup(
     else:
         uri = tmpdir / request.param
 
-    mlflow.set_tracking_uri(uri)
+    Path("123.log").write_text("test log")
+    Path("dir.log").mkdir()
 
+    mlflow.set_tracking_uri(uri)
     mlflow.set_experiment("e1")
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
         mlflow.log_text("1", "text.txt")
+        log_text(run, Path.cwd(), "*.log")
+        log_text(run, Path.cwd(), "*.log")
+
     with mlflow.start_run():
         mlflow.log_text("2", "text.txt")
 
@@ -66,6 +77,26 @@ def setup(
     yield
 
     os.chdir(curdir)
+
+
+@pytest.fixture(scope="module")
+def run() -> Run:
+    runs = mlflow.search_runs(experiment_names=["e1"], output_format="list")
+    assert isinstance(runs, list)
+    return runs[-1]
+
+
+def test_get_artifact_dir(run: Run) -> None:
+    artifact_dir = get_artifact_dir(run)
+    assert artifact_dir.name == "artifacts"
+    assert artifact_dir.parent.name == run.info.run_id
+
+
+def test_log_text(run: Run) -> None:
+    artifact_dir = get_artifact_dir(run)
+    logged_file = artifact_dir / "123.log"
+    assert logged_file.exists()
+    assert logged_file.read_text().endswith("test log\ntest log")
 
 
 def test_get_experiment_names():
