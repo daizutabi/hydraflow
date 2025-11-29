@@ -62,6 +62,7 @@ dev = [
   "pytest>=9",
   "pytest-clarity",
   "pytest-cov",
+  "pytest-mock>=3.15.1",
   "pytest-order",
   "pytest-randomly",
   "pytest-xdist",
