@@ -62,6 +62,7 @@ def main[C](
     node: C | type[C],
     config_name: str = "config",
     *,
+    tracking_uri: str | None = None,
     chdir: bool = False,
     force_new_run: bool = False,
     match_overrides: bool = False,
@@ -78,6 +79,11 @@ def main[C](
         node: Configuration node class or instance defining the structure of the
             configuration.
         config_name: Name of the configuration. Defaults to "config".
+        tracking_uri: The tracking URI for MLflow. If a relative path is
+            provided (e.g., "mlruns" or "sqlite:///mlflow.db"), it will be
+            resolved to an absolute path relative to the original working
+            directory. If not provided, MLflow's default tracking URI is
+            used. Defaults to None.
         chdir: If True, changes working directory to the artifact directory
             of the run. Defaults to False.
         force_new_run: If True, always creates a new MLflow run instead of
@@ -136,6 +142,8 @@ def main[C](
             global_lock_dir.mkdir(parents=True, exist_ok=True)
             lock_path = global_lock_dir / ".mlflow.lock"
             with FileLock(lock_path):
+                if tracking_uri is not None:
+                    mlflow.set_tracking_uri(tracking_uri)
                 experiment = mlflow.set_experiment(hc.job.name)
 
             if force_new_run:

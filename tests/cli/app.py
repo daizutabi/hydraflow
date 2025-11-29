@@ -5,8 +5,6 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import mlflow
-
 import hydraflow
 
 if TYPE_CHECKING:
@@ -28,7 +26,7 @@ class Config:
     name: str = "a"
 
 
-@hydraflow.main(Config)
+@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
 def app(_run: Run, _cfg: Config):
     """Example app demonstrating Hydraflow's basic functionality.
 
@@ -53,5 +51,4 @@ def app(_run: Run, _cfg: Config):
 
 
 if __name__ == "__main__":
-    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

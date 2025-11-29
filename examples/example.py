@@ -4,8 +4,6 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import mlflow
-
 import hydraflow
 
 if TYPE_CHECKING:
@@ -20,12 +18,11 @@ class Config:
     height: int = 768
 
 
-@hydraflow.main(Config)
+@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
 def app(run: Run, cfg: Config) -> None:
     logger.info(run.info.run_id)
     logger.info(cfg)
 
 
 if __name__ == "__main__":
-    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()

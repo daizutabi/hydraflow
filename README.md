@@ -53,7 +53,6 @@ pip install hydraflow
 
 ```python
 import hydraflow
-import mlflow
 from dataclasses import dataclass
 from mlflow.entities import Run
 
@@ -62,13 +61,12 @@ class Config:
     width: int = 1024
     height: int = 768
 
-@hydraflow.main(Config)
+@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
 def app(run: Run, cfg: Config) -> None:
     # Your experiment code here
     print(f"Running with width={cfg.width}, height={cfg.height}")
 
 if __name__ == "__main__":
-    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     app()
 ```
 
