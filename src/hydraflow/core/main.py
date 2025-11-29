@@ -175,12 +175,9 @@ def set_experiment(hc: HydraConf, tracking_uri: str | None) -> Experiment:
     if hc.mode == RunMode.MULTIRUN:
         # Use the parent of sweep_dir for a global lock.
         # This handles race conditions across different sweeps
-        # under a common parent.
-        global_lock_dir = Path(hc.sweep.dir).parent
-        # Ensure the directory exists before creating the lock file
-        global_lock_dir.mkdir(parents=True, exist_ok=True)
-        lock_path = global_lock_dir / ".mlflow.lock"
-        lock_manager = FileLock(lock_path)
+        # under a common parent. (Issue #245)
+        lock_file = Path(hc.sweep.dir).parent.joinpath(".hydraflow.lock")
+        lock_manager = FileLock(lock_file)
 
     with lock_manager:
         if tracking_uri is not None:
