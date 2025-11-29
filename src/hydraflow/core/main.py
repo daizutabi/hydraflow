@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from contextlib import nullcontext
 from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -45,6 +46,7 @@ import hydra
 from filelock import FileLock
 from hydra.core.config_store import ConfigStore
 from hydra.core.hydra_config import HydraConfig
+from hydra.types import RunMode
 from omegaconf import OmegaConf
 
 from hydraflow.core.context import start_run
@@ -53,15 +55,18 @@ from hydraflow.core.io import file_uri_to_path
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from hydra.conf import HydraConf
     from mlflow.entities import Run
+    from mlflow.entities.experiment import Experiment
 
-log = logging.getLogger("hydraflow")
+logger = logging.getLogger("hydraflow")
 
 
 def main[C](
     node: C | type[C],
     config_name: str = "config",
     *,
+    tracking_uri: str | None = None,
     chdir: bool = False,
     force_new_run: bool = False,
     match_overrides: bool = False,
@@ -78,6 +83,8 @@ def main[C](
         node: Configuration node class or instance defining the structure of the
             configuration.
         config_name: Name of the configuration. Defaults to "config".
+        tracking_uri: The tracking URI for MLflow. If not provided, MLflow's
+            default tracking URI is used. Defaults to None.
         chdir: If True, changes working directory to the artifact directory
             of the run. Defaults to False.
         force_new_run: If True, always creates a new MLflow run instead of
@@ -124,19 +131,10 @@ def main[C](
                 OmegaConf.save(cfg, cfg_path)
 
             if dry_run:
-                log.info("Dry run:\n%s", OmegaConf.to_yaml(cfg).rstrip())
+                logger.info("Dry run:\n%s", OmegaConf.to_yaml(cfg).rstrip())
                 return
 
-            # Use the parent of sweep_dir for a global lock.
-            # This handles race conditions across different sweeps
-            # under a common parent, and is robust for both single-run
-            # and multi-run scenarios.
-            global_lock_dir = Path(hc.sweep.dir).parent
-            # Ensure the directory exists before creating the lock file
-            global_lock_dir.mkdir(parents=True, exist_ok=True)
-            lock_path = global_lock_dir / ".mlflow.lock"
-            with FileLock(lock_path):
-                experiment = mlflow.set_experiment(hc.job.name)
+            experiment = set_experiment(hc, tracking_uri)
 
             if force_new_run:
                 run_id = None
@@ -156,6 +154,35 @@ def main[C](
         return inner_decorator
 
     return decorator
+
+
+def set_experiment(hc: HydraConf, tracking_uri: str | None) -> Experiment:
+    """Set the MLflow tracking URI if provided and experiment.
+
+    Args:
+        hc (HydraConf): The Hydra configuration instance.
+        tracking_uri (str | None): The tracking URI for MLflow. If None,
+            MLflow's default tracking URI is used.
+
+    Returns:
+        Experiment: The MLflow experiment instance.
+
+    """
+    import mlflow
+
+    lock_manager = nullcontext()
+
+    if hc.mode == RunMode.MULTIRUN:
+        # Use the parent of sweep_dir for a global lock.
+        # This handles race conditions across different sweeps
+        # under a common parent. (Issue #245)
+        lock_file = Path(hc.sweep.dir).parent.joinpath(".hydraflow.lock")
+        lock_manager = FileLock(lock_file)
+
+    with lock_manager:
+        if tracking_uri is not None:
+            mlflow.set_tracking_uri(tracking_uri)
+        return mlflow.set_experiment(hc.job.name)
 
 
 def get_run_id(uri: str, config: Any, overrides: list[str] | None) -> str | None:

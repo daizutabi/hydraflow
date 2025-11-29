@@ -13,13 +13,13 @@ rm -rf mlruns outputs multirun mlflow.db __pycache__
 Before you begin this tutorial, you should:
 
 1. Have HydraFlow installed ([Installation Guide](../getting-started/installation.md))
-2. Have a basic understanding of Python and machine learning experiments
+2. Have a basic understanding of Python
 
 ## Project Structure
 
 First, let's examine our project structure:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF --noreport
 ```
 
@@ -38,7 +38,7 @@ configuration class and tracks experiment parameters:
 
 Let's break down the essential parts of this application:
 
-1. **Configuration Class**: A dataclass that defines the parameters for our experiment
+1. **Configuration Class**: A `dataclass` that defines the parameters for our experiment:
     ```python
     @dataclass
     class Config:
@@ -46,33 +46,31 @@ Let's break down the essential parts of this application:
         height: int = 768
     ```
 
-    This class defines the structure and default values for our configuration parameters.
-    Using Python's dataclass gives us type safety and clear structure.
-
-2. **Main Function**: The core of our application, decorated with `@hydraflow.main`
+2. **Main Function**: The core of our application, decorated with `@hydraflow.main`:
     ```python
-    @hydraflow.main(Config)
+    @hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
     def app(run: Run, cfg: Config) -> None:
-        log.info(run.info.run_id)
-        log.info(cfg)
+        logger.info(run.info.run_id)
+        logger.info(cfg)
     ```
 
-    This function will be executed with the provided configuration. It takes two key parameters:
+    This function is the entry point and receives two key parameters: `run` (an MLflow Run object) and `cfg` (the configuration object).
 
-    - `run`: An MLflow run object that provides access to the current experiment
-    - `cfg`: The configuration object with our parameters
+3. **Entry Point**: The standard Python entry point that calls our application function:
+    ```python
+    if __name__ == "__main__":
+        app()
+    ```
 
 ### The Power of the Decorator
 
 The [`hydraflow.main`][hydraflow.main] decorator is where the magic happens:
 
-- It registers your configuration class with Hydra's `ConfigStore`
-- It sets up an MLflow experiment
-- It starts an MLflow run and passes it to your function
-- It stores all Hydra configuration and logs as MLflow artifacts
-
-This single decorator seamlessly connects Hydra's configuration capabilities
-with MLflow's experiment tracking.
+- It registers your configuration class with Hydra's `ConfigStore`.
+- It sets the MLflow tracking URI via the `tracking_uri` if provided.
+- It sets up an MLflow experiment.
+- It starts an MLflow run and passes it to your function.
+- It stores all Hydra configuration and logs as MLflow artifacts.
 
 ## Running the Application
 
@@ -88,9 +86,10 @@ $ python example.py
 
 When you run the application, HydraFlow automatically:
 
-1. Creates an MLflow experiment named after your application (in this case, "example")
-2. Starts a run with the provided configuration
-3. Captures logs and artifacts
+1.  Sets the MLflow tracking URI to the `mlflow.db` SQLite database in the project root.
+2.  Creates an MLflow experiment named after your application (in this case, "example").
+3.  Starts a run with the provided configuration.
+4.  Captures logs and artifacts.
 
 Let's use the MLflow CLI to verify that our experiment was created:
 
@@ -100,7 +99,7 @@ $ MLFLOW_TRACKING_URI=sqlite:///mlflow.db mlflow experiments search
 
 Now, let's examine the directory structure created by Hydra and MlFlow:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF -L 5 --dirsfirst -I '.trash|tags' --noreport
 ```
 
@@ -116,7 +115,7 @@ The directory structure shows:
 One of Hydra's most powerful features is the ability to run parameter sweeps.
 Let's try this by overriding our configuration parameters:
 
-```console exec="on" source="console" workdir="examples" result="nohighlight"
+```console exec="on" source="console" workdir="examples"
 $ python example.py -m width=400,600 height=100,200
 ```
 
@@ -130,7 +129,7 @@ the specified parameters. In this case, we'll run 4 combinations:
 
 Let's see the updated directory structure:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF -L 5 --dirsfirst -I '.trash|metrics|params|tags|*.yaml' --noreport
 ```
 
@@ -148,7 +147,7 @@ $ rm -rf outputs multirun
 
 After cleanup, the directory structure is much simpler:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF -L 3 --dirsfirst --noreport
 ```
 

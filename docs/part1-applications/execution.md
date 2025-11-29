@@ -14,9 +14,9 @@ python train.py
 
 This will:
 
-1. Set up an MLflow experiment with the same name as the Hydra job name
-    (using `mlflow.set_experiment`). If the experiment doesn't exist,
-    it will be created automatically
+1. Set up the MLflow tracking URI (if provided in the decorator) and an
+    MLflow experiment with the same name as the Hydra job name. If the
+    experiment doesn't exist, it will be created automatically
 2. Create a new MLflow run or reuse an existing one based on the configuration
 3. Save the Hydra configuration as an MLflow artifact
 4. Execute your function decorated with `@hydraflow.main`

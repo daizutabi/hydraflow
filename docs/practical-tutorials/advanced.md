@@ -19,7 +19,7 @@ Before you begin this tutorial, you should:
 
 First, let's examine our project structure:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF --noreport
 ```
 
@@ -215,7 +215,7 @@ $ rm -rf multirun
 
 Let's check the directory structure:
 
-```console exec="on" workdir="examples" result="nohighlight"
+```console exec="on" workdir="examples" result="text"
 $ tree -aF -L 3 --dirsfirst --noreport
 ```
 

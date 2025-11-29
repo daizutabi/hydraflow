@@ -73,18 +73,20 @@ HydraFlow provides utilities to easily find and load runs from your
 MLflow tracking directory:
 
 ```python
+import mlflow
 from hydraflow import Run
 from hydraflow.core.io import iter_run_dirs
 
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+
 # Find all runs in the tracking directory
-tracking_dir = "mlruns"
-runs = Run.load(iter_run_dirs(tracking_dir))
+runs = Run.load(iter_run_dirs())
 
 # Load runs from specific experiments
-runs = Run.load(iter_run_dirs(tracking_dir, "my_experiment"))
+runs = Run.load(iter_run_dirs("my_experiment"))
 
 # Load runs from multiple experiments using patterns
-runs = Run.load(iter_run_dirs(tracking_dir, ["training_*", "finetuning_*"]))
+runs = Run.load(iter_run_dirs(["training_*", "finetuning_*"]))
 ```
 
 This approach makes it easy to gather all relevant runs for analysis
