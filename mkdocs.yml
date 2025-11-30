@@ -65,27 +65,27 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
-      - Getting Started: getting-started/index.md
+      - Overview: getting-started/index.md
       - Installation: getting-started/installation.md
       - Core Concepts: getting-started/concepts.md
-  - Practical Tutorials:
-      - Practical Tutorials: practical-tutorials/index.md
-      - Creating Your First Application: practical-tutorials/applications.md
-      - Automating Complex Workflows: practical-tutorials/advanced.md
-      - Analyzing Experiment Results: practical-tutorials/analysis.md
+  - Tutorials:
+      - Overview: practical-tutorials/index.md
+      - First Application: practical-tutorials/applications.md
+      - Advanced Workflows: practical-tutorials/advanced.md
+      - Result Analysis: practical-tutorials/analysis.md
   - User Guide:
-      - "Part 1: Running Applications":
-          - Running Applications: part1-applications/index.md
+      - "Part 1: Applications":
+          - Overview: part1-applications/index.md
           - Main Decorator: part1-applications/main-decorator.md
           - Configuration: part1-applications/configuration.md
           - Execution: part1-applications/execution.md
-      - "Part 2: Automating Workflows":
-          - Automating Workflows: part2-advanced/index.md
+      - "Part 2: Automation":
+          - Overview: part2-advanced/index.md
           - Extended Sweep Syntax: part2-advanced/sweep-syntax.md
           - Job Configuration: part2-advanced/job-configuration.md
-      - "Part 3: Analyzing Results":
-          - Analyzing Results: part3-analysis/index.md
+      - "Part 3: Analysis":
+          - Overview: part3-analysis/index.md
           - Run Class: part3-analysis/run-class.md
           - Run Collection: part3-analysis/run-collection.md
-          - Updating Run Configurations: part3-analysis/updating-runs.md
+          - Updating Runs: part3-analysis/updating-runs.md
   - API Reference: $api/hydraflow.***

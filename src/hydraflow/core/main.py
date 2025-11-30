@@ -73,8 +73,8 @@ def main[C](
     rerun_finished: bool = False,
     dry_run: bool = False,
     update: Callable[[C], C | None] | None = None,
-):
-    """Decorator for configuring and running MLflow experiments with Hydra.
+) -> Callable[..., Callable[[], None]]:
+    """Decorate a function for configuring and running MLflow experiments with Hydra.
 
     This decorator combines Hydra configuration management with MLflow experiment
     tracking. It automatically handles run deduplication and configuration storage.

@@ -123,6 +123,7 @@ def callback(
         Option("--version", help="Show the version and exit."),
     ] = False,
 ) -> None:
+    """Hydraflow CLI."""
     if version:
         import importlib.metadata
 

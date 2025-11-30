@@ -1,3 +1,5 @@
+"""Configuration dataclasses for Hydraflow executor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -5,6 +7,8 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Set:
+    """A set of commands or actions to be executed."""
+
     each: str = ""
     all: str = ""
     add: str = ""
@@ -12,6 +16,8 @@ class Set:
 
 @dataclass
 class Job:
+    """A job configuration containing various commands and sets."""
+
     name: str = ""
     run: str = ""
     call: str = ""
@@ -22,4 +28,6 @@ class Job:
 
 @dataclass
 class HydraflowConf:
+    """Configuration for Hydraflow executor."""
+
     jobs: dict[str, Job] = field(default_factory=dict)
