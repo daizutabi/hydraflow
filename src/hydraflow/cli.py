@@ -6,6 +6,7 @@ import shlex
 from typing import TYPE_CHECKING, Annotated
 
 import typer
+from omegaconf.errors import ConfigKeyError
 from typer import Argument, Exit, Option
 
 if TYPE_CHECKING:
@@ -31,7 +32,11 @@ def _run(  # pyright: ignore[reportUnusedFunction]
     from hydraflow.executor.io import get_job
 
     args = args or []
-    job = get_job(name)
+    try:
+        job = get_job(name)
+    except ConfigKeyError:
+        typer.echo(f"Job not found: {name}")
+        raise typer.Exit(1) from None
 
     if job.submit:
         submit(job, args, dry_run=dry_run)
@@ -43,7 +48,7 @@ def _run(  # pyright: ignore[reportUnusedFunction]
         call(job, args, dry_run=dry_run)
 
     else:
-        typer.echo(f"No command found in job: {job.name}.")
+        typer.echo(f"No command found in job: {job.name}")
         raise Exit(1)
 
 
