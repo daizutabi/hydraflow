@@ -15,7 +15,7 @@ class Config:
     count: int = 0
 
 
-@hydraflow.main(Config, chdir=True, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config, chdir=True)
 def app(run: Run, cfg: Config):
     file = Path("a.txt")
     text = file.read_text() if file.exists() else ""

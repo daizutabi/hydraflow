@@ -26,12 +26,7 @@ class Config:
         return cfg
 
 
-@hydraflow.main(
-    Config,
-    chdir=True,
-    update=Config.update,
-    tracking_uri="sqlite:///mlflow.db",
-)
+@hydraflow.main(Config, chdir=True, update=Config.update)
 def app(_run: Run, _cfg: Config):
     pass
 

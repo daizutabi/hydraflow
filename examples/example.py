@@ -18,7 +18,7 @@ class Config:
     height: int = 768
 
 
-@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config)
 def app(run: Run, cfg: Config) -> None:
     logger.info(run.info.run_id)
     logger.info(cfg)
