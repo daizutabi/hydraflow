@@ -16,7 +16,7 @@ class Config:
     name: str = "a"
 
 
-@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config)
 def app(run: Run, cfg: Config):
     path = hydraflow.get_artifact_dir(run) / "a.txt"
     path.write_text(f"{cfg.count}")

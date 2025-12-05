@@ -54,7 +54,7 @@ point for a HydraFlow application:
 import hydraflow
 from mlflow.entities import Run
 
-@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config)
 def train(run: Run, cfg: Config) -> None:
     # Your experiment code
     print(f"Training with lr={cfg.learning_rate}, batch_size={cfg.batch_size}")
@@ -66,7 +66,7 @@ def train(run: Run, cfg: Config) -> None:
 This decorator provides:
 
 - Automatic registration of your config class with Hydra's `ConfigStore`
-- Automatic setup of an MLflow experiment (including tracking URI)
+- Automatic setup of an MLflow experiment (including tracking URI if provided)
 - Storage of Hydra configurations and logs as MLflow artifacts
 - Support for type-safe APIs and IDE integration
 

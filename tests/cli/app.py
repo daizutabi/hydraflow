@@ -26,7 +26,7 @@ class Config:
     name: str = "a"
 
 
-@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config)
 def app(_run: Run, _cfg: Config):
     """Example app demonstrating Hydraflow's basic functionality.
 

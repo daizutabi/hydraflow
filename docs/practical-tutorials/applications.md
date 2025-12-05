@@ -48,7 +48,7 @@ Let's break down the essential parts of this application:
 
 2. **Main Function**: The core of our application, decorated with `@hydraflow.main`:
     ```python
-    @hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+    @hydraflow.main(Config)
     def app(run: Run, cfg: Config) -> None:
         logger.info(run.info.run_id)
         logger.info(cfg)
@@ -94,7 +94,7 @@ When you run the application, HydraFlow automatically:
 Let's use the MLflow CLI to verify that our experiment was created:
 
 ```console exec="on" source="console" workdir="examples"
-$ MLFLOW_TRACKING_URI=sqlite:///mlflow.db mlflow experiments search
+$ mlflow experiments search
 ```
 
 Now, let's examine the directory structure created by Hydra and MlFlow:

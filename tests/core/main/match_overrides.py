@@ -15,7 +15,7 @@ class Config:
     name: str = "a"
 
 
-@hydraflow.main(Config, match_overrides=True, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config, match_overrides=True)
 def app(_run: Run, _cfg: Config):
     pass
 

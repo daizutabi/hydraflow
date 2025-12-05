@@ -61,7 +61,7 @@ class Config:
     width: int = 1024
     height: int = 768
 
-@hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
+@hydraflow.main(Config)
 def app(run: Run, cfg: Config) -> None:
     # Your experiment code here
     print(f"Running with width={cfg.width}, height={cfg.height}")
@@ -124,7 +124,6 @@ import mlflow
 from hydraflow import Run, iter_run_dirs
 
 # Load runs
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
 runs = Run.load(iter_run_dirs())
 
 # Filter and analyze

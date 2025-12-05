@@ -51,10 +51,7 @@ run2 = Run(Path("mlruns/exp_id/run_id2"))
 runs = RunCollection([run1, run2])
 
 # Method 4: Using iter_run_dirs to find runs dynamically
-import mlflow
 from hydraflow import iter_run_dirs
-
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
 # Find all runs in a tracking directory
 runs = Run.load(iter_run_dirs())

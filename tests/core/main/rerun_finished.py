@@ -22,12 +22,7 @@ class Config:
     a: A = field(default_factory=A)
 
 
-@hydraflow.main(
-    Config,
-    chdir=True,
-    rerun_finished=True,
-    tracking_uri="sqlite:///mlflow.db",
-)
+@hydraflow.main(Config, chdir=True, rerun_finished=True)
 def app(_run: Run, cfg: Config):
     file = Path("a.txt")
     text = file.read_text() if file.exists() else ""
