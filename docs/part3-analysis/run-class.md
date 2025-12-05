@@ -243,11 +243,8 @@ HydraFlow provides the [`iter_run_dirs`][hydraflow.core.io.iter_run_dirs]
 function to easily discover runs in your MLflow tracking directory:
 
 ```python
-import mlflow
 from hydraflow.core.io import iter_run_dirs
 from hydraflow import Run
-
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
 # Find all runs in the tracking directory
 run_dirs = list(iter_run_dirs())

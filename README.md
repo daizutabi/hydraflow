@@ -124,7 +124,6 @@ import mlflow
 from hydraflow import Run, iter_run_dirs
 
 # Load runs
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
 runs = Run.load(iter_run_dirs())
 
 # Filter and analyze
