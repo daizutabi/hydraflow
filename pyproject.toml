@@ -67,7 +67,7 @@ dev = [
   "pytest-randomly>=4",
   "pytest-xdist>=3",
   "ruff>=0.14.8",
-  "ty>=0.0.1a32",
+  "ty>=0.0.2",
 ]
 docs = ["markdown-exec[ansi]", "mkapi>=4.4", "mkdocs-material"]
 
