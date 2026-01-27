@@ -13,14 +13,14 @@ repos:
     hooks:
       - id: validate-pyproject
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.13
+    rev: v0.14.14
     hooks:
       - id: ruff-check
         files: ^(src|tests)/
       - id: ruff-format
         files: ^(src|tests)/
   - repo: https://github.com/DetachHead/basedpyright-prek-mirror
-    rev: 1.37.1
+    rev: 1.37.2
     hooks:
       - id: basedpyright
         files: ^(src|tests)/
