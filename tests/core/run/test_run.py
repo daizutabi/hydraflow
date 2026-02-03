@@ -218,9 +218,8 @@ def test_get_impl():
     assert run.get("impl") is run.impl
 
 
-@pytest.mark.parametrize("n_jobs", [0, 1, 2])
-def test_load_collection(n_jobs: int):
-    rc = Run[Config].load([Path("a/b/c"), Path("a/b/d")], n_jobs=n_jobs)
+def test_load_collection():
+    rc = Run[Config].load([Path("a/b/c"), Path("a/b/d")])
     assert isinstance(rc, RunCollection)
     assert len(rc) == 2
     assert rc[0].impl is None

@@ -127,7 +127,7 @@ class Run[C, I = None]:
 
     @overload
     @classmethod
-    def load(  # type: ignore
+    def load(
         cls,
         run_dir: str | Path,
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
@@ -139,8 +139,6 @@ class Run[C, I = None]:
         cls,
         run_dir: Iterable[str | Path],
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
-        *,
-        n_jobs: int = 0,
     ) -> RunCollection[Self]: ...
 
     @classmethod
@@ -148,8 +146,6 @@ class Run[C, I = None]:
         cls,
         run_dir: str | Path | Iterable[str | Path],
         impl_factory: Callable[[Path], I] | Callable[[Path, C], I] | None = None,
-        *,
-        n_jobs: int = 0,
     ) -> Self | RunCollection[Self]:
         """Load a Run from a run directory.
 
@@ -162,8 +158,6 @@ class Run[C, I = None]:
                 can accept either just the artifacts directory path, or both the
                 path and the configuration instance. Defaults to None, in which
                 case a function that returns None is used.
-            n_jobs (int): The number of parallel jobs. If 0 (default), runs
-                sequentially. If -1, uses all available CPU cores.
 
         Returns:
             Self | RunCollection[Self]: A single Run instance or a RunCollection
@@ -175,15 +169,8 @@ class Run[C, I = None]:
 
         from .run_collection import RunCollection
 
-        if n_jobs == 0:
-            runs = (cls(Path(r), impl_factory) for r in run_dir)
-            return RunCollection(runs, cls.get)
-
-        from joblib import Parallel, delayed
-
-        parallel = Parallel(backend="threading", n_jobs=n_jobs)
-        runs = parallel(delayed(cls)(Path(r), impl_factory) for r in run_dir)
-        return RunCollection(runs, cls.get)  # pyright: ignore[reportArgumentType]
+        runs = (cls(Path(r), impl_factory) for r in run_dir)
+        return RunCollection(runs, cls.get)
 
     @overload
     def update(

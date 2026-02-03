@@ -40,7 +40,7 @@ Note:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Self, overload
+from typing import TYPE_CHECKING, Any, overload
 
 import polars as pl
 
@@ -67,71 +67,6 @@ class RunCollection[R: Run[Any, Any]](Collection[R]):
             the collection.
 
     """
-
-    def preload(
-        self,
-        *,
-        n_jobs: int = 0,
-        cfg: bool = True,
-        impl: bool = True,
-    ) -> Self:
-        """Pre-load configuration and implementation objects for all runs in parallel.
-
-        This method eagerly evaluates the cfg and impl properties of all runs
-        in the collection, potentially in parallel using joblib. This can
-        significantly improve performance for subsequent operations that
-        access these properties, as they will be already loaded in memory.
-
-        Args:
-            n_jobs (int): Number of parallel jobs to run.
-                - 0: Run sequentially (default)
-                - -1: Use all available CPU cores
-                - >0: Use the specified number of cores
-            cfg (bool): Whether to preload the configuration objects.
-                Defaults to True.
-            impl (bool): Whether to preload the implementation objects.
-                Defaults to True.
-
-        Returns:
-            Self: The same RunCollection instance with preloaded
-            configuration and implementation objects.
-
-        Note:
-            The preloading is done using joblib's threading backend,
-            which is suitable for I/O-bound tasks like loading
-            configuration files and implementation objects.
-
-        Examples:
-            ```python
-            # Preload all runs sequentially
-            runs.preload()
-
-            # Preload using all available cores
-            runs.preload(n_jobs=-1)
-
-            # Preload only configurations
-            runs.preload(impl=False)
-
-            # Preload only implementations
-            runs.preload(cfg=False)
-            ```
-
-        """
-
-        def load(run: R) -> None:
-            _ = cfg and run.cfg
-            _ = impl and run.impl
-
-        if n_jobs == 0:
-            for run in self:
-                load(run)
-            return self
-
-        from joblib import Parallel, delayed
-
-        parallel = Parallel(backend="threading", n_jobs=n_jobs)
-        parallel(delayed(load)(run) for run in self)
-        return self
 
     @overload
     def update(
