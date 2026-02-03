@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from itertools import product
+from itertools import product, starmap
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -59,7 +59,7 @@ type Rc = RunCollection[Run[Config, Impl]]
 def rc(run_factory: Callable[..., Run[Config, Impl]]) -> Rc:
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
-    runs = [run_factory(*p) for p in it]
+    runs = starmap(run_factory, it)
     return RunCollection[Run[Config, Impl]](runs, Run.get)  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
 
 

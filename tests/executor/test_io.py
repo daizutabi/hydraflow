@@ -25,7 +25,7 @@ def test_merge(schema: DictConfig):
 
 def test_load_config_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.chdir(tmp_path)
-    Path("hydraflow.yaml").write_text("- a\n- b\n")
+    Path("hydraflow.yaml").write_text("- a\n- b\n", encoding="utf-8")
 
     cfg = load_config()
     assert isinstance(cfg, DictConfig)

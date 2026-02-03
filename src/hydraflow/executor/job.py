@@ -69,8 +69,8 @@ def iter_batches(job: Job) -> Iterator[list[str]]:
     Args:
         job (Job): The job to generate the Hydra configuration for.
 
-    Returns:
-        list[str]: A list of Hydra configuration strings.
+    Yields:
+        str: Hydra configuration strings.
 
     """
     job_name = f"hydra.job.name={job.name}"
@@ -127,7 +127,7 @@ class Call(Task):
 
 
 def iter_tasks(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Task]:
-    """Yield tasks of a job to be executed using a shell command."""
+    """Yield tasks of a job to be executed using a shell command."""  # noqa: DOC402
     executable, *args = args
     if executable == "python" and sys.platform == "win32":
         executable = sys.executable
@@ -140,7 +140,7 @@ def iter_tasks(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Task]
 
 
 def iter_calls(args: list[str], iterable: Iterable[list[str]]) -> Iterator[Call]:
-    """Yield calls of a job to be executed using a Python function."""
+    """Yield calls of a job to be executed using a Python function."""  # noqa: DOC402
     funcname, *args = args
     func = get_callable(funcname)
 
@@ -168,7 +168,7 @@ def submit(
     temp.close()
 
     text = "\n".join(shlex.join(args) for args in iterable)
-    file.write_text(text)
+    file.write_text(text, encoding="utf-8")
     cmd = [executable, *args, file.as_posix()]
 
     try:
@@ -181,7 +181,12 @@ def submit(
 
 
 def get_callable(name: str) -> Callable[[list[str]], Any]:
-    """Get a callable from a function name."""
+    """Get a callable from a function name.
+
+    Raises:
+        ValueError: If the name of the function is invalid.
+
+    """
     if "." not in name:
         msg = f"Invalid function path: {name}."
         raise ValueError(msg)

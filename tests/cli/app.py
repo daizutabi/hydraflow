@@ -37,8 +37,8 @@ def app(_run: Run, _cfg: Config):
     3. Access the MLflow run instance and configuration
 
     Args:
-        run: MLflow run instance for tracking metrics and parameters
-        cfg: Configuration instance containing run parameters
+        _run: MLflow run instance for tracking metrics and parameters
+        _cfg: Configuration instance containing run parameters
     """
     # Start the run
     logger.info("start")

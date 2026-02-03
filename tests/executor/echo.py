@@ -9,10 +9,10 @@ def main():
     arg = " ".join(sys.argv[3:5])
 
     if not path.exists():
-        path.write_text(arg)
+        path.write_text(arg, encoding="utf-8")
     else:
-        text = path.read_text()
-        path.write_text(f"{text} {arg}")
+        text = path.read_text(encoding="utf-8")
+        path.write_text(f"{text} {arg}", encoding="utf-8")
 
 
 if __name__ == "__main__":

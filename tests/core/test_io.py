@@ -53,7 +53,7 @@ def setup(
     else:
         uri = tmpdir / request.param
 
-    Path("123.log").write_text("test log")
+    Path("123.log").write_text("test log", encoding="utf-8")
     Path("dir.log").mkdir()
 
     mlflow.set_tracking_uri(uri)

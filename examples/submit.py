@@ -8,7 +8,7 @@ from pathlib import Path
 
 def main() -> None:
     app_file, opt_file = sys.argv[1:]
-    text = Path(opt_file).read_text()
+    text = Path(opt_file).read_text(encoding="utf-8")
 
     for line in text.splitlines():
         opts = shlex.split(line)

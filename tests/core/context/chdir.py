@@ -25,7 +25,7 @@ def app(cfg: Config):
     mlflow.set_experiment(hc.job.name)
 
     with hydraflow.start_run(chdir=True):
-        Path("a.txt").write_text(str(cfg.count))
+        Path("a.txt").write_text(str(cfg.count), encoding="utf-8")
 
 
 if __name__ == "__main__":

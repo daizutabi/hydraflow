@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from itertools import product
+from itertools import product, starmap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -54,7 +54,7 @@ def run_factory():
 def rc(run_factory: Callable[..., Run[Config, Impl]]):
     it = product([1, 2], ["abc", "def"], [10, 20, 30])
     it = ([Path("/".join(map(str, p))), *p] for p in it)
-    runs = [run_factory(*p) for p in it]
+    runs = list(starmap(run_factory, it))
     return RunCollection[Run[Config, Impl]](runs, Run.get)  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
 
 
@@ -69,9 +69,9 @@ def test_getitem_key(rc: Rc):
 
 def test_getitem_key_multi(rc: Rc):
     gp = rc.group_by("count", "name")
-    assert len(gp[(1, "abc")]) == 3
+    assert len(gp[1, "abc"]) == 3
     assert len(gp[1, "def"]) == 3
-    assert len(gp[(2, "abc")]) == 3
+    assert len(gp[2, "abc"]) == 3
     assert len(gp[2, "def"]) == 3
 
 
@@ -126,6 +126,6 @@ def test_agg_get(rc: Rc):
 
 
 def test_agg_callable(rc: Rc):
-    df = rc.group_by("count", "name").agg(x=lambda x: len(x))
+    df = rc.group_by("count", "name").agg(x=len)
     assert df.item(0, "x") == 3
     assert df.item(1, "x") == 3

@@ -400,8 +400,8 @@ class Collection[I](Sequence[I]):
             *args: Additional positional arguments to pass to the function.
             **kwargs: Additional keyword arguments to pass to the function.
 
-        Returns:
-            Iterator[R]: An iterator of the function's results.
+        Yields:
+            R: The function's results.
 
         Examples:
             ```python
@@ -826,9 +826,8 @@ class Collection[I](Sequence[I]):
             Callable[[I], bool]: A predicate function for filtering.
 
         """
-        return (
-            lambda i: re.match(pattern, str(self._get(i, key, default)), flags)
-            is not None
+        return lambda i: (
+            re.match(pattern, str(self._get(i, key, default)), flags) is not None
         )
 
 

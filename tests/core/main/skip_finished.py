@@ -18,8 +18,8 @@ class Config:
 @hydraflow.main(Config, chdir=True)
 def app(run: Run, cfg: Config):
     file = Path("a.txt")
-    text = file.read_text() if file.exists() else ""
-    file.write_text(text + f"{cfg.count} {run.info.run_id}\n")
+    text = file.read_text(encoding="utf-8") if file.exists() else ""
+    file.write_text(text + f"{cfg.count} {run.info.run_id}\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

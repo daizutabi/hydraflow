@@ -90,9 +90,6 @@ class GroupBy[C: Collection[Any], I]:
         Returns:
             The Collection corresponding to the key.
 
-        Raises:
-            KeyError: If the key is not found in the groups.
-
         """
         return self.groups[key]
 

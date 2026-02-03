@@ -41,7 +41,7 @@ def apply_hydra_argparse_patch() -> None:  # pragma: no cover
         import argparse
         from functools import wraps
 
-        from hydra._internal import utils as hydra_utils
+        from hydra._internal import utils as hydra_utils  # noqa: PLC2701
 
         original_get_args_parser = hydra_utils.get_args_parser
         original_check_help = argparse.ArgumentParser._check_help

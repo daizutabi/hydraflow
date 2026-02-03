@@ -75,7 +75,6 @@ def start_run(
     configuration instance. It ensures that the run is properly closed after completion.
 
     Args:
-        config (object): The configuration instance to log parameters from.
         chdir (bool): Whether to change the current working directory to the
             artifact directory of the current run. Defaults to False.
         run_id (str | None): The existing run ID. Defaults to None.
@@ -86,8 +85,6 @@ def start_run(
         tags (dict[str, str] | None): Tags to associate with the run. Defaults to None.
         description (str | None): A description of the run. Defaults to None.
         log_system_metrics (bool | None): Whether to log system metrics.
-            Defaults to None.
-        synchronous (bool | None): Whether to log parameters synchronously.
             Defaults to None.
 
     Yields:
@@ -126,6 +123,9 @@ def chdir_artifact(run: Run) -> Iterator[Path]:
 
     Args:
         run (Run | None): The run to get the artifact directory from.
+
+    Yields:
+        str: The artifact directory
 
     """
     current_dir = Path.cwd()

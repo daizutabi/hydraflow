@@ -335,9 +335,6 @@ class Run[C, I = None]:
         Returns:
             Expr: A Polars literal expression aliased to the provided key.
 
-        Raises:
-            AttributeError: If the key is not found and no default is provided.
-
         """
         value = self.get(key, default)
         return pl.lit(value, dtype).alias(key)
@@ -372,6 +369,9 @@ class Run[C, I = None]:
 
         Returns:
             dict[str, Any]: A dictionary representation of the Run's configuration.
+
+        Raises:
+            TypeError: If the configuration is not a dictionary.
 
         """
         cfg = OmegaConf.to_container(self.cfg)

@@ -127,7 +127,7 @@ def get_experiment_names() -> list[str]:
 def iter_experiment_dirs(
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the experiment directories."""
+    """Iterate over the experiment directories."""  # noqa: DOC402
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
@@ -141,7 +141,7 @@ def iter_experiment_dirs(
 def iter_run_dirs(
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the run directories in the tracking directory."""
+    """Iterate over the run directories in the tracking directory."""  # noqa: DOC402
     for experiment_dir in iter_experiment_dirs(experiment_names):
         for path in experiment_dir.iterdir():
             if path.is_dir() and (path / "artifacts").exists():
@@ -151,7 +151,7 @@ def iter_run_dirs(
 def iter_artifacts_dirs(
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifacts directories in the tracking directory."""
+    """Iterate over the artifacts directories in the tracking directory."""  # noqa: DOC402
     for path in iter_run_dirs(experiment_names):
         yield path / "artifacts"
 
@@ -160,6 +160,6 @@ def iter_artifact_paths(
     artifact_path: str | Path,
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
-    """Iterate over the artifact paths in the tracking directory."""
+    """Iterate over the artifact paths in the tracking directory."""  # noqa: DOC402
     for path in iter_artifacts_dirs(experiment_names):
         yield path / artifact_path

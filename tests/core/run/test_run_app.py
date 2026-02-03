@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -49,13 +50,10 @@ class Dummy:
     pass
 
 
+@dataclass
 class ImplConfig:
     path: Path
     cfg: Dummy
-
-    def __init__(self, path: Path, cfg: Dummy):
-        self.path = path
-        self.cfg = cfg
 
 
 @pytest.fixture(scope="module")
@@ -80,7 +78,7 @@ def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]):
 def test_chdir(run_impl_config: Run[Dummy, ImplConfig]):
     run = run_impl_config
     with run.chdir():
-        Path("a.txt").write_text("a")
+        Path("a.txt").write_text("a", encoding="utf-8")
     assert run.path("a.txt").read_text() == "a"
 
 

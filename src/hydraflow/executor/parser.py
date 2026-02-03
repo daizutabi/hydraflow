@@ -165,7 +165,12 @@ SUFFIX_EXPONENT = {
 
 
 def _get_range(arg: str) -> tuple[float, float, float]:
-    """Return a tuple of (start, stop, step)."""
+    """Return a tuple of (start, stop, step).
+
+    Raises:
+        ValueError: If the argument is invalid.
+
+    """
     args = [to_number(x) for x in arg.split(":")]
 
     if len(args) == 2:
@@ -198,6 +203,9 @@ def _arange(start: float, stop: float, step: float) -> list[float]:
     Returns:
         list[float]: A list of floating point numbers from start to stop
         (inclusive) with the given step.
+
+    Raises:
+        ValueError: If step is zero.
 
     """
     if step == 0:
@@ -278,7 +286,7 @@ def add_exponent(value: str, exponent: str) -> str:
         '0.0'
 
     """
-    if value in ["0", "0.", "0.0"] or not exponent:
+    if value in {"0", "0.", "0.0"} or not exponent:
         return value
 
     return f"{value}{exponent}"
@@ -290,8 +298,8 @@ def split_parentheses(arg: str) -> Iterator[str]:
     Args:
         arg (str): The string to split.
 
-    Returns:
-        Iterator[str]: An iterator of the split strings.
+    Yields:
+        str: The split strings.
 
     Examples:
         >>> list(split_parentheses("a(b,c)m(e:f)k"))
@@ -303,7 +311,7 @@ def split_parentheses(arg: str) -> Iterator[str]:
     current = ""
 
     for char in arg:
-        if char in ("(", ")"):
+        if char in {"(", ")"}:
             if current:
                 yield SUFFIX_EXPONENT.get(current, current)
                 current = ""
@@ -461,8 +469,8 @@ def expand_values(arg: str, suffix: str = "") -> Iterator[str]:
         arg (str): The argument to expand.
         suffix (str): The suffix to append to each value.
 
-    Returns:
-        Iterator[str]: An iterator of the expanded values.
+    Yields:
+        str: The expanded values.
 
     """
     suffix = SUFFIX_EXPONENT.get(suffix, suffix)
@@ -480,6 +488,9 @@ def split_arg(arg: str) -> tuple[str, str, str]:
     Returns:
         tuple[str, str, str]: A tuple containing the key,
         suffix, and value.
+
+    Raises:
+        ValueError: If the argument is invalid.
 
     """
     if "=" not in arg:
@@ -524,8 +535,11 @@ def expand_arg(arg: str) -> Iterator[str]:
     Args:
         arg (str): The argument to parse.
 
-    Returns:
-       list[str]: A list of the parsed arguments.
+    Yields:
+       str: Parsed arguments.
+
+    Raises:
+        ValueError: xx
 
     """
     if "|" not in arg:
