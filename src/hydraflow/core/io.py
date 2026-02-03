@@ -9,8 +9,6 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-import mlflow
-
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
@@ -57,6 +55,8 @@ def log_text(run: Run, from_dir: Path, pattern: str = "*.log") -> None:
         pattern (str): The pattern to match the logs.
 
     """
+    import mlflow
+
     artifact_dir = get_artifact_dir(run)
 
     for file in from_dir.glob(pattern):
@@ -104,6 +104,8 @@ def get_experiment_name(experiment_dir: Path) -> str:
         The job name as a string, or an empty string if the file does not exist
 
     """
+    import mlflow
+
     es = mlflow.search_experiments(filter_string='name != "Default"')
     for experiment in es:
         loc = cast("str", experiment.artifact_location)
@@ -120,6 +122,8 @@ def get_experiment_names() -> list[str]:
         list[str]: A list of experiment names sorted by the name.
 
     """
+    import mlflow
+
     es = mlflow.search_experiments(filter_string='name != "Default"')
     return [e.name for e in es]  # pyright: ignore[reportUnknownMemberType]
 
@@ -128,6 +132,8 @@ def iter_experiment_dirs(
     experiment_names: str | list[str] | Callable[[str], bool] | None = None,
 ) -> Iterator[Path]:
     """Iterate over the experiment directories."""  # noqa: DOC402
+    import mlflow
+
     if isinstance(experiment_names, str):
         experiment_names = [experiment_names]
 
