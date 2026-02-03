@@ -9,7 +9,6 @@ from dataclasses import MISSING
 from typing import TYPE_CHECKING, Any, Concatenate, Self, overload
 
 import numpy as np
-from joblib.parallel import Parallel, delayed
 from omegaconf import ListConfig, OmegaConf
 from polars import DataFrame, Series
 
@@ -416,62 +415,10 @@ class Collection[I](Sequence[I]):
         """
         yield from (function(i, *args, **kwargs) for i in self)
 
-    def pmap[**P, R](
-        self,
-        function: Callable[Concatenate[I, P], R],
-        n_jobs: int = -1,
-        backend: str = "multiprocessing",
-        progress: bool = False,
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> list[R]:
-        """Apply a function to each item in parallel and return a list of results.
-
-        This method processes items concurrently for improved performance on
-        CPU-bound or I/O-bound operations, depending on the backend.
-
-        Args:
-            function: Function to apply to each item. The item is passed
-                as the first argument.
-            n_jobs (int): Number of jobs to run in parallel. -1 means using all
-                processors.
-            backend (str): Parallelization backend.
-            progress (bool): Whether to display a progress bar.
-            *args: Additional positional arguments to pass to the function.
-            **kwargs: Additional keyword arguments to pass to the function.
-
-        Returns:
-            list[R]: A list containing all results of the function applications.
-
-        Examples:
-            ```python
-            # Process all items in parallel using all cores
-            results = collection.pmap(heavy_computation)
-
-            # Specify number of parallel jobs and backend
-            results = collection.pmap(process_files, n_jobs=4, backend="threading")
-            ```
-
-        """
-        parallel = Parallel(n_jobs=n_jobs, backend=backend, return_as="list")
-        it = (delayed(function)(i, *args, **kwargs) for i in self)
-
-        if not progress:
-            return parallel(it)  # pyright: ignore[reportReturnType]
-
-        from hydraflow.utils.progress import Progress
-
-        with Progress(*Progress.get_default_columns()) as p:
-            p.add_task("", total=len(self))
-            return parallel(it)  # pyright: ignore[reportReturnType]
-
     def to_frame(
         self,
         *keys: str | tuple[str, Any | Callable[[I], Any]],
         defaults: dict[str, Any | Callable[[I], Any]] | None = None,
-        n_jobs: int = 0,
-        backend: str = "multiprocessing",
-        progress: bool = False,
         **kwargs: Callable[[I], Any],
     ) -> DataFrame:
         """Convert the collection to a Polars DataFrame.
@@ -488,10 +435,6 @@ class Collection[I](Sequence[I]):
             defaults (dict[str, Any | Callable[[I], Any]] | None): Default values
                 for the keys. If a callable, it will be called with the item and the
                 value returned will be used as the default.
-            n_jobs (int): Number of jobs to run in parallel. 0 means no parallelization.
-                Default to 0.
-            backend (str): Parallelization backend.
-            progress (bool): Whether to display a progress bar.
             **kwargs (Callable[[I], Any]): Additional columns to compute using
                 callables that take an item and return a value.
 
@@ -526,11 +469,7 @@ class Collection[I](Sequence[I]):
             return df
 
         kv = kwargs.items()
-        if n_jobs == 0:
-            return df.with_columns(Series(k, self.map(v)) for k, v in kv)
-
-        columns = [Series(k, self.pmap(v, n_jobs, backend, progress)) for k, v in kv]
-        return df.with_columns(*columns)
+        return df.with_columns(Series(k, self.map(v)) for k, v in kv)
 
     def group_by(self, *by: str) -> GroupBy[Self, I]:
         """Group items by one or more keys and return a GroupBy instance.
