@@ -56,9 +56,9 @@ hydraflow = "hydraflow.cli:app"
 
 [dependency-groups]
 dev = [
-  "basedpyright>=1.35.0",
+  "basedpyright>=1.37.3",
   "hydra-joblib-launcher>=1.2",
-  "prek>=0.2.18",
+  "prek>=0.3.1",
   "pytest>=9",
   "pytest-clarity>=1",
   "pytest-cov>=7",
@@ -66,7 +66,7 @@ dev = [
   "pytest-order>=1",
   "pytest-randomly>=4",
   "pytest-xdist>=3",
-  "ruff>=0.14.8",
+  "ruff>=0.15.0",
   "ty>=0.0.2",
 ]
 docs = ["markdown-exec[ansi]", "mkapi>=4.4", "mkdocs-material"]
