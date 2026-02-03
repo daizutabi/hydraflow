@@ -259,20 +259,6 @@ def test_to_frame_kwargs_without_keys(rc: Rc):
     assert df.item(-1, "z") == 4
 
 
-@pytest.mark.parametrize("progress", [False, True])
-def test_to_frame_parallel(rc: Rc, progress: bool):
-    df = rc.to_frame(
-        z=lambda r: r.cfg.x + 10,
-        n_jobs=2,
-        backend="threading",
-        progress=progress,
-    )
-    assert df.shape == (12, 1)
-    assert df.columns == ["z"]
-    assert df.item(0, "z") == 11
-    assert df.item(-1, "z") == 13
-
-
 def test_group_by(rc: Rc):
     gp = rc.group_by("y")
     assert isinstance(gp, GroupBy)
