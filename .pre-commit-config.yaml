@@ -20,7 +20,7 @@ repos:
       - id: ruff-format
         files: ^(src|tests)/
   - repo: https://github.com/DetachHead/basedpyright-prek-mirror
-    rev: 1.37.3
+    rev: 1.37.4
     hooks:
       - id: basedpyright
         files: ^(src|tests)/
