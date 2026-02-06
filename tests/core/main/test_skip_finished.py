@@ -39,7 +39,7 @@ def results(collect: Collect, tmp_path_factory: pytest.TempPathFactory) -> Resul
     return collect(file, args, cwd=cwd)
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 3
 
 
@@ -69,14 +69,14 @@ def text(path: Path):
     return path.joinpath("a.txt").read_text()
 
 
-def test_count(text: str, count: int):
+def test_count(text: str, count: int) -> None:
     assert len(text.splitlines()) == count
 
 
-def test_config(text: str, count: int):
+def test_config(text: str, count: int) -> None:
     assert int(text.split(" ", maxsplit=1)[0]) == count
 
 
-def test_run(text: str, path: Path):
+def test_run(text: str, path: Path) -> None:
     line = text.splitlines()[-1]
     assert line.split(" ", maxsplit=1)[1] == path.parent.name

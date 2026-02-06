@@ -17,7 +17,7 @@ class Config:
 
 
 @hydraflow.main(Config)
-def app(run: Run, cfg: Config):
+def app(run: Run, cfg: Config) -> None:
     path = hydraflow.get_artifact_dir(run) / "a.txt"
     path.write_text(f"{cfg.count}")
     path = hydraflow.get_artifact_dir(run) / "b.txt"

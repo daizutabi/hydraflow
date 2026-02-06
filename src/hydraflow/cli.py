@@ -107,11 +107,7 @@ def show(
 
     from hydraflow.executor.io import get_job, load_config
 
-    if name:
-        cfg = get_job(name)
-    else:
-        cfg = load_config()
-
+    cfg = get_job(name) if name else load_config()
     typer.echo(OmegaConf.to_yaml(cfg))
 
 

@@ -23,7 +23,7 @@ class Config:
 
 
 @hydraflow.main(Config, tracking_uri="sqlite:///mlflow.db")
-def app(_run: Run, _cfg: Config):
+def app(_run: Run, _cfg: Config) -> None:
     pass
 
 

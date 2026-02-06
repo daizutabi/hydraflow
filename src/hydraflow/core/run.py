@@ -229,7 +229,7 @@ class Run[C, I = None]:
             key = key.replace("__", ".")
 
             if force or OmegaConf.select(cfg, key, default=MISSING) is MISSING:
-                v = value(self) if callable(value) else value  # type: ignore
+                v = value(self) if callable(value) else value
                 OmegaConf.update(cfg, key, v, force_add=True)
             return
 
@@ -238,7 +238,7 @@ class Run[C, I = None]:
             return
 
         if callable(value):
-            value = value(self)  # type: ignore
+            value = value(self)
 
         if not isinstance(value, Iterable) or isinstance(value, str):
             msg = f"{value} is not an iterable"
@@ -347,7 +347,7 @@ class Run[C, I = None]:
             self.lit(k) if isinstance(k, str) else self.lit(k[0], k[1]) for k in keys
         )
 
-    def to_dict(self, flatten: bool = True) -> dict[str, Any]:
+    def to_dict(self, *, flatten: bool = True) -> dict[str, Any]:
         """Convert the Run to a dictionary.
 
         Args:
@@ -363,7 +363,8 @@ class Run[C, I = None]:
         """
         cfg = OmegaConf.to_container(self.cfg)
         if not isinstance(cfg, dict):
-            raise TypeError("Configuration must be a dictionary")
+            msg = "configuration must be a dictionary"
+            raise TypeError(msg)
 
         standard_dict: dict[str, Any] = {str(k): v for k, v in cfg.items()}  # pyright: ignore[reportUnknownArgumentType]
 

@@ -16,7 +16,7 @@ class Config:
 
 
 @hydraflow.main(Config, chdir=True)
-def app(run: Run, cfg: Config):
+def app(run: Run, cfg: Config) -> None:
     file = Path("a.txt")
     text = file.read_text(encoding="utf-8") if file.exists() else ""
     file.write_text(text + f"{cfg.count} {run.info.run_id}\n", encoding="utf-8")

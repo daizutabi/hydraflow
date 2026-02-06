@@ -25,32 +25,32 @@ def run():
     return Run[Config](Path())
 
 
-def test_repr(run: Run[Config]):
+def test_repr(run: Run[Config]) -> None:
     assert repr(run) == "Run('')"
 
 
-def test_update_str(run: Run[Config]):
+def test_update_str(run: Run[Config]) -> None:
     run.update("a", 10)
     assert run.get("a") == 10
     run.update("a", 20)
     assert run.get("a") == 10
 
 
-def test_update_str_force(run: Run[Config]):
+def test_update_str_force(run: Run[Config]) -> None:
     run.update("a", 10)
     assert run.get("a") == 10
     run.update("a", 20, force=True)
     assert run.get("a") == 20
 
 
-def test_update_str_dot(run: Run[Config]):
+def test_update_str_dot(run: Run[Config]) -> None:
     run.update("db.name", "abc")
     assert run.get("db.name") == "abc"
     run.update("db.name", "def")
     assert run.get("db.name") == "abc"
 
 
-def test_update_str_underscore(run: Run[Config]):
+def test_update_str_underscore(run: Run[Config]) -> None:
     run.update("db__name", "abc")
     assert run.get("db.name") == "abc"
     assert run.get("db__name") == "abc"
@@ -59,14 +59,14 @@ def test_update_str_underscore(run: Run[Config]):
     assert run.get("db__name") == "abc"
 
 
-def test_update_str_dot_force(run: Run[Config]):
+def test_update_str_dot_force(run: Run[Config]) -> None:
     run.update("db.b", 100)
     assert run.get("db.b") == 100
     run.update("db.b", 200, force=True)
     assert run.get("db.b") == 200
 
 
-def test_update_callable(run: Run[Config]):
+def test_update_callable(run: Run[Config]) -> None:
     run.update("db.name", lambda _: "abc")
     run.update("db.b", lambda run: len(run.cfg.db.name))
     assert run.get("db.b") == 3
@@ -74,7 +74,7 @@ def test_update_callable(run: Run[Config]):
     assert run.get("db.b") == 3
 
 
-def test_update_tuple(run: Run[Config]):
+def test_update_tuple(run: Run[Config]) -> None:
     run.update(("db.name", "db.b"), ["xyz", 1000])
     assert run.get("db.name") == "xyz"
     assert run.get("db.b") == 1000
@@ -83,7 +83,7 @@ def test_update_tuple(run: Run[Config]):
     assert run.get("a") == 1
 
 
-def test_update_underscore(run: Run[Config]):
+def test_update_underscore(run: Run[Config]) -> None:
     run.update(("db__name", "db__b"), ["xyz", 1000])
     assert run.get("db.name") == "xyz"
     assert run.get("db.b") == 1000
@@ -95,7 +95,7 @@ def test_update_underscore(run: Run[Config]):
     assert run.get("a") == 1
 
 
-def test_update_tuple_callable(run: Run[Config]):
+def test_update_tuple_callable(run: Run[Config]) -> None:
     run.update(("db.name", "db.b"), lambda x: ["a", 1])
     assert run.get("db.name") == "a"
     assert run.get("db.b") == 1
@@ -105,30 +105,30 @@ def test_update_tuple_callable(run: Run[Config]):
     run.update(("db.name", "a"), lambda x: [1 / 0, 1 / 0])
 
 
-def test_update_tuple_error(run: Run[Config]):
+def test_update_tuple_error(run: Run[Config]) -> None:
     with pytest.raises(TypeError):
         run.update(("db.name", "db.b"), lambda x: "ab")
 
 
-def test_get_error(run: Run[Config]):
+def test_get_error(run: Run[Config]) -> None:
     with pytest.raises(AttributeError):
         run.get("unknown")
 
 
-def test_get_default(run: Run[Config]):
+def test_get_default(run: Run[Config]) -> None:
     assert run.get("unknown", 10) == 10
 
 
-def test_get_default_callable(run: Run[Config]):
+def test_get_default_callable(run: Run[Config]) -> None:
     run.update("a", 1000)
     assert run.get("unknown", lambda run: run.get("a")) == 1000
 
 
-def test_get_info(run: Run[Config]):
+def test_get_info(run: Run[Config]) -> None:
     assert run.get("run_dir").as_posix() == "."
 
 
-def test_lit(run: Run[Config]):
+def test_lit(run: Run[Config]) -> None:
     run.update("db.b", 100)
     expr = run.lit("db.b", dtype=pl.Int64)
     df = pl.DataFrame({"a": [1, 2, 3]})
@@ -140,7 +140,7 @@ def test_lit(run: Run[Config]):
     assert df.item(2, "db.b") == 100
 
 
-def test_to_frame(run: Run[Config]):
+def test_to_frame(run: Run[Config]) -> None:
     def func(run: Run[Config]) -> pl.DataFrame:
         return pl.DataFrame({"a": [run.get("a"), 20]})
 
@@ -154,7 +154,7 @@ def test_to_frame(run: Run[Config]):
     assert df["y"].to_list() == [10, 10]
 
 
-def test_to_dict(run: Run[Config]):
+def test_to_dict(run: Run[Config]) -> None:
     run.update("a", 10)
     run.update("db.name", "abc")
     run.update("db.b", 100)
@@ -165,7 +165,7 @@ def test_to_dict(run: Run[Config]):
     }
 
 
-def test_to_dict_flatten_false(run: Run[Config]):
+def test_to_dict_flatten_false(run: Run[Config]) -> None:
     run.update("a", 10)
     run.update("db.name", "abc")
     run.update("db.b", 100)
@@ -175,50 +175,50 @@ def test_to_dict_flatten_false(run: Run[Config]):
     }
 
 
-def test_to_dict_error(run: Run[Config]):
+def test_to_dict_error(run: Run[Config]) -> None:
     run.cfg = ListConfig([1, 2, 3])  # pyright: ignore[reportAttributeAccessIssue]
     with pytest.raises(TypeError):
         run.to_dict()
 
 
-def test_impl_none(run: Run[Config]):
+def test_impl_none(run: Run[Config]) -> None:
     assert run.impl is None
 
 
 class Impl:
     path: str
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path) -> None:
         self.path = path.as_posix()
 
 
-def test_impl():
+def test_impl() -> None:
     run = Run[Config, Impl](Path(), Impl)
     assert run.impl.path == "artifacts"
 
 
-def test_repr_impl():
+def test_repr_impl() -> None:
     run = Run[Config, Impl](Path("a/b/c"), Impl)
     assert repr(run) == "Run[Impl]('c')"
 
 
-def test_load():
+def test_load() -> None:
     run = Run[Config].load("a/b/c")
     assert isinstance(run, Run)
     assert run.impl is None
 
 
-def test_get_cfg():
+def test_get_cfg() -> None:
     run = Run[Config, Impl](Path(), Impl)
     assert run.get("cfg") is run.cfg
 
 
-def test_get_impl():
+def test_get_impl() -> None:
     run = Run[Config, Impl](Path(), Impl)
     assert run.get("impl") is run.impl
 
 
-def test_load_collection():
+def test_load_collection() -> None:
     rc = Run[Config].load([Path("a/b/c"), Path("a/b/d")])
     assert isinstance(rc, RunCollection)
     assert len(rc) == 2
@@ -226,11 +226,11 @@ def test_load_collection():
     assert rc[1].impl is None
 
 
-def test_load_impl():
+def test_load_impl() -> None:
     run = Run[Config, Impl].load("a/b/c", Impl)
     assert run.impl.path == "a/b/c/artifacts"
 
 
-def test_get_impl_str():
+def test_get_impl_str() -> None:
     run = Run[Config, Impl].load("a/b/c", Impl)
     assert run.get("path") == "a/b/c/artifacts"

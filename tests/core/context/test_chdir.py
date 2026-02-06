@@ -17,7 +17,7 @@ def results(collect: Collect):
     return collect(file, ["-m", "count=1,2"])
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 2
 
 
@@ -27,6 +27,6 @@ def result(results: Results, request: pytest.FixtureRequest):
     return results[request.param]
 
 
-def test_first(result: tuple[Path, DictConfig]):
+def test_first(result: tuple[Path, DictConfig]) -> None:
     path, cfg = result
     assert int(path.joinpath("a.txt").read_text()) == cfg.count

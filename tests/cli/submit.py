@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-def main():
+def main() -> None:
     file = Path(sys.argv[-1])
     for line in file.read_text(encoding="utf-8").splitlines():
         args = shlex.split(line)

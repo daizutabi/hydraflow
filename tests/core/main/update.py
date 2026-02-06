@@ -27,7 +27,7 @@ class Config:
 
 
 @hydraflow.main(Config, chdir=True, update=Config.update)
-def app(_run: Run, _cfg: Config):
+def app(_run: Run, _cfg: Config) -> None:
     pass
 
 

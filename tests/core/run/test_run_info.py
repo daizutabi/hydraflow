@@ -14,5 +14,5 @@ def run_dir(tmp_path_factory: pytest.TempPathFactory):
     return p.parent
 
 
-def test_run_id():
+def test_run_id() -> None:
     assert RunInfo(Path(__file__)).run_id == "test_run_info.py"

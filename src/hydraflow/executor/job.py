@@ -163,7 +163,8 @@ def submit(
     if executable == "python" and sys.platform == "win32":
         executable = sys.executable
 
-    temp = NamedTemporaryFile(dir=Path.cwd(), delete=False)  # for Windows
+    # For Windows, don't use a context manager
+    temp = NamedTemporaryFile(dir=Path.cwd(), delete=False)  # noqa: SIM115
     file = Path(temp.name)
     temp.close()
 

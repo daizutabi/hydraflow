@@ -14,16 +14,16 @@ def schema():
     return OmegaConf.structured(HydraflowConf)
 
 
-def test_scheme_type(schema: DictConfig):
+def test_scheme_type(schema: DictConfig) -> None:
     assert isinstance(schema, DictConfig)
 
 
-def test_merge(schema: DictConfig):
+def test_merge(schema: DictConfig) -> None:
     cfg = OmegaConf.merge(schema, {})
     assert cfg.jobs == {}
 
 
-def test_load_config_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_load_config_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     Path("hydraflow.yaml").write_text("- a\n- b\n", encoding="utf-8")
 
@@ -32,12 +32,12 @@ def test_load_config_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert cfg.jobs == {}
 
 
-def test_load_config_none():
+def test_load_config_none() -> None:
     cfg = load_config()
     assert cfg.jobs == {}
 
 
-def test_load_config_job(tmp_path: Path):
+def test_load_config_job(tmp_path: Path) -> None:
     config_file = tmp_path.joinpath("hydraflow.yaml")
     config_file.write_text("jobs:\n  a:\n    run: a.test\n    add: --opt1 --opt2\n")
     cfg = load_config(config_file)
@@ -45,7 +45,7 @@ def test_load_config_job(tmp_path: Path):
     assert cfg.jobs["a"].add == "--opt1 --opt2"
 
 
-def test_load_config_set(tmp_path: Path):
+def test_load_config_set(tmp_path: Path) -> None:
     config_file = tmp_path.joinpath("hydraflow.yaml")
     config_file.write_text("jobs:\n  a:\n    sets:\n      - add: --opt1 --opt2\n")
     cfg = load_config(config_file)
@@ -66,7 +66,7 @@ def test_load_config_set(tmp_path: Path):
         ("a[b]", "a[b]"),
     ],
 )
-def test_load_config_args_quote(text: str, expected: str, tmp_path: Path):
+def test_load_config_args_quote(text: str, expected: str, tmp_path: Path) -> None:
     config_file = tmp_path.joinpath("hydraflow.yaml")
     config_file.write_text(f"jobs:\n  a:\n    sets:\n      - all: {text}\n")
     cfg = load_config(config_file)

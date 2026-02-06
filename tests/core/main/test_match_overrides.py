@@ -20,5 +20,5 @@ def results(collect: Collect) -> Results:
     )
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 4

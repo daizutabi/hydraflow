@@ -17,7 +17,7 @@ def results(collect: Collect):
     return collect(file, ["-m", "name=a,b,c"])
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 3
 
 
@@ -27,11 +27,11 @@ def result(results: Results, request: pytest.FixtureRequest):
     return results[request.param]
 
 
-def test_first(result: tuple[Path, DictConfig]):
+def test_first(result: tuple[Path, DictConfig]) -> None:
     path, cfg = result
     assert path.joinpath("1.txt").read_text() == cfg.name
 
 
-def test_second(result: tuple[Path, DictConfig]):
+def test_second(result: tuple[Path, DictConfig]) -> None:
     path, cfg = result
     assert path.joinpath("2.txt").read_text() == cfg.name * 2

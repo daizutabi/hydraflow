@@ -11,7 +11,7 @@ from hydraflow.core.run import Run
 runner = CliRunner()
 
 
-def test_run_args_dry_run():
+def test_run_args_dry_run() -> None:
     result = runner.invoke(app, ["run", "args", "--dry-run"])
     assert result.exit_code == 0
     out = result.stdout
@@ -20,7 +20,7 @@ def test_run_args_dry_run():
     assert out.count("hydra.job.name=args") == 2
 
 
-def test_run_batch_dry_run():
+def test_run_batch_dry_run() -> None:
     result = runner.invoke(app, ["run", "batch", "--dry-run"])
     assert result.exit_code == 0
     out = result.stdout
@@ -31,7 +31,7 @@ def test_run_batch_dry_run():
     assert out.count("hydra.job.name=batch") == 4
 
 
-def test_run_parallel_dry_run():
+def test_run_parallel_dry_run() -> None:
     result = runner.invoke(app, ["run", "parallel", "--dry-run"])
     assert result.exit_code == 0
     out = result.stdout
@@ -43,21 +43,21 @@ def test_run_parallel_dry_run():
     assert "hydra.launcher.n_jobs=4" in lines[1]
 
 
-def test_run_parallel_dry_run_extra_args():
+def test_run_parallel_dry_run_extra_args() -> None:
     args = ["run", "parallel", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert result.stdout.count("app.py a --b --dry-run --multirun") == 2
 
 
-def test_run_echo_dry_run():
+def test_run_echo_dry_run() -> None:
     args = ["run", "echo", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert result.stdout.count("typer.echo(['a', 'b', 'c', '--multirun',") == 4
 
 
-def test_submit_dry_run():
+def test_submit_dry_run() -> None:
     args = ["run", "submit", "--dry-run", "a", "--b", "--", "--dry-run"]
     result = runner.invoke(app, args)
     assert result.exit_code == 0
@@ -71,21 +71,21 @@ def test_submit_dry_run():
     assert "name=d count=6" in lines[4]
 
 
-def test_run_args():
+def test_run_args() -> None:
     result = runner.invoke(app, ["run", "args"])
     assert result.exit_code == 0
     run_dirs = list(iter_run_dirs("args"))
     assert len(run_dirs) == 12
 
 
-def test_run_batch():
+def test_run_batch() -> None:
     result = runner.invoke(app, ["run", "batch"])
     assert result.exit_code == 0
     run_dirs = list(iter_run_dirs("batch"))
     assert len(run_dirs) == 8
 
 
-def test_run_parallel():
+def test_run_parallel() -> None:
     result = runner.invoke(app, ["run", "parallel"])
     assert result.exit_code == 0
     run_dirs = list(iter_run_dirs("parallel"))
@@ -97,7 +97,7 @@ def test_run_parallel():
     assert len(run_dirs) == 8
 
 
-def test_run_echo():
+def test_run_echo() -> None:
     result = runner.invoke(app, ["run", "echo"])
     assert result.exit_code == 0
     out = result.stdout
@@ -108,7 +108,7 @@ def test_run_echo():
     assert "['a', 'b', 'c', '--multirun', 'name=d', 'count=4,5,6'" in lines[-1]
 
 
-def test_submit():
+def test_submit() -> None:
     result = runner.invoke(app, ["run", "submit"])
     assert result.exit_code == 0
     run_dirs = list(iter_run_dirs("submit"))
@@ -120,20 +120,20 @@ def test_submit():
     assert len(run_dirs) == 4
 
 
-def test_run():
+def test_run() -> None:
     runner.invoke(app, ["run", "job-name"])
     run_dir = next(iter_run_dirs("job-name"))
     run: Run[Any, None] = Run(run_dir)
     assert run.info.job_name == "job-name"
 
 
-def test_run_error():
+def test_run_error() -> None:
     result = runner.invoke(app, ["run", "error"])
     assert result.exit_code == 1
     assert "No command found in job: error" in result.stdout
 
 
-def test_run_error_not_found():
+def test_run_error_not_found() -> None:
     result = runner.invoke(app, ["run", "not_found"])
     assert result.exit_code == 1
     assert "Job not found: not_found" in result.stdout

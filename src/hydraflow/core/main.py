@@ -62,7 +62,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("hydraflow")
 
 
-def main[C](
+def main[C](  # noqa: PLR0913
     node: C | type[C],
     config_name: str = "config",
     *,
