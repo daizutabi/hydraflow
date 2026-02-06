@@ -7,14 +7,14 @@ from hydraflow.cli import app
 runner = CliRunner()
 
 
-def test_show():
+def test_show() -> None:
     result = runner.invoke(app, ["show"])
     assert result.exit_code == 0
     assert "jobs:\n" in result.stdout
     assert "  args:\n" in result.stdout
 
 
-def test_show_job():
+def test_show_job() -> None:
     result = runner.invoke(app, ["show", "args"])
     assert result.exit_code == 0
     assert "name: args\n" in result.stdout

@@ -57,7 +57,7 @@ def log_run(run: Run) -> Iterator[None]:
 
 
 @contextmanager
-def start_run(
+def start_run(  # noqa: PLR0913
     *,
     chdir: bool = False,
     run_id: str | None = None,

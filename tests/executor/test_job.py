@@ -17,7 +17,7 @@ from hydraflow.executor.job import (
 )
 
 
-def test_iter_args():
+def test_iter_args() -> None:
     it = iter_args("b=3,4 c=5,6", "a=1:3")
     assert next(it) == ["b=3", "c=5", "a=1,2,3"]
     assert next(it) == ["b=3", "c=6", "a=1,2,3"]
@@ -25,7 +25,7 @@ def test_iter_args():
     assert next(it) == ["b=4", "c=6", "a=1,2,3"]
 
 
-def test_iter_args_pipe():
+def test_iter_args_pipe() -> None:
     it = iter_args("b=3,4|c=5:7", "a=1:3")
     assert next(it) == ["b=3,4", "a=1,2,3"]
     assert next(it) == ["c=5,6,7", "a=1,2,3"]
@@ -52,21 +52,21 @@ def batches(job: Job):
         (["a", "b"], ["c", "d", "a", "b=1"], ["a", "b=1", "c", "d"]),
     ],
 )
-def test_merge_args(first: list[str], second: list[str], expected: list[str]):
+def test_merge_args(first: list[str], second: list[str], expected: list[str]) -> None:
     assert merge_args(first, second) == expected
 
 
-def test_sweep_dir(batches: list[list[str]]):
+def test_sweep_dir(batches: list[list[str]]) -> None:
     assert all(x[-1].startswith("hydra.sweep.dir=multirun/") for x in batches)
     assert all(len(x[-1].split("/")[-1]) == 26 for x in batches)
 
 
-def test_job_name(batches: list[list[str]]):
+def test_job_name(batches: list[list[str]]) -> None:
     assert all(x[-2].startswith("hydra.job.name=test") for x in batches)
 
 
 @pytest.mark.parametrize(("i", "x"), [(0, "b=5"), (1, "b=6"), (2, "c=7"), (3, "c=8")])
-def test_batch_args(batches: list[list[str]], i: int, x: str):
+def test_batch_args(batches: list[list[str]], i: int, x: str) -> None:
     assert batches[i][1] == x
 
 
@@ -74,11 +74,11 @@ def test_batch_args(batches: list[list[str]], i: int, x: str):
     ("i", "x"),
     [(0, "a=1,2"), (1, "a=1,2"), (2, "a=3,4"), (3, "a=3,4")],
 )
-def test_sweep_args(batches: list[list[str]], i: int, x: str):
+def test_sweep_args(batches: list[list[str]], i: int, x: str) -> None:
     assert batches[i][-3] == x
 
 
-def test_iter_tasks(job: Job, tmp_path: Path):
+def test_iter_tasks(job: Job, tmp_path: Path) -> None:
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "echo.py"
 
@@ -88,7 +88,7 @@ def test_iter_tasks(job: Job, tmp_path: Path):
     assert path.read_text() == "b=5 a=1,2 b=6 a=1,2 c=7 a=3,4 c=8 a=3,4"
 
 
-def test_iter_calls(job: Job, capsys: pytest.CaptureFixture[str]):
+def test_iter_calls(job: Job, capsys: pytest.CaptureFixture[str]) -> None:
     for call in iter_calls(["typer.echo"], iter_batches(job)):
         call.func()
     out, _ = capsys.readouterr()
@@ -96,7 +96,7 @@ def test_iter_calls(job: Job, capsys: pytest.CaptureFixture[str]):
     assert "'c=8', 'a=3,4'" in out
 
 
-def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture[str]):
+def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture[str]) -> None:
     job.call = "typer.echo a 'b c'"
     for call in iter_calls(["typer.echo", "a", "b c"], iter_batches(job)):
         call.func()
@@ -104,7 +104,7 @@ def test_iter_calls_args(job: Job, capsys: pytest.CaptureFixture[str]):
     assert "['a', 'b c', '--multirun'," in out
 
 
-def test_submit(job: Job, tmp_path: Path):
+def test_submit(job: Job, tmp_path: Path) -> None:
     path = tmp_path / "output.txt"
     file = Path(__file__).parent / "read.py"
 
@@ -118,11 +118,11 @@ def test_submit(job: Job, tmp_path: Path):
     assert lines[3].startswith("--multirun c=8 a=3,4 ")
 
 
-def test_get_callable_error():
+def test_get_callable_error() -> None:
     with pytest.raises(ValueError):
         get_callable("print")
 
 
-def test_get_callable_not_found():
+def test_get_callable_not_found() -> None:
     with pytest.raises(ValueError):
         get_callable("hydraflow.invalid")

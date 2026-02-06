@@ -173,18 +173,22 @@ def _get_range(arg: str) -> tuple[float, float, float]:
     """
     args = [to_number(x) for x in arg.split(":")]
 
-    if len(args) == 2:
+    if len(args) == 2:  # noqa: PLR2004
         if args[0] > args[1]:
-            raise ValueError("start cannot be greater than stop")
+            msg = "start cannot be greater than stop"
+            raise ValueError(msg)
 
         return (args[0], args[1], 1)
 
     if args[2] == 0:
-        raise ValueError("step cannot be zero")
+        msg = "step cannot be zero"
+        raise ValueError(msg)
     if args[2] > 0 and args[0] > args[1]:
-        raise ValueError("start cannot be greater than stop")
+        msg = "start cannot be greater than stop"
+        raise ValueError(msg)
     if args[2] < 0 and args[0] < args[1]:
-        raise ValueError("start cannot be less than stop")
+        msg = "start cannot be less than stop"
+        raise ValueError(msg)
 
     return args[0], args[1], args[2]
 
@@ -209,7 +213,8 @@ def _arange(start: float, stop: float, step: float) -> list[float]:
 
     """
     if step == 0:
-        raise ValueError("Step cannot be zero")
+        msg = "Step cannot be zero"
+        raise ValueError(msg)
 
     epsilon = min(abs(start), abs(stop)) * 1e-5
 
@@ -251,7 +256,7 @@ def split_suffix(arg: str) -> tuple[str, str]:
         (':1:2', 'e6')
 
     """
-    if len(arg) < 3 or ":" not in arg:
+    if len(arg) < 3 or ":" not in arg:  # noqa: PLR2004
         return arg, ""
 
     prefix, suffix = arg.rsplit(":", 1)

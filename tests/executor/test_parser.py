@@ -23,7 +23,7 @@ from hydraflow.executor.parser import (
 
 
 @pytest.mark.parametrize(("s", "x"), [("1", 1), ("1.2", 1.2), ("", 0)])
-def test_to_number(s: str, x: float):
+def test_to_number(s: str, x: float) -> None:
     assert to_number(s) == x
 
 
@@ -31,7 +31,7 @@ def test_to_number(s: str, x: float):
     ("s", "x"),
     [("1", 0), ("1.2", 1), ("1.234", 3), ("123.", 0), ("", 0), ("1.234e-10", 3)],
 )
-def test_count_decimal_digits(s: str, x: int):
+def test_count_decimal_digits(s: str, x: int) -> None:
     assert count_decimal_digits(s) == x
 
 
@@ -39,7 +39,7 @@ def test_count_decimal_digits(s: str, x: int):
     ("s", "x"),
     [("1", 1), ("1.2", 1), ("1.234", 1), ("123.", 3), ("", 0), ("1.234e-10", 1)],
 )
-def test_count_integer_digits(s: str, x: int):
+def test_count_integer_digits(s: str, x: int) -> None:
     assert count_integer_digits(s) == x
 
 
@@ -52,7 +52,7 @@ def test_count_integer_digits(s: str, x: int):
         ("1.2:1.4:0.1", (1.2, 1.4, 0.1)),
     ],
 )
-def test_get_range(s: str, x: tuple[float, float, float]):
+def test_get_range(s: str, x: tuple[float, float, float]) -> None:
     assert _get_range(s) == x
 
 
@@ -69,7 +69,7 @@ def test_get_range_errors(
     arg: str,
     expected_exception: type[BaseException],
     expected_message: str,
-):
+) -> None:
     with pytest.raises(expected_exception) as excinfo:
         _get_range(arg)
     assert str(excinfo.value) == expected_message
@@ -85,11 +85,11 @@ def test_get_range_errors(
         (1.02e-3, 1.04e-3, 0.01e-3, [0.00102, 0.00103, 0.00104]),
     ],
 )
-def test_arange(start: float, stop: float, step: float, expected: list[float]):
+def test_arange(start: float, stop: float, step: float, expected: list[float]) -> None:
     np.testing.assert_allclose(_arange(start, stop, step), expected)
 
 
-def test_arange_error():
+def test_arange_error() -> None:
     with pytest.raises(ValueError):
         _arange(1.0, 1.0, 0.0)
 
@@ -116,7 +116,7 @@ def test_arange_error():
         ("ab", ("ab", "")),
     ],
 )
-def test_split_suffix(s: str, x: tuple[str, str]):
+def test_split_suffix(s: str, x: tuple[str, str]) -> None:
     assert split_suffix(s) == x
 
 
@@ -156,7 +156,7 @@ def test_split_suffix(s: str, x: tuple[str, str]):
         ("(1:3,5:9:2,20)k", ["1e3", "2e3", "3e3", "5e3", "7e3", "9e3", "20e3"]),
     ],
 )
-def test_collect_value(s: str, x: list[str]):
+def test_collect_value(s: str, x: list[str]) -> None:
     assert collect_values(s) == x
 
 
@@ -177,7 +177,7 @@ def test_collect_value(s: str, x: list[str]):
         ("(1:3)e-2,(5:7)e-3", ["1e-2", "2e-2", "3e-2", "5e-3", "6e-3", "7e-3"]),
     ],
 )
-def test_expand_value(s: str, x: list[str]):
+def test_expand_value(s: str, x: list[str]) -> None:
     assert list(expand_values(s)) == x
 
 
@@ -190,11 +190,11 @@ def test_expand_value(s: str, x: list[str]):
         ("3", ["3e3"]),
     ],
 )
-def test_expand_value_suffix(s: str, x: list[str]):
+def test_expand_value_suffix(s: str, x: list[str]) -> None:
     assert list(expand_values(s, "k")) == x
 
 
-def test_split_arg_error():
+def test_split_arg_error() -> None:
     with pytest.raises(ValueError):
         split_arg("1,2,3")
 
@@ -215,7 +215,7 @@ def test_split_arg_error():
         ("a/m=1:3,8:10", "a=1e-3,2e-3,3e-3,8e-3,9e-3,10e-3"),
     ],
 )
-def test_collect_arg(s: str, x: str):
+def test_collect_arg(s: str, x: str) -> None:
     assert collect_arg(s) == x
 
 
@@ -240,11 +240,11 @@ def test_collect_arg(s: str, x: str):
         ("a/k=1,2|b/m=3,4|c/u=5,6", ["a=1e3,2e3", "b=3e-3,4e-3", "c=5e-6,6e-6"]),
     ],
 )
-def test_expand_arg(s: str, x: list[str]):
+def test_expand_arg(s: str, x: list[str]) -> None:
     assert list(expand_arg(s)) == x
 
 
-def test_expand_arg_error():
+def test_expand_arg_error() -> None:
     with pytest.raises(ValueError):
         list(expand_arg("1,2|3,4|"))
 
@@ -259,7 +259,7 @@ def test_expand_arg_error():
         (["a/k=1:3", "b/m=4:6"], ["a=1e3,2e3,3e3", "b=4e-3,5e-3,6e-3"]),
     ],
 )
-def test_collect_list(s: list[str], x: list[str]):
+def test_collect_list(s: list[str], x: list[str]) -> None:
     assert collect(s) == x
 
 
@@ -272,7 +272,7 @@ def test_collect_list(s: list[str], x: list[str]):
         ("", []),
     ],
 )
-def test_collect_str(s: str, x: list[str]):
+def test_collect_str(s: str, x: list[str]) -> None:
     assert collect(s) == x
 
 
@@ -307,7 +307,7 @@ def test_collect_str(s: str, x: list[str]):
         ),
     ],
 )
-def test_expand_list(s: list[str], x: list[list[str]]):
+def test_expand_list(s: list[str], x: list[list[str]]) -> None:
     assert expand(s) == x
 
 
@@ -326,5 +326,5 @@ def test_expand_list(s: list[str], x: list[list[str]]):
         ("", [[]]),
     ],
 )
-def test_expand_str(s: str, x: list[list[str]]):
+def test_expand_str(s: str, x: list[list[str]]) -> None:
     assert expand(s) == x

@@ -17,7 +17,7 @@ def results(collect: Collect) -> Results:
     return collect(file, ["count=3"], ["count=3"], ["count=3"])
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 3
 
 
@@ -32,5 +32,5 @@ def path(result: tuple[Path, DictConfig]):
     return result[0]
 
 
-def test_count(path: Path):
+def test_count(path: Path) -> None:
     assert path.joinpath("a.txt").read_text() == "3"

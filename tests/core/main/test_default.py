@@ -18,7 +18,7 @@ def results(collect: Collect) -> Results:
     return collect(file, ["-m", "count=1,2"], ["-m", "name=a", "count=1,2,3,4"])
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 4
 
 
@@ -48,7 +48,7 @@ def text(path: Path):
     return path.joinpath("a.txt").read_text()
 
 
-def test_count(text: str, count: int):
+def test_count(text: str, count: int) -> None:
     assert text == str(count)
 
 
@@ -57,10 +57,10 @@ def cwd(path: Path):
     return Path(path.joinpath("b.txt").read_text())
 
 
-def test_cwd(cwd: Path, path: Path):
+def test_cwd(cwd: Path, path: Path) -> None:
     assert cwd.name == path.parents[3].name
 
 
-def test_run(path: Path, cfg: DictConfig):
+def test_run(path: Path, cfg: DictConfig) -> None:
     run = Run[DictConfig](path.parent)
     assert run.cfg == cfg

@@ -16,7 +16,7 @@ class Config:
 
 
 @hydraflow.main(Config, match_overrides=True)
-def app(_run: Run, _cfg: Config):
+def app(_run: Run, _cfg: Config) -> None:
     pass
 
 

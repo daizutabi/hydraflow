@@ -134,6 +134,7 @@ def test_set_experiment(
 
 @pytest.mark.parametrize(("mocked", "expected"), [(True, "run_123"), (False, None)])
 def test_get_run_id(
+    *,
     mocked: bool,
     expected: str | None,
     tmp_path: Path,
@@ -154,7 +155,7 @@ def test_get_run_id_empty_dir(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(("a", "expected"), [(1, True)])
-def test_equals_config(a: int, expected: bool, tmp_path: Path) -> None:
+def test_equals_config(a: int, *, expected: bool, tmp_path: Path) -> None:
     hydra_dir = tmp_path.joinpath("artifacts/.hydra")
     hydra_dir.mkdir(parents=True)
     hydra_dir.joinpath("config.yaml").write_text("a: 1\n")
@@ -166,7 +167,7 @@ def test_equals_config_invalid_path() -> None:
 
 
 @pytest.mark.parametrize(("a", "expected"), [(1, True)])
-def test_equals_overdies(a: int, expected: bool, tmp_path: Path) -> None:
+def test_equals_overdies(a: int, *, expected: bool, tmp_path: Path) -> None:
     hydra_dir = tmp_path.joinpath("artifacts/.hydra")
     hydra_dir.mkdir(parents=True)
     hydra_dir.joinpath("overrides.yaml").write_text("a=1\n")

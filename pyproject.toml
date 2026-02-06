@@ -98,11 +98,7 @@ preview = true
 select = ["ALL"]
 unfixable = ["F401"]
 ignore = [
-  "A005",
-  "ANN003",
   "ANN401",
-  "B904",
-  "C901",
   "CPY001",
   "D104",
   "D105",
@@ -112,23 +108,9 @@ ignore = [
   "DOC201",
   "DOC501",
   "DOC502",
-  "EM101",
-  "FBT001",
-  "FBT002",
-  "PGH003",
   "PLC0415",
-  "PLR0904",
-  "PLR0911",
-  "PLR0913",
-  "PLR1704",
-  "PLR2004",
-  "RUF067",
   "S404",
   "S603",
-  "SIM102",
-  "SIM108",
-  "SIM115",
-  "TRY003",
 ]
 
 [tool.ruff.lint.isort]
@@ -138,19 +120,7 @@ required-imports = ["from __future__ import annotations"]
 "examples/*.py" = ["D", "G", "INP", "T"]
 "src/hydraflow/__init__.py" = ["E402"]
 "src/hydraflow/_py314_compat.py" = ["ANN202", "ARG005", "SLF001"]
-"tests/*" = [
-  "A001",
-  "ANN",
-  "ARG",
-  "D",
-  "FBT",
-  "PD",
-  "PLC",
-  "PLR",
-  "PT",
-  "S",
-  "SLF",
-]
+"tests/*" = ["ANN", "ARG", "D", "PLC2701", "PLR2004", "PT011", "S", "SLF001"]
 
 [tool.ruff.format]
 preview = true

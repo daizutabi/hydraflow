@@ -32,11 +32,11 @@ def results(collect: Collect, request: pytest.FixtureRequest) -> Results:
     return collect(file, ["count=10", "name=abc", "size.width=1", "size.height=3"])
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 1
 
 
-def test_config(results: Results):
+def test_config(results: Results) -> None:
     run_dir = results[0][0].parent
     run = Run[Config](run_dir)
     assert run.get("count") == 10
@@ -62,11 +62,11 @@ def run_impl_config(results: Results):
     return Run[Dummy, ImplConfig].load(run_dir, ImplConfig)
 
 
-def test_impl_config_repr(run_impl_config: Run[Dummy, ImplConfig]):
+def test_impl_config_repr(run_impl_config: Run[Dummy, ImplConfig]) -> None:
     assert repr(run_impl_config).startswith("Run[ImplConfig]('")
 
 
-def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]):
+def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]) -> None:
     assert run_impl_config.impl.path.stem == "artifacts"
     cfg = run_impl_config.cfg
     assert cfg.count == 10
@@ -75,7 +75,7 @@ def test_impl_config(run_impl_config: Run[Dummy, ImplConfig]):
     assert cfg.size.height == 3
 
 
-def test_chdir(run_impl_config: Run[Dummy, ImplConfig]):
+def test_chdir(run_impl_config: Run[Dummy, ImplConfig]) -> None:
     run = run_impl_config
     with run.chdir():
         Path("a.txt").write_text("a", encoding="utf-8")
@@ -88,7 +88,7 @@ def rc(results: Results):
     return Run[Dummy, ImplConfig].load([run_dir, run_dir], ImplConfig)
 
 
-def test_iterdir_glob(rc: RunCollection[Run[Dummy, ImplConfig]]):
+def test_iterdir_glob(rc: RunCollection[Run[Dummy, ImplConfig]]) -> None:
     for run in rc:
         run.path("a.txt").write_text("a")
 

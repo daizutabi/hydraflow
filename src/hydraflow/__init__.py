@@ -1,13 +1,13 @@
+"""Integrate Hydra and MLflow to manage and track machine learning experiments."""
+
 from __future__ import annotations
 
 # Apply Python 3.14 compatibility patch for Hydra
 from ._py314_compat import apply_hydra_argparse_patch
 
-apply_hydra_argparse_patch()
-del apply_hydra_argparse_patch
+apply_hydra_argparse_patch()  # noqa: RUF067
+del apply_hydra_argparse_patch  # noqa: RUF067
 
-
-"""Integrate Hydra and MLflow to manage and track machine learning experiments."""
 
 from hydraflow.core.collection import Collection
 from hydraflow.core.context import chdir_artifact, log_run, start_run

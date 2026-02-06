@@ -66,7 +66,7 @@ def test_log_run_error() -> None:
 
 
 @pytest.mark.parametrize(("chdir", "expected"), [(True, True), (False, False)])
-def test_start_run(chdir: bool, expected: bool) -> None:
+def test_start_run(*, chdir: bool, expected: bool) -> None:
     with start_run(chdir=chdir) as run:
         assert run is not None
         assert (Path.cwd() == get_artifact_dir(run)) == expected

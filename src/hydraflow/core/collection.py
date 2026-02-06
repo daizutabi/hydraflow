@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 # pyright: reportUnknownVariableType=false
 
 
-class Collection[I](Sequence[I]):
+class Collection[I](Sequence[I]):  # noqa: PLR0904
     """A collection of items that implements the Sequence protocol."""
 
     _items: list[I]
@@ -846,7 +846,7 @@ def matches(value: Any, criterion: Any) -> bool:
     if isinstance(criterion, list | set) and not _is_iterable(value):
         return value in criterion
 
-    if isinstance(criterion, tuple) and len(criterion) == 2 and not _is_iterable(value):  # pyright: ignore[reportUnknownArgumentType]
+    if isinstance(criterion, tuple) and len(criterion) == 2 and not _is_iterable(value):  # pyright: ignore[reportUnknownArgumentType]  # noqa: PLR2004
         return criterion[0] <= value <= criterion[1]
 
     if _is_iterable(criterion):

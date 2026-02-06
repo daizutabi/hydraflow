@@ -28,12 +28,12 @@ if TYPE_CHECKING:
     ("uri", "path"),
     [("/a/b/c", "/a/b/c"), ("file:///a/b/c", "/a/b/c"), ("file:C:/a/b/c", "C:/a/b/c")],
 )
-def test_file_uri_to_path(uri: str, path: str):
+def test_file_uri_to_path(uri: str, path: str) -> None:
     assert file_uri_to_path(uri).as_posix() == path
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="This test is for Windows")
-def test_file_uri_to_path_win_python_310_311():
+def test_file_uri_to_path_win_python_310_311() -> None:
     assert file_uri_to_path("file:///C:/a/b/c").as_posix() == "C:/a/b/c"
 
 
@@ -99,11 +99,11 @@ def test_log_text(run: Run) -> None:
     assert logged_file.read_text().endswith("test log\ntest log")
 
 
-def test_get_experiment_names():
+def test_get_experiment_names() -> None:
     assert sorted(get_experiment_names()) == ["e1", "e2"]
 
 
-def test_iter_experiment_dirs():
+def test_iter_experiment_dirs() -> None:
     names = [get_experiment_name(p) for p in iter_experiment_dirs()]
     assert sorted(names) == ["e1", "e2"]
 
@@ -112,34 +112,34 @@ def test_iter_experiment_dirs():
     ("e", "es"),
     [("e1", ["e1"]), ("e*", ["e1", "e2"]), ("*", ["e1", "e2"]), ("*2", ["e2"])],
 )
-def test_iter_experiment_dirs_glob(e: str, es: list[str]):
+def test_iter_experiment_dirs_glob(e: str, es: list[str]) -> None:
     names = [get_experiment_name(p) for p in iter_experiment_dirs(e)]
     assert sorted(names) == es
 
 
-def test_iter_experiment_dirs_filter():
+def test_iter_experiment_dirs_filter() -> None:
     it = iter_experiment_dirs(experiment_names="e1")
     assert [get_experiment_name(p) for p in it] == ["e1"]
 
 
-def test_iter_experiment_dirs_filter_callable():
+def test_iter_experiment_dirs_filter_callable() -> None:
     it = iter_experiment_dirs(experiment_names=lambda name: name == "e2")
     assert [get_experiment_name(p) for p in it] == ["e2"]
 
 
-def test_get_experiment_name_none():
-    assert get_experiment_name("invalid") == ""
+def test_get_experiment_name_none() -> None:
+    assert not get_experiment_name("invalid")
 
 
-def test_iter_run_dirs():
+def test_iter_run_dirs() -> None:
     assert len(list(iter_run_dirs())) == 5
 
 
-def test_iter_artifacts_dirs():
+def test_iter_artifacts_dirs() -> None:
     assert len(list(iter_artifacts_dirs())) == 5
 
 
-def test_iter_artifact_paths():
+def test_iter_artifact_paths() -> None:
     it = iter_artifact_paths("text.txt")
     text = sorted("".join(p.read_text() for p in it))
     assert text == ["1", "2", "3", "4", "5"]

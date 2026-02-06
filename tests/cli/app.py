@@ -27,7 +27,7 @@ class Config:
 
 
 @hydraflow.main(Config)
-def app(_run: Run, _cfg: Config):
+def app(_run: Run, _cfg: Config) -> None:
     """Example app demonstrating Hydraflow's basic functionality.
 
     This app shows how to:

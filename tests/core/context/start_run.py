@@ -21,7 +21,7 @@ ConfigStore.instance().store(name="config", node=Config)
 
 
 @hydra.main(config_name="config", version_base=None)
-def app(cfg: Config):
+def app(cfg: Config) -> None:
     hc = HydraConfig.get()
     mlflow.set_experiment(hc.job.name)
 

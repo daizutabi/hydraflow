@@ -22,11 +22,11 @@ def results(collect: Collect) -> Results:
     )
 
 
-def test_len(results: Results):
+def test_len(results: Results) -> None:
     assert len(results) == 1
 
 
-def test_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     file = Path(__file__).parent.joinpath("update.py")
     shutil.copy(file, "update.py")

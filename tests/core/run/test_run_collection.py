@@ -34,7 +34,7 @@ class Impl:
     x: int
     y: list[str]
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path) -> None:
         self.x = len(path.as_posix())
         self.y = list(path.parts)
 
@@ -63,177 +63,177 @@ def rc(run_factory: Callable[..., Run[Config, Impl]]) -> Rc:
     return RunCollection[Run[Config, Impl]](runs, Run.get)  # pyright: ignore[reportUnknownMemberType, reportArgumentType]
 
 
-def test_repr(rc: Rc):
+def test_repr(rc: Rc) -> None:
     assert repr(rc) == "RunCollection(Run[Impl], n=12)"
 
 
-def test_repr_empty():
+def test_repr_empty() -> None:
     assert repr(RunCollection[Any]([])) == "RunCollection(empty)"
 
 
-def test_len(rc: Rc):
+def test_len(rc: Rc) -> None:
     assert len(rc) == 12
 
 
-def test_bool(rc: Rc):
+def test_bool(rc: Rc) -> None:
     assert bool(rc) is True
 
 
-def test_getitem_int(rc: Rc):
+def test_getitem_int(rc: Rc) -> None:
     assert isinstance(rc[0], Run)
 
 
-def test_getitem_slice(rc: Rc):
+def test_getitem_slice(rc: Rc) -> None:
     assert isinstance(rc[:3], RunCollection)
 
 
-def test_getitem_iterable(rc: Rc):
+def test_getitem_iterable(rc: Rc) -> None:
     assert isinstance(rc[[0, 1, 2]], RunCollection)
 
 
-def test_iter(rc: Rc):
+def test_iter(rc: Rc) -> None:
     assert len(list(iter(rc))) == 12
 
 
-def test_update(rc: Rc):
+def test_update(rc: Rc) -> None:
     rc.update("size.height", 10)
     assert all(r.get("size.height") is None for r in rc)
 
 
-def test_update_force(rc: Rc):
+def test_update_force(rc: Rc) -> None:
     rc.update("size.height", 10, force=True)
     assert all(r.get("size.height") == 10 for r in rc)
 
 
-def test_update_callable(rc: Rc):
+def test_update_callable(rc: Rc) -> None:
     rc.update("size.height", lambda r: r.get("size.width") + 10, force=True)
     assert all(r.get("size.height") == r.get("size.width") + 10 for r in rc)
 
 
-def test_filter(rc: Rc):
+def test_filter(rc: Rc) -> None:
     assert len(rc.filter(count=1, name="def")) == 3
 
 
-def test_filter_callable(rc: Rc):
+def test_filter_callable(rc: Rc) -> None:
     assert len(rc.filter(lambda r: r.get("count") == 1)) == 6
 
 
-def test_filter_tuple(rc: Rc):
+def test_filter_tuple(rc: Rc) -> None:
     assert len(rc.filter(("size.width", 10), ("count", 2))) == 2
 
 
-def test_filter_underscore(rc: Rc):
+def test_filter_underscore(rc: Rc) -> None:
     assert len(rc.filter(size__width=10, count=2)) == 2
 
 
-def test_filter_tuple_list(rc: Rc):
+def test_filter_tuple_list(rc: Rc) -> None:
     assert len(rc.filter(("size.width", [10, 30]))) == 8
 
 
-def test_filter_underscope_list(rc: Rc):
+def test_filter_underscope_list(rc: Rc) -> None:
     assert len(rc.filter(size__width=[10, 30])) == 8
 
 
-def test_filter_tuple_tuple(rc: Rc):
+def test_filter_tuple_tuple(rc: Rc) -> None:
     assert len(rc.filter(("size.width", (20, 30)))) == 8
 
 
-def test_filter_multi(rc: Rc):
+def test_filter_multi(rc: Rc) -> None:
     assert len(rc.filter(("size.width", (20, 30)), count=1, name="abc")) == 2
 
 
-def test_try_get(rc: Rc):
+def test_try_get(rc: Rc) -> None:
     assert rc.try_get(("size.height", 10)) is None
 
 
-def test_try_get_error(rc: Rc):
+def test_try_get_error(rc: Rc) -> None:
     with pytest.raises(ValueError):
         rc.try_get(count=1)
 
 
-def test_get(rc: Rc):
+def test_get(rc: Rc) -> None:
     r = rc.get(("size.width", 10), count=1, name="abc")
     assert r.get("count") == 1
     assert r.get("name") == "abc"
     assert r.get("size.width") == 10
 
 
-def test_get_error(rc: Rc):
+def test_get_error(rc: Rc) -> None:
     with pytest.raises(ValueError):
         rc.get(count=100)
 
 
-def test_first(rc: Rc):
+def test_first(rc: Rc) -> None:
     r = rc.first(count=1, name="abc")
     assert r.get("count") == 1
     assert r.get("name") == "abc"
 
 
-def test_first_error(rc: Rc):
+def test_first_error(rc: Rc) -> None:
     with pytest.raises(ValueError):
         rc.first(count=100)
 
 
-def test_last(rc: Rc):
+def test_last(rc: Rc) -> None:
     r = rc.last(count=2, name="def")
     assert r.get("count") == 2
     assert r.get("name") == "def"
 
 
-def test_last_error(rc: Rc):
+def test_last_error(rc: Rc) -> None:
     with pytest.raises(ValueError):
         rc.last(count=100)
 
 
-def test_to_list(rc: Rc):
+def test_to_list(rc: Rc) -> None:
     assert sorted(rc.to_list("name")) == [*(["abc"] * 6), *(["def"] * 6)]
 
 
-def test_to_list_default(rc: Rc):
+def test_to_list_default(rc: Rc) -> None:
     assert sorted(rc.to_list("unknown", 1)) == [1] * 12
 
 
-def test_to_list_default_callable(rc: Rc):
+def test_to_list_default_callable(rc: Rc) -> None:
     x = sorted(rc.to_list("unknown", lambda r: r.get("count")))
     assert x == [1] * 6 + [2] * 6
 
 
-def test_to_numpy(rc: Rc):
+def test_to_numpy(rc: Rc) -> None:
     assert np.array_equal(rc.to_numpy("count")[3:5], [1, 1])
 
 
-def test_to_series(rc: Rc):
+def test_to_series(rc: Rc) -> None:
     s = rc.to_series("count")
     assert s.to_list() == [1] * 6 + [2] * 6
     assert s.name == "count"
 
 
-def test_unique(rc: Rc):
+def test_unique(rc: Rc) -> None:
     assert np.array_equal(rc.unique("count"), [1, 2])
 
 
-def test_n_unique(rc: Rc):
+def test_n_unique(rc: Rc) -> None:
     assert rc.n_unique("size.width") == 3
 
 
-def test_sort(rc: Rc):
+def test_sort(rc: Rc) -> None:
     x = [10, 10, 10, 10, 20, 20, 20, 20, 30, 30, 30, 30]
     assert rc.sort("size.width").to_list("size.width") == x
     assert rc.sort("size.width", reverse=True).to_list("size.width") == x[::-1]
 
 
-def test_sort_emtpy(rc: Rc):
+def test_sort_emtpy(rc: Rc) -> None:
     assert rc.sort().to_list("count")[-1] == 2
 
 
-def test_sort_multi(rc: Rc):
+def test_sort_multi(rc: Rc) -> None:
     r = rc.sort("size.width", "count", reverse=True)[0]
     assert r.get("size.width") == 30
     assert r.get("count") == 2
     assert r.get("name") == "def"
 
 
-def test_map(rc: Rc):
+def test_map(rc: Rc) -> None:
     def func(r: Run[Config, Impl], x: int, y: int = 2) -> int:
         return r.cfg.size.width + x + y
 
@@ -241,7 +241,7 @@ def test_map(rc: Rc):
     assert x == [40, 50, 60] * 4
 
 
-def test_to_frame(rc: Rc):
+def test_to_frame(rc: Rc) -> None:
     df = rc.to_frame("size.width", "count", "run_id")
     assert df.shape == (12, 3)
     assert df.columns == ["size.width", "count", "run_id"]
@@ -253,7 +253,7 @@ def test_to_frame(rc: Rc):
     assert df.item(-1, "run_id") == "30"
 
 
-def test_to_frame_kwargs(rc: Rc):
+def test_to_frame_kwargs(rc: Rc) -> None:
     def func(r: Run[Config, Impl]) -> int:
         return r.cfg.count
 
@@ -262,12 +262,12 @@ def test_to_frame_kwargs(rc: Rc):
     assert df["count"].to_list() == df["func"].to_list()
 
 
-def test_group_by(rc: Rc):
+def test_group_by(rc: Rc) -> None:
     gp = rc.group_by("count", "name")
     assert isinstance(gp, GroupBy)
 
 
-def test_concat(rc: Rc):
+def test_concat(rc: Rc) -> None:
     def func(r: Run[Config, Impl]) -> DataFrame:
         return DataFrame({"a": [r.get("count"), 20]})
 

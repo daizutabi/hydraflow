@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 
-def main():
+def main() -> None:
     path = Path(sys.argv[1])
     arg = " ".join(sys.argv[3:5])
 
