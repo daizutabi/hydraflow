@@ -5,6 +5,7 @@ from pathlib import Path
 import polars as pl
 import pytest
 from omegaconf import ListConfig
+from polars.testing import assert_frame_equal
 
 from hydraflow.core.run import Run
 from hydraflow.core.run_collection import RunCollection
@@ -234,3 +235,19 @@ def test_load_impl() -> None:
 def test_get_impl_str() -> None:
     run = Run[Config, Impl].load("a/b/c", Impl)
     assert run.get("path") == "a/b/c/artifacts"
+
+
+def test_to_fram_imple() -> None:
+    run = Run[Config, Impl](Path(), Impl)
+    run.update("a", 10)
+
+    def func(impl: Impl) -> pl.DataFrame:
+        return pl.DataFrame({"path": [impl.path, "abc"]})
+
+    df = run.to_frame_impl(func, "a")
+
+    expected = pl.DataFrame(
+        {"path": ["artifacts", "abc"], "a": [10, 10]},
+        schema_overrides={"a": pl.Int32},
+    )
+    assert_frame_equal(df, expected)

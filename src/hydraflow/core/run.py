@@ -347,6 +347,25 @@ class Run[C, I = None]:
             self.lit(k) if isinstance(k, str) else self.lit(k[0], k[1]) for k in keys
         )
 
+    def to_frame_impl(
+        self,
+        function: Callable[[I], DataFrame],
+        *keys: str | tuple[str, Any | Callable[[Self], Any]],
+    ) -> DataFrame:
+        """Convert the Run to a DataFrame.
+
+        Args:
+            function (Callable[[I], DataFrame]): A function that takes a Run.impl
+                instance and returns a DataFrame.
+            keys (str | tuple[str, Any | Callable[[Run], Any]]): The keys to
+                add to the DataFrame.
+
+        Returns:
+            DataFrame: A DataFrame representation of the Run.
+
+        """
+        return self.to_frame(lambda r: function(r.impl), *keys)
+
     def to_dict(self, *, flatten: bool = True) -> dict[str, Any]:
         """Convert the Run to a dictionary.
 
