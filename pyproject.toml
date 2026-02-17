@@ -130,10 +130,7 @@ preview = true
 include = ["src", "tests"]
 reportAny = false
 reportExplicitAny = false
-reportImplicitOverride = false
 reportImportCycles = false
-reportIncompatibleVariableOverride = false
-reportMissingTypeStubs = false
 reportUnusedCallResult = false
 
 [tool.ty.rules]

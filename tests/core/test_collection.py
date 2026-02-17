@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from itertools import product
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import numpy as np
 import pytest
@@ -291,6 +291,7 @@ def test_to_hashable_fallback_str() -> None:
     class C:
         __hash__ = None  # pyright: ignore[reportAssignmentType, reportUnannotatedClassAttribute]
 
+        @override
         def __str__(self) -> str:
             return "abc"
 

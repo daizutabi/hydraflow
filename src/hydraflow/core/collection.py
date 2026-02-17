@@ -6,7 +6,7 @@ import random
 import re
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import MISSING
-from typing import TYPE_CHECKING, Any, Concatenate, Self, overload
+from typing import TYPE_CHECKING, Any, Concatenate, Self, overload, override
 
 import numpy as np
 from omegaconf import ListConfig, OmegaConf
@@ -37,6 +37,7 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
         self._items = list(items)
         self._get = get or getattr
 
+    @override
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         if not self:
@@ -47,6 +48,7 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
             type_name = type_name.split("(", 1)[0]
         return f"{class_name}({type_name}, n={len(self)})"
 
+    @override
     def __len__(self) -> int:
         return len(self._items)
 
@@ -62,6 +64,7 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
     @overload
     def __getitem__(self, index: Iterable[int]) -> Self: ...
 
+    @override
     def __getitem__(self, index: int | slice | Iterable[int]) -> I | Self:
         if isinstance(index, int):
             return self._items[index]
@@ -71,6 +74,7 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
 
         return self.__class__([self._items[i] for i in index], self._get)
 
+    @override
     def __iter__(self) -> Iterator[I]:
         return iter(self._items)
 

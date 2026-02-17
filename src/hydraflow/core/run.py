@@ -29,7 +29,7 @@ from contextlib import contextmanager
 from dataclasses import MISSING
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Self, cast, overload
+from typing import TYPE_CHECKING, Any, Self, cast, overload, override
 
 import polars as pl
 from omegaconf import DictConfig, OmegaConf
@@ -79,6 +79,7 @@ class Run[C, I = None]:
         self.info = RunInfo(run_dir)
         self.impl_factory = impl_factory or (lambda _: None)  # pyright: ignore[reportAttributeAccessIssue]
 
+    @override
     def __repr__(self) -> str:
         """Return a string representation of the Run."""
         class_name = self.__class__.__name__
