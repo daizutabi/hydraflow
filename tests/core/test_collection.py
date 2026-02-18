@@ -6,6 +6,7 @@ from itertools import product
 from typing import TYPE_CHECKING, Any, Self, override
 
 import numpy as np
+import polars as pl
 import pytest
 from omegaconf import ListConfig
 
@@ -91,6 +92,10 @@ def test_getitem_iterable(rc: Rc) -> None:
     assert rc._get(rc[0], "y", None) == "c"
 
 
+def test_getitem_str(rc: Rc) -> None:
+    assert isinstance(rc["x"], pl.Series)
+
+
 def test_iter(rc: Rc) -> None:
     assert len(list(iter(rc))) == 12
 
@@ -117,6 +122,19 @@ def test_filter_tuple(rc: Rc) -> None:
     assert len(rc.filter(("x", (1, 2)), ("y", ["b", "c"]))) == 4
     assert len(rc.filter(("x", (1, 3)), ("y", ["b", "c"]))) == 6
     assert len(rc.filter(("x", (1, 2)), ("y", ["a", "c"]))) == 4
+
+
+def test_filter_iterable(rc: Rc) -> None:
+    rc = rc.filter(rc["x"] >= 2, rc["y"].is_in(["a", "b"]))
+    assert len(rc) == 4
+    assert all(rc["x"] >= 2)
+    assert all(rc["y"].is_in(["a", "b"]))
+
+
+def test_filter_complex(rc: Rc) -> None:
+    rc = rc.filter(rc["x"] <= 2, ("x", (1, 3)), rc["y"] > "b", y=["a", "b", "d"])
+    assert rc["x"].to_list() == [1, 2]
+    assert rc["y"].to_list() == ["d", "d"]
 
 
 def test_try_get(rc: Rc) -> None:
