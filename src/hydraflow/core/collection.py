@@ -64,8 +64,14 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
     @overload
     def __getitem__(self, index: Iterable[int]) -> Self: ...
 
+    @overload
+    def __getitem__(self, index: str) -> Series: ...
+
     @override
-    def __getitem__(self, index: int | slice | Iterable[int]) -> I | Self:
+    def __getitem__(self, index: int | slice | Iterable[int] | str) -> I | Self | Any:
+        if isinstance(index, str):
+            return self.to_series(index)
+
         if isinstance(index, int):
             return self._items[index]
 
@@ -80,7 +86,7 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
 
     def filter(
         self,
-        *criteria: Callable[[I], bool] | tuple[str, Any],
+        *criteria: Callable[[I], bool] | Iterable[Any] | tuple[str, Any],
         **kwargs: Any,
     ) -> Self:
         """Filter items based on criteria.
@@ -117,6 +123,9 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
             # Filter using a key-value tuple
             filtered = collection.filter(("age", 25))
 
+            # Filter using an iterable
+            filtered = collection.filter([True, False, True])
+
             # Filter using keyword arguments
             filtered = collection.filter(age=25, name="John")
 
@@ -128,18 +137,32 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
             ```
 
         """
-        items = self._items
+        if kwargs:
+            criteria = (*criteria, *kwargs.items())
 
+        index = set(range(len(self._items)))
         for c in criteria:
-            if callable(c):
-                items = [i for i in items if c(i)]
-            else:
-                items = [i for i in items if matches(self._get(i, c[0], MISSING), c[1])]
+            index = index.intersection(self._filter(c, index))
 
-        for key, value in kwargs.items():
-            items = [i for i in items if matches(self._get(i, key, MISSING), value)]
-
+        items = [self._items[i] for i in index]
         return self.__class__(items, self._get)
+
+    def _filter(
+        self,
+        c: Callable[[I], bool] | Iterable[Any] | tuple[str, Any],
+        index: set[int],
+    ) -> Iterator[int]:
+        if callable(c) or isinstance(c, tuple):
+            it = [(i, self._items[i]) for i in index]
+        else:
+            it = enumerate(self._items)
+
+        if callable(c):
+            yield from (k for k, i in it if c(i))
+        elif isinstance(c, tuple):
+            yield from (k for k, i in it if matches(self._get(i, c[0], MISSING), c[1]))
+        else:
+            yield from (k for (k, _), v in zip(it, c, strict=True) if v)
 
     def try_get(
         self,
