@@ -129,6 +129,11 @@ def test_get_info(run: Run[Config]) -> None:
     assert run.get("run_dir").as_posix() == "."
 
 
+def test_getitem(run: Run[Config]) -> None:
+    run.update("key", 100)
+    assert run["key"] == 100
+
+
 def test_lit(run: Run[Config]) -> None:
     run.update("db.b", 100)
     expr = run.lit("db.b", dtype=pl.Int64)
