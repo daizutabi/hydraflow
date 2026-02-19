@@ -144,7 +144,67 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
         for c in criteria:
             index = index.intersection(self._filter(c, index))
 
-        items = [self._items[i] for i in index]
+        items = [self._items[i] for i in sorted(index)]
+        return self.__class__(items, self._get)
+
+    def exclude(
+        self,
+        *criteria: Callable[[I], bool] | Iterable[Any] | tuple[str, Any],
+        **kwargs: Any,
+    ) -> Self:
+        """Exclude items based on criteria.
+
+        This method works the opposite of `filter`. It excludes items that
+        match any of the specified criteria.
+
+        This method allows excluding items using various criteria:
+
+        - Callable criteria that take an item and return a boolean
+        - Key-value tuples where the key is a string and the value
+          is compared using the `matches` function
+        - Keyword arguments, where the key is a string and the value
+          is compared using the `matches` function
+
+        The `matches` function supports the following comparison types:
+
+        - Callable: The predicate function is called with the value
+        - List/Set: Checks if the value is in the list/set
+        - Tuple of length 2: Checks if the value is in the range [min, max]
+        - Other: Checks for direct equality
+
+        Args:
+            *criteria: Callable criteria or (key, value) tuples
+                for exclusion.
+            **kwargs: Additional key-value pairs for exclusion.
+
+        Returns:
+            Self: A new Collection containing only the items that
+            do not match any of the criteria.
+
+        Examples:
+            ```python
+            # Exclude using a callable
+            excluded = collection.exclude(lambda x: x > 5)
+
+            # Exclude using a key-value tuple
+            excluded = collection.exclude(("age", 25))
+
+            # Exclude using an iterable mask
+            excluded = collection.exclude([True, False, True])
+
+            # Exclude using keyword arguments
+            excluded = collection.exclude(age=25, name="John")
+            ```
+
+        """
+        if kwargs:
+            criteria = (*criteria, *kwargs.items())
+
+        index = set(range(len(self._items)))
+        for c in criteria:
+            index = index.difference(self._filter(c, index))
+
+        items = [self._items[i] for i in sorted(index)]
         return self.__class__(items, self._get)
 
     def _filter(
