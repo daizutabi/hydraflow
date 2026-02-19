@@ -137,6 +137,22 @@ def test_filter_complex(rc: Rc) -> None:
     assert rc["y"].to_list() == ["d", "d"]
 
 
+def test_filter_none(rc: Rc) -> None:
+    rc_ = rc.filter()
+    assert list(rc_) == list(rc)
+
+
+def test_exclude(rc: Rc) -> None:
+    rc = rc.exclude(rc["x"] <= 2, y=["a", "b", "d"])
+    assert rc["x"].to_list() == [3]
+    assert rc["y"].to_list() == ["c"]
+
+
+def test_exclude_none(rc: Rc) -> None:
+    rc_ = rc.exclude()
+    assert list(rc_) == list(rc)
+
+
 def test_try_get(rc: Rc) -> None:
     assert rc.try_get(("x", 10)) is None
 
