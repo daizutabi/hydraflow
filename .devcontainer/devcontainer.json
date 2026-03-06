@@ -9,6 +9,7 @@
       "extensions": [
         "charliermarsh.ruff",
         "detachhead.basedpyright",
+        "esbenp.prettier-vscode",
         "fill-labs.dependi",
         "markis.code-coverage",
         "ms-python.python",
@@ -17,5 +18,6 @@
       ]
     }
   },
-  "postCreateCommand": ".devcontainer/postCreate.sh"
+  "postCreateCommand": ".devcontainer/postCreate.sh",
+  "remoteEnv": { "UV_LINK_MODE": "copy" }
 }
