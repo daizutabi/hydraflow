@@ -13,7 +13,7 @@ from hydra.core.hydra_config import HydraConfig
 from .io import get_artifact_dir, log_text
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
 
     from mlflow.entities.run import Run
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def log_run(run: Run) -> Iterator[None]:
+def log_run(run: Run) -> Generator[None]:
     """Log the parameters from the given configuration instance.
 
     This context manager logs the parameters from the provided configuration instance
@@ -68,7 +68,7 @@ def start_run(  # noqa: PLR0913
     tags: dict[str, str] | None = None,
     description: str | None = None,
     log_system_metrics: bool | None = None,
-) -> Iterator[Run]:
+) -> Generator[Run]:
     """Start an MLflow run and log parameters using the provided configuration instance.
 
     This context manager starts an MLflow run and logs parameters using the specified
@@ -114,7 +114,7 @@ def start_run(  # noqa: PLR0913
 
 
 @contextmanager
-def chdir_artifact(run: Run) -> Iterator[Path]:
+def chdir_artifact(run: Run) -> Generator[Path]:
     """Change the current working directory to the artifact directory of the given run.
 
     This context manager changes the current working directory to the artifact

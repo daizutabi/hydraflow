@@ -57,7 +57,7 @@ def setup(
     Path("dir.log").mkdir()
 
     mlflow.set_tracking_uri(uri)
-    mlflow.set_experiment("e1")
+    mlflow.set_experiment("e1")  # pyright: ignore[reportUnknownMemberType]
     with mlflow.start_run() as run:
         mlflow.log_text("1", "text.txt")
         log_text(run, Path.cwd(), "*.log")
@@ -66,7 +66,7 @@ def setup(
     with mlflow.start_run():
         mlflow.log_text("2", "text.txt")
 
-    mlflow.set_experiment("e2")
+    mlflow.set_experiment("e2")  # pyright: ignore[reportUnknownMemberType]
     with mlflow.start_run():
         mlflow.log_text("3", "text.txt")
     with mlflow.start_run():

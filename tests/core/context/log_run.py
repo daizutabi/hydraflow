@@ -25,7 +25,7 @@ ConfigStore.instance().store(name="config", node=Config)
 @hydra.main(config_name="config", version_base=None)
 def app(cfg: Config) -> None:
     hc = HydraConfig.get()
-    mlflow.set_experiment(hc.job.name)
+    mlflow.set_experiment(hc.job.name)  # pyright: ignore[reportUnknownMemberType]
 
     with hydraflow.start_run():
         logger.info("logger.info")

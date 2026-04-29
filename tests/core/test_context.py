@@ -32,7 +32,7 @@ def setup(
         uri = tmpdir / request.param
 
     mlflow.set_tracking_uri(uri)
-    mlflow.set_experiment("e1")
+    mlflow.set_experiment("e1")  # pyright: ignore[reportUnknownMemberType]
 
     yield
 

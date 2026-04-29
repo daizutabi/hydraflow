@@ -182,7 +182,7 @@ def set_experiment(hc: HydraConf, tracking_uri: str | Path | None) -> Experiment
     with lock_manager:
         if tracking_uri is not None:
             mlflow.set_tracking_uri(tracking_uri)
-        return mlflow.set_experiment(hc.job.name)
+        return mlflow.set_experiment(hc.job.name)  # pyright: ignore[reportUnknownMemberType]
 
 
 def get_run_id(uri: str, config: Any, overrides: list[str] | None) -> str | None:

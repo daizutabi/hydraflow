@@ -541,15 +541,15 @@ class Collection[I](Sequence[I]):  # noqa: PLR0904
         if defaults is None:
             defaults = {}
 
-        keys_ = []
+        keys_: list[Any] = []
         for k in keys:
             if isinstance(k, tuple):
-                keys_.append(k[0])  # pyright: ignore[reportUnknownMemberType]
+                keys_.append(k[0])
                 defaults[k[0]] = k[1]
             else:
-                keys_.append(k)  # pyright: ignore[reportUnknownMemberType]
+                keys_.append(k)
 
-        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys_}  # pyright: ignore[reportUnknownArgumentType]
+        data = {k: self.to_list(k, defaults.get(k, MISSING)) for k in keys_}
         df = DataFrame(data)
 
         if not kwargs:

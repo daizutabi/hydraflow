@@ -37,7 +37,7 @@ from omegaconf import DictConfig, OmegaConf
 from .run_info import RunInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator, Iterator
 
     from polars import DataFrame, Expr
     from polars._typing import PolarsDataType
@@ -397,7 +397,7 @@ class Run[C, I = None]:
         return standard_dict
 
     @contextmanager
-    def chdir(self, relative_dir: str = "") -> Iterator[Path]:
+    def chdir(self, relative_dir: str = "") -> Generator[Path]:
         """Change the current working directory to the artifact directory.
 
         This context manager changes the current working directory
