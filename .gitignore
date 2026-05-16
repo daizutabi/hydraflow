@@ -1,11 +1,12 @@
-*.db
 **/mlruns/
 **/multirun/
 **/outputs/
+*.db
 .coverage*
 .env
 .venv/
 __pycache__/
+devcontainer-lock.json
 dist/
 lcov.info
 uv.lock
